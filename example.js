@@ -1,5 +1,5 @@
-var actionResque = require(__dirname + "/index.js");
-// In your projects: var actionResque = require("actionResque");
+var AR = require(__dirname + "/index.js");
+// In your projects: var AR = require("action_resque");
 var connectionDetails = {
   host:      "127.0.0.1",
   password:  "",
@@ -26,11 +26,11 @@ var jobs = {
   },
 };
 
-var worker = new actionResque.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
   worker.start();
 });
 
-var queue = new actionResque.queue({connection: connectionDetails, queue: 'math'}, function(){
+var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, function(){
   queue.enqueue("add", [1,2]);
   queue.enqueue("subtract", [2,1]);
   jobsToComplete = 2;  
