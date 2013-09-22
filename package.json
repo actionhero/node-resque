@@ -1,0 +1,26 @@
+{
+  "author":      "Evan Tahler <evantahler@gmail.com>",
+  "name":        "actionResque",
+  "description": "an opinionated implamenation of resque in node",
+  "version":     "0.0.1",
+  "homepage":    "x",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/evantahler/actionResque.git"
+  },
+  "main":        "index.js",
+  "keywords": ["delayed", "queue", "resque"],
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "dependencies": {
+    "redis": "0.8.x"
+  },
+  "devDependencies": {
+    "mocha": "1.9.x",
+    "should": "1.2.x"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec"
+  }
+}
