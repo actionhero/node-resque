@@ -1,5 +1,5 @@
 # actionQueue
-Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](https://github.com/resque/resque)
+Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](https://github.com/resque/resque) and [resque scheduler](https://github.com/resque/resque-scheduler)
 
 ## Usage
 
@@ -67,4 +67,8 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs
 - When ending your application, be sure to allow your workers time to finsih what they are working on
 
 ## Acknowledgments
-Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque).  Thanks!
+Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
+
+##TODO:
+- pid cleaner
+- domains

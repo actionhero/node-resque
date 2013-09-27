@@ -30,10 +30,15 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs
   worker.start();
 });
 
+var scheduler = new AR.scheduler({connection: connectionDetails}, function(){
+  scheduler.start();
+});
+
 var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, function(){
   queue.enqueue("add", [1,2]);
-  queue.enqueue("subtract", [2,1]);
-  jobsToComplete = 2;  
+  queue.enqueue("add", [2,3]);
+  queue.enqueueIn(3000,"subtract", [2,1]);
+  jobsToComplete = 3;  
 });
 
 var shutdown = function(){
