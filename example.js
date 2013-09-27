@@ -1,5 +1,14 @@
+/////////////////////////
+// REQUIRE THE PACKAGE //
+/////////////////////////
+
 var AR = require(__dirname + "/index.js");
 // In your projects: var AR = require("action_resque");
+
+///////////////////////////
+// SET UP THE CONNECTION //
+///////////////////////////
+
 var connectionDetails = {
   host:      "127.0.0.1",
   password:  "",
@@ -9,30 +18,61 @@ var connectionDetails = {
   // looping: true
 }
 
-var jobsToComplete = 0;
+//////////////////////////////
+// DEFINE YOUR WORKER TASKS //
+//////////////////////////////
 
+var jobsToComplete = 0;
 var jobs = {
   add: function(a,b,callback){
-    console.log("adding " + a + " + " + b);
     jobsToComplete--;
-    if(jobsToComplete == 0){ shutdown(); }
+    shutdown();
     callback(a + b);
   },
   subtract: function(a,b,callback){
-    console.log("subtracting " + a + " - " + b);
     jobsToComplete--;
-    if(jobsToComplete == 0){ shutdown(); }
+    shutdown();
     callback(a - b);
   },
 };
+
+////////////////////
+// START A WORKER //
+////////////////////
 
 var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
   worker.start();
 });
 
+///////////////////////
+// START A SCHEDULER //
+///////////////////////
+
 var scheduler = new AR.scheduler({connection: connectionDetails}, function(){
   scheduler.start();
 });
+
+/////////////////////////
+// REGESTER FOR EVENTS //
+/////////////////////////
+
+worker.on('start',   function(){ console.log("worker started"); })
+worker.on('end',     function(){ console.log("worker ended"); })
+worker.on('poll',    function(queue){ console.log("worker polling " + queue); })
+worker.on('job',     function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); })
+worker.on('success', function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
+worker.on('error',   function(queue, job, error){ console.log("job failed " + queue + " " + JSON.stringify(job) + " >> " + error); })
+worker.on('pause',   function(){ console.log("worker paused"); })
+
+scheduler.on('start',             function(){ console.log("scheduler started"); })
+scheduler.on('end',               function(){ console.log("scheduler ended"); })
+scheduler.on('poll',              function(){ console.log("scheduler polling"); })
+scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
+scheduler.on('enquing_job',      function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
+
+////////////////////////
+// CONNECT TO A QUEUE //
+////////////////////////
 
 var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, function(){
   queue.enqueue("add", [1,2]);
@@ -42,9 +82,13 @@ var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, functio
 });
 
 var shutdown = function(){
-  setTimeout(function(){
-    worker.end(function(){
-      process.exit();
-    });
-  }, 500);
+  if(jobsToComplete === 0){
+    setTimeout(function(){
+      scheduler.end(function(){
+        worker.end(function(){
+          process.exit();
+        });
+      });
+    }, 500);
+  }
 }
