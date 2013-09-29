@@ -1,7 +1,7 @@
 # actionQueue
 Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](https://github.com/resque/resque) and [resque scheduler](https://github.com/resque/resque-scheduler)
 
-[![Build Status](https://secure.travis-ci.org/evantahler/actionHero.png?branch=master)](http://travis-ci.org/evantahler/actionHero)
+[![Build Status](https://secure.travis-ci.org/evantahler/action_resque.png?branch=master)](http://travis-ci.org/evantahler/action_resque)
 
 ## Usage
 
