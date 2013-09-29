@@ -3,31 +3,87 @@ Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](ht
 
 ## Usage
 
+I learn best by examples:
+
 ```javascript
-// require the package
+/////////////////////////
+// REQUIRE THE PACKAGE //
+/////////////////////////
+
 var AR = require("action_resque");
 
-// define some jobs
+///////////////////////////
+// SET UP THE CONNECTION //
+///////////////////////////
+
+var connectionDetails = {
+  host:      "127.0.0.1",
+  password:  "",
+  port:      6379,
+  database:  0,
+}
+
+//////////////////////////////
+// DEFINE YOUR WORKER TASKS //
+//////////////////////////////
+
 var jobs = {
   add: function(a,b,callback){
-    console.log("adding " + a + "+" + b + ": " + (a + b));
-    callback();
+    jobsToComplete--;
+    shutdown();
+    callback(a + b);
   },
   subtract: function(a,b,callback){
-    console.log("subtractinh " + a + "-" + b + ": " + (a - b));
-    callback();
+    jobsToComplete--;
+    shutdown();
+    callback(a - b);
   },
 };
 
-// start a the worker
-var worker = new AR.worker({queues: 'math'}, jobs, function(){
+////////////////////
+// START A WORKER //
+////////////////////
+
+var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+  worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers
   worker.start();
 });
 
-// enqueue some jobs
-var queue = new AR.queue({queue: 'math'}, function(){
+///////////////////////
+// START A SCHEDULER //
+///////////////////////
+
+var scheduler = new AR.scheduler({connection: connectionDetails}, function(){
+  scheduler.start();
+});
+
+/////////////////////////
+// REGESTER FOR EVENTS //
+/////////////////////////
+
+worker.on('start',           function(){ console.log("worker started"); })
+worker.on('end',             function(){ console.log("worker ended"); })
+worker.on('cleaning_worker', function(worker, pid){ console.log("cleaning old worker " + worker); })
+worker.on('poll',            function(queue){ console.log("worker polling " + queue); })
+worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); })
+worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
+worker.on('error',           function(queue, job, error){ console.log("job failed " + queue + " " + JSON.stringify(job) + " >> " + error); })
+worker.on('pause',           function(){ console.log("worker paused"); })
+
+scheduler.on('start',             function(){ console.log("scheduler started"); })
+scheduler.on('end',               function(){ console.log("scheduler ended"); })
+scheduler.on('poll',              function(){ console.log("scheduler polling"); })
+scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
+scheduler.on('enquing_job',       function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
+
+////////////////////////
+// CONNECT TO A QUEUE //
+////////////////////////
+
+var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, function(){
   queue.enqueue("add", [1,2]);
-  queue.enqueue("subtract", [2,1]);
+  queue.enqueue("add", [2,3]);
+  queue.enqueueIn(3000,"subtract", [2,1]);
 });
 ```
 
@@ -46,7 +102,7 @@ options = {
 }
 ```
 
-The configuration hash passed to `new worker` or `new queue` can also take a `connection` option.  
+The configuration hash passed to `new worker`, `new scheduler` or `new queue` can also take a `connection` option.  
 
 ```javascript
 var connectionDetails = {
@@ -71,7 +127,7 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs
 ```javascript
 var name = os.hostname() + ":" + process.pid() + counter;
 var worker = new AR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
-``
+```
 
 ## Acknowledgments
 Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!

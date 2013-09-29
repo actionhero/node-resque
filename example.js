@@ -41,7 +41,7 @@ var jobs = {
 ////////////////////
 
 var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
-  worker.workerCleanup(); // optional: cleanup any previous improperly shutodwn workers
+  worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers
   worker.start();
 });
 
@@ -70,7 +70,7 @@ scheduler.on('start',             function(){ console.log("scheduler started"); 
 scheduler.on('end',               function(){ console.log("scheduler ended"); })
 scheduler.on('poll',              function(){ console.log("scheduler polling"); })
 scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
-scheduler.on('enquing_job',      function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
+scheduler.on('enquing_job',       function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
 
 ////////////////////////
 // CONNECT TO A QUEUE //
