@@ -55,6 +55,14 @@ describe('scheduler', function(){
   });
 
   it("will not move jobs in the future", function(done){
+    queue.enqueueAt((new Date().getTime() + 10000), 'someJob', [1,2,3], function(){
+      scheduler.poll(function(){
+        specHelper.popFromQueue(function(err, obj){
+          should.not.exist(obj);
+          done();
+        });
+      });
+    });
     done()
   });
 
