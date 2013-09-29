@@ -53,10 +53,17 @@ exports.specHelper = {
     });
   },
   endAll: function(callback){
+    var self = this;
     self.worker.end(function(){
       self.scheduler.end(function(){
         callback()
       })
+    });
+  },
+  popFromQueue: function(callback){
+    var self = this;
+    self.redis.lpop(self.namespace + ":queue:" + self.queue, function(err, obj){
+      callback(err, obj)
     });
   }
 }
