@@ -133,8 +133,6 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math', 'name
 Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
 
 ##TODO:
-- domains for running jobs
-- domains for everything else (if redis dies)
-- graceful shutdown
+- domains for everything else (if redis dies)?
 - locking for scheduler?  Do we need this?
 - tests

@@ -33,7 +33,7 @@ var jobs = {
     jobsToComplete--;
     shutdown();
     callback(a - b);
-  },
+  }
 };
 
 ////////////////////
