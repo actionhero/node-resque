@@ -65,10 +65,20 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs
 ## Notes
 - Be sure to call `worker.end()` before shutting down your application if you want to properly clear your worker status from resque
 - When ending your application, be sure to allow your workers time to finsih what they are working on
+- `worker.workerCleanup()` only works for *nix operating systems (osx, unix, solaris, etc)
+- If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the patern `hostname:pid:unique_id`.  For example: 
+
+```javascript
+var name = os.hostname() + ":" + process.pid() + counter;
+var worker = new AR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
+``
 
 ## Acknowledgments
 Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
 
 ##TODO:
-- pid cleaner
-- domains
+- domains for running jobs
+- domains for everything else (if redis dies)
+- graceful shutdown
+- locking for scheduler?  Do we need this?
+- tests

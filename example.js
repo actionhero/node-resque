@@ -41,6 +41,7 @@ var jobs = {
 ////////////////////
 
 var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+  worker.workerCleanup(); // optional: cleanup any previous improperly shutodwn workers
   worker.start();
 });
 
@@ -56,13 +57,14 @@ var scheduler = new AR.scheduler({connection: connectionDetails}, function(){
 // REGESTER FOR EVENTS //
 /////////////////////////
 
-worker.on('start',   function(){ console.log("worker started"); })
-worker.on('end',     function(){ console.log("worker ended"); })
-worker.on('poll',    function(queue){ console.log("worker polling " + queue); })
-worker.on('job',     function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); })
-worker.on('success', function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
-worker.on('error',   function(queue, job, error){ console.log("job failed " + queue + " " + JSON.stringify(job) + " >> " + error); })
-worker.on('pause',   function(){ console.log("worker paused"); })
+worker.on('start',           function(){ console.log("worker started"); })
+worker.on('end',             function(){ console.log("worker ended"); })
+worker.on('cleaning_worker', function(worker, pid){ console.log("cleaning old worker " + worker); })
+worker.on('poll',            function(queue){ console.log("worker polling " + queue); })
+worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); })
+worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
+worker.on('error',           function(queue, job, error){ console.log("job failed " + queue + " " + JSON.stringify(job) + " >> " + error); })
+worker.on('pause',           function(){ console.log("worker paused"); })
 
 scheduler.on('start',             function(){ console.log("scheduler started"); })
 scheduler.on('end',               function(){ console.log("scheduler ended"); })
