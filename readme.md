@@ -83,9 +83,9 @@ scheduler.on('transfered_job',    function(timestamp, job){ console.log("schedul
 ////////////////////////
 
 var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, function(){
-  queue.enqueue("add", [1,2]);
-  queue.enqueue("add", [2,3]);
-  queue.enqueueIn(3000,"subtract", [2,1]);
+  queue.enqueue('math', "add", [1,2]);
+  queue.enqueue('math', "add", [2,3]);
+  queue.enqueueIn(3000, 'math', "subtract", [2,1]);
 });
 ```
 

@@ -26,7 +26,7 @@ describe('queue', function(){
   });
 
   it('can add a normal job', function(done){
-    queue.enqueue('someJob', [1,2,3], function(){
+    queue.enqueue(specHelper.queue, 'someJob', [1,2,3], function(){
       specHelper.popFromQueue(function(err, obj){
         should.exist(obj);
         obj = JSON.parse(obj);
@@ -38,7 +38,7 @@ describe('queue', function(){
   });
 
   it('can add delayed job (enqueueAt)', function(done){
-    queue.enqueueAt(10000, 'someJob', [1,2,3], function(){
+    queue.enqueueAt(10000, specHelper.queue, 'someJob', [1,2,3], function(){
       specHelper.redis.zscore(specHelper.namespace + ":delayed_queue_schedule", "10", function(err, score){
         score.should.equal("10");
         specHelper.redis.lpop(specHelper.namespace + ":delayed:" + "10", function(err, obj){
@@ -54,7 +54,7 @@ describe('queue', function(){
 
   it('can add delayed job (enqueueIn)', function(done){
     var now = Math.round( new Date().getTime() / 1000 ) + 5;
-    queue.enqueueIn(5 * 1000, 'someJob', [1,2,3], function(){
+    queue.enqueueIn(5 * 1000, specHelper.queue, 'someJob', [1,2,3], function(){
       specHelper.redis.zscore(specHelper.namespace + ":delayed_queue_schedule", now, function(err, score){
         score.should.equal(String(now));
         specHelper.redis.lpop(specHelper.namespace + ":delayed:" + now, function(err, obj){
@@ -69,9 +69,9 @@ describe('queue', function(){
   });
 
   it('can get the number of jobs currently enqueued', function(done){
-    queue.enqueue('someJob', [1,2,3], function(){
-      queue.enqueue('someJob', [1,2,3], function(){
-        queue.length(function(err, len){
+    queue.enqueue(specHelper.queue, 'someJob', [1,2,3], function(){
+      queue.enqueue(specHelper.queue, 'someJob', [1,2,3], function(){
+        queue.length(specHelper.queue, function(err, len){
           len.should.equal(2);
           done();
         })

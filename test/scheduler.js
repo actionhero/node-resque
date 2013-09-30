@@ -41,7 +41,7 @@ describe('scheduler', function(){
   });
 
   it("will move enqueued jobs when the time comes", function(done){
-    queue.enqueueAt(1000 * 10, 'someJob', [1,2,3], function(){
+    queue.enqueueAt(1000 * 10, specHelper.queue, 'someJob', [1,2,3], function(){
       scheduler.poll(function(){
         specHelper.popFromQueue(function(err, obj){
           should.exist(obj);
@@ -55,7 +55,7 @@ describe('scheduler', function(){
   });
 
   it("will not move jobs in the future", function(done){
-    queue.enqueueAt((new Date().getTime() + 10000), 'someJob', [1,2,3], function(){
+    queue.enqueueAt((new Date().getTime() + 10000),  specHelper.queue, 'someJob', [1,2,3], function(){
       scheduler.poll(function(){
         specHelper.popFromQueue(function(err, obj){
           should.not.exist(obj);

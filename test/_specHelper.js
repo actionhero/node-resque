@@ -46,7 +46,7 @@ exports.specHelper = {
     var self = this;
     self.worker = new self.AR.worker({connection: self.connectionDetails, queues: self.queue, timeout: self.timeout}, jobs, function(){
       self.scheduler = new self.AR.scheduler({connection: self.connectionDetails, timeout: self.timeout}, function(){
-        self.queue = new self.AR.queue({connection: self.connectionDetails, queue: self.queue}, function(){
+        self.queue = new self.AR.queue({connection: self.connectionDetails}, function(){
           callback();
         });
       });

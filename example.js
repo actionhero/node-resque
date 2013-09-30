@@ -76,10 +76,10 @@ scheduler.on('transfered_job',    function(timestamp, job){ console.log("schedul
 // CONNECT TO A QUEUE //
 ////////////////////////
 
-var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, function(){
-  queue.enqueue("add", [1,2]);
-  queue.enqueue("add", [2,3]);
-  queue.enqueueIn(3000,"subtract", [2,1]);
+var queue = new AR.queue({connection: connectionDetails}, function(){
+  queue.enqueue('math', "add", [1,2]);
+  queue.enqueue('math', "add", [2,3]);
+  queue.enqueueIn(3000, 'math', "subtract", [2,1]);
   jobsToComplete = 3;  
 });
 
