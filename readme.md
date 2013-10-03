@@ -31,14 +31,12 @@ var connectionDetails = {
 
 var jobs = {
   add: function(a,b,callback){
-    jobsToComplete--;
-    shutdown();
-    callback(a + b);
+    var answer = a + b; 
+    callback(answer);
   },
   subtract: function(a,b,callback){
-    jobsToComplete--;
-    shutdown();
-    callback(a - b);
+    var answer = a - b; 
+    callback(answer);
   },
 };
 
