@@ -24,18 +24,20 @@ var connectionDetails = {
 
 var jobsToComplete = 0;
 var jobs = {
-  add: function(job,callback){
-    jobsToComplete--;
-    shutdown();
+  add: function(a,b,callback){
+    worker.runWith('jobLock', function(){
+      jobsToComplete--;
+      shutdown();
 
-    var answer = job.args[0] + job.args[1]
-    callback(answer);
+      var answer = a + b; 
+      callback();
+    });
   },
-  subtract: function(job,callback){
+  subtract: function(a,b,callback){
     jobsToComplete--;
     shutdown();
     
-    var answer = job.args[0] - job.args[1]; 
+    var answer = a + b; 
     callback(answer);
   }
 };
@@ -44,7 +46,7 @@ var jobs = {
 // START A WORKER //
 ////////////////////
 
-var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+var worker = new AR.worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs, function(){
   worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers
   worker.start();
 });
@@ -66,6 +68,7 @@ worker.on('end',             function(){ console.log("worker ended"); })
 worker.on('cleaning_worker', function(worker, pid){ console.log("cleaning old worker " + worker); })
 worker.on('poll',            function(queue){ console.log("worker polling " + queue); })
 worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); })
+worker.on('reEnqueue',       function(queue, job, plugin){ console.log("reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
 worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
 worker.on('error',           function(queue, job, error){ console.log("job failed " + queue + " " + JSON.stringify(job) + " >> " + error); })
 worker.on('pause',           function(){ console.log("worker paused"); })

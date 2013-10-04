@@ -30,12 +30,12 @@ var connectionDetails = {
 //////////////////////////////
 
 var jobs = {
-  add: function(job,callback){
-    var answer = job.args[0] + job.args[1]
+  add: function(a,b,callback){
+    var answer = a + b; 
     callback(answer);
   },
-  subtract: function(job,callback){
-    var answer = job.args[0] - job.args[1]
+  subtract: function(a,b,callback){
+    var answer = a - b; 
     callback(answer);
   },
 };
@@ -44,7 +44,7 @@ var jobs = {
 // START A WORKER //
 ////////////////////
 
-var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+var worker = new AR.worker({connection: connectionDetails, queues: ['math']}, jobs, function(){
   worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers
   worker.start();
 });
@@ -66,6 +66,7 @@ worker.on('end',             function(){ console.log("worker ended"); })
 worker.on('cleaning_worker', function(worker, pid){ console.log("cleaning old worker " + worker); })
 worker.on('poll',            function(queue){ console.log("worker polling " + queue); })
 worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); })
+worker.on('reEnqueue',       function(queue, job, plugin){ console.log("reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
 worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
 worker.on('error',           function(queue, job, error){ console.log("job failed " + queue + " " + JSON.stringify(job) + " >> " + error); })
 worker.on('pause',           function(){ console.log("worker paused"); })
@@ -128,6 +129,48 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs
 var name = os.hostname() + ":" + process.pid() + counter;
 var worker = new AR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
 ```
+
+## Worker Plugins
+
+**TODO: have a way to load these where they don't need to be in this package**
+Just like ruby resque, you can write worker plugins.  They look look like this.  At the minimum, you must return to the callback within a `run` method on your prototype.
+
+```javascript
+var myPlugin = function(worker, job, callback){
+  var self = this;
+  self.worker = worker;
+  self.job = job;
+  self.callback = callback;
+}
+
+myPlugin.prototype.jobComplete(cb){
+  // I am run after a job.  I'll clean stuff up (even if the job errors, but not if the plugin says not to run)
+  cb();
+}
+
+myPlugin.prototype.run = function(){
+  // do stuff
+  self.callback(error, toRun)
+}
+
+exports.myPlugin = myPlugin;
+```
+
+And then your plugin can be invoked within a job like this:
+
+```javascript
+var jobs = function(job, callback){
+  worker.runWith(['myPlugin', 'otherPlugin'], function(){
+    // biz logic here
+    callback();
+  });
+}
+```
+
+**notes**
+
+- All plugins which return an error or `toRun = false` will cause the job to reEnqued and not run at this time
+
 
 ## Acknowledgments
 Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
