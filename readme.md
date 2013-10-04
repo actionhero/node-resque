@@ -30,12 +30,12 @@ var connectionDetails = {
 //////////////////////////////
 
 var jobs = {
-  add: function(a,b,callback){
-    var answer = a + b; 
+  add: function(job,callback){
+    var answer = job.args[0] + job.args[1]
     callback(answer);
   },
-  subtract: function(a,b,callback){
-    var answer = a - b; 
+  subtract: function(job,callback){
+    var answer = job.args[0] - job.args[1]
     callback(answer);
   },
 };

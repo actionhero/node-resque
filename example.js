@@ -24,15 +24,19 @@ var connectionDetails = {
 
 var jobsToComplete = 0;
 var jobs = {
-  add: function(a,b,callback){
+  add: function(job,callback){
     jobsToComplete--;
     shutdown();
-    callback(a + b);
+
+    var answer = job.args[0] + job.args[1]
+    callback(answer);
   },
-  subtract: function(a,b,callback){
+  subtract: function(job,callback){
     jobsToComplete--;
     shutdown();
-    callback(a - b);
+    
+    var answer = job.args[0] - job.args[1]; 
+    callback(answer);
   }
 };
 
