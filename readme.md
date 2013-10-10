@@ -30,13 +30,17 @@ var connectionDetails = {
 //////////////////////////////
 
 var jobs = {
-  add: function(a,b,callback){
-    var answer = a + b; 
-    callback(answer);
+  "add": {
+    perform: function(a,b,callback){
+      var answer = a + b; 
+      callback(answer);
+    },
   },
-  subtract: function(a,b,callback){
-    var answer = a - b; 
-    callback(answer);
+  "subtract": {
+    perform: function(a,b,callback){
+      var answer = a - b; 
+      callback(answer);
+    },
   },
 };
 
@@ -133,43 +137,64 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math', 'name
 ## Worker Plugins
 
 **TODO: have a way to load these where they don't need to be in this package**
-Just like ruby resque, you can write worker plugins.  They look look like this.  At the minimum, you must return to the callback within a `run` method on your prototype.
+Just like ruby resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
 
 ```javascript
-var myPlugin = function(worker, job, callback){
+
+var myPlugin = function(worker, job, args, options){
   var self = this;
   self.worker = worker;
   self.job = job;
-  self.callback = callback;
+  self.args = args;
+  self.options = options;
 }
 
-myPlugin.prototype.jobComplete(cb){
-  // I am run after a job.  I'll clean stuff up (even if the job errors, but not if the plugin says not to run)
-  cb();
+////////////////////
+// PLUGIN METHODS //
+////////////////////
+
+myPlugin.prototype.before_enqueue = function(callback){
+  // console.log("** before_enqueue")
+  callback(null, true);
 }
 
-myPlugin.prototype.run = function(){
-  // do stuff
-  self.callback(error, toRun)
+myPlugin.prototype.after_enqueue = function(callback){
+  // console.log("** after_enqueue")
+  callback(null, true);
 }
 
-exports.myPlugin = myPlugin;
+myPlugin.prototype.before_perform = function(callback){
+  // console.log("** before_perform")
+  callback(null, true);
+}
+
+myPlugin.prototype.after_perform = function(callback){
+  // console.log("** after_perform")
+  callback(null, true);
+}
+
 ```
 
 And then your plugin can be invoked within a job like this:
 
 ```javascript
-var jobs = function(job, callback){
-  worker.runWith(['myPlugin', 'otherPlugin'], function(){
-    // biz logic here
-    callback();
-  });
+var jobs = {
+  "add": {
+    plugins: [ 'myPlugin' ],
+    pluginOptions: {
+      myPlugin: { thing: 'stuff' },
+    },
+    perform: function(a,b,callback){
+      var answer = a + b; 
+      callback(answer);
+    },
+  },
 }
 ```
 
 **notes**
 
-- All plugins which return an error or `toRun = false` will cause the job to reEnqued and not run at this time
+- All plugins which return `(error, toRun)` an error or `toRun = false` will cause the job to reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
 
 
 ## Acknowledgments
