@@ -142,9 +142,10 @@ Just like ruby resque, you can write worker plugins.  They look look like this. 
 
 ```javascript
 
-var myPlugin = function(worker, func, job, args, options){
+var myPlugin = function(worker, func, queue, job, args, options){
   var self = this;
   self.worker = worker;
+  self.queue = queue;
   self.func = func;
   self.job = job;
   self.args = args;

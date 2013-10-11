@@ -25,16 +25,18 @@ var connectionDetails = {
 var jobsToComplete = 0;
 var jobs = {
   "add": {
-    plugins: [ 'queueLock' ],
+    plugins: [ 'jobLock' ],
     pluginOptions: {
-      queueLock: {},
+      jobLock: {},
     },
     perform: function(a,b,callback){
-      jobsToComplete--;
-      shutdown();
+      setTimeout(function(){
+        jobsToComplete--;
+        shutdown();
 
-      var answer = a + b; 
-      callback(answer);
+        var answer = a + b; 
+        callback(answer);
+      }, 1000);
     },
   },
   "subtract": {
@@ -91,9 +93,10 @@ scheduler.on('transfered_job',    function(timestamp, job){ console.log("schedul
 
 var queue = new AR.queue({connection: connectionDetails}, jobs, function(){
   queue.enqueue('math', "add", [1,2]);
+  queue.enqueue('math', "add", [1,2]);
   queue.enqueue('math', "add", [2,3]);
   queue.enqueueIn(3000, 'math', "subtract", [2,1]);
-  jobsToComplete = 3;  
+  jobsToComplete = 4;  
 });
 
 var shutdown = function(){
