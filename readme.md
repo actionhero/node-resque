@@ -134,16 +134,18 @@ var name = os.hostname() + ":" + process.pid() + counter;
 var worker = new AR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
 ```
 
-## Worker Plugins
+## Plugins
 
 **TODO: have a way to load these where they don't need to be in this package**
+
 Just like ruby resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
 
 ```javascript
 
-var myPlugin = function(worker, job, args, options){
+var myPlugin = function(worker, func, job, args, options){
   var self = this;
   self.worker = worker;
+  self.func = func;
   self.job = job;
   self.args = args;
   self.options = options;
