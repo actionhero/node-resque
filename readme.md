@@ -85,7 +85,7 @@ scheduler.on('transfered_job',    function(timestamp, job){ console.log("schedul
 // CONNECT TO A QUEUE //
 ////////////////////////
 
-var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, function(){
+var queue = new AR.queue({connection: connectionDetails}, jobs, function(){
   queue.enqueue('math', "add", [1,2]);
   queue.enqueue('math', "add", [2,3]);
   queue.enqueueIn(3000, 'math', "subtract", [2,1]);
@@ -94,7 +94,7 @@ var queue = new AR.queue({connection: connectionDetails, queue: 'math'}, functio
 
 ## Configutation Options:
 
-`new queue` requires only the "queue" variable to be set.
+`new queue` requires only the "queue" variable to be set.  You can also pass the `jobs` hash to it.
 
 `new worker` has some additonal options:
 
@@ -127,6 +127,7 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs
 - Be sure to call `worker.end()` before shutting down your application if you want to properly clear your worker status from resque
 - When ending your application, be sure to allow your workers time to finsih what they are working on
 - `worker.workerCleanup()` only works for *nix operating systems (osx, unix, solaris, etc)
+- If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor 
 - If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the patern `hostname:pid:unique_id`.  For example: 
 
 ```javascript
@@ -136,9 +137,9 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math', 'name
 
 ## Plugins
 
-**TODO: have a way to load these where they don't need to be in this package**
+**TODO: have a way to load plugins so they don't need to be in this package**
 
-Just like ruby resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
+Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
 
 ```javascript
 
@@ -197,7 +198,7 @@ var jobs = {
 
 **notes**
 
-- All plugins which return `(error, toRun)` an error or `toRun = false` will cause the job to reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
+- All plugins which return `(error, toRun)`.  if `toRun = false` on  `beforeEnqueue`, the job beign inqueued will be thrown away, and if `toRun = false` on `beforePerfporm`, the job will be reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
 
 
 ## Acknowledgments
