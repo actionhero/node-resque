@@ -2,7 +2,7 @@
   "author":      "Evan Tahler <evantahler@gmail.com>",
   "name":        "action_resque",
   "description": "an opinionated implamenation of resque in node",
-  "version":     "0.1.6",
+  "version":     "0.1.7",
   "homepage":    "http://github.com/evantahler/action_resque",
   "repository": {
     "type": "git",
