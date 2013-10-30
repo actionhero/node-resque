@@ -1,6 +1,8 @@
 # node-resque
 Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](https://github.com/resque/resque) and [resque scheduler](https://github.com/resque/resque-scheduler)
 
+[Find me on the NPM @ node-resque](https://npmjs.org/package/node-resque)
+
 [![Build Status](https://secure.travis-ci.org/taskrabbit/node-resque.png?branch=master)](http://travis-ci.org/taskrabbit/node-resque)
 
 ## Usage
