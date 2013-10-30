@@ -2,8 +2,8 @@
 // REQUIRE THE PACKAGE //
 /////////////////////////
 
-var AR = require(__dirname + "/index.js");
-// In your projects: var AR = require("action_resque");
+var NR = require(__dirname + "/index.js");
+// In your projects: var NR = require("node-resque");
 
 ///////////////////////////
 // SET UP THE CONNECTION //
@@ -54,7 +54,7 @@ var jobs = {
 // START A WORKER //
 ////////////////////
 
-var worker = new AR.worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs, function(){
+var worker = new NR.worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs, function(){
   worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers
   worker.start();
 });
@@ -63,7 +63,7 @@ var worker = new AR.worker({connection: connectionDetails, queues: ['math', 'oth
 // START A SCHEDULER //
 ///////////////////////
 
-var scheduler = new AR.scheduler({connection: connectionDetails}, function(){
+var scheduler = new NR.scheduler({connection: connectionDetails}, function(){
   scheduler.start();
 });
 
@@ -85,13 +85,13 @@ scheduler.on('start',             function(){ console.log("scheduler started"); 
 scheduler.on('end',               function(){ console.log("scheduler ended"); })
 scheduler.on('poll',              function(){ console.log("scheduler polling"); })
 scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
-scheduler.on('transfered_job',    function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
+scheduler.on('transferred_job',    function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
 
 ////////////////////////
 // CONNECT TO A QUEUE //
 ////////////////////////
 
-var queue = new AR.queue({connection: connectionDetails}, jobs, function(){
+var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
   queue.enqueue('math', "add", [1,2]);
   queue.enqueue('math', "add", [1,2]);
   queue.enqueue('math', "add", [2,3]);

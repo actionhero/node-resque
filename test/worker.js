@@ -18,7 +18,7 @@ describe('worker', function(){
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
-        queue = new specHelper.AR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
           done();
         });
       });
@@ -32,7 +32,7 @@ describe('worker', function(){
   });
 
   it("can connect", function(done){
-    worker = new specHelper.AR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs, function(){
+    worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs, function(){
       should.exist(worker);
       done()
     });
@@ -55,11 +55,11 @@ describe('worker', function(){
     it('can clear previously crashed workers from the same host', function(done){
       var name1 = os.hostname() + ":" + "000" // fake pid
       var name2 = os.hostname() + ":" + process.pid // fake pid
-      worker1 = new specHelper.AR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs, function(){
+      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs, function(){
         worker1.init(function(){
           worker1.running = false;
           setTimeout(function(){
-            worker2 = new specHelper.AR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs, function(){
+            worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs, function(){
               worker2.on('cleaning_worker', function(worker, pid){
                 worker.should.equal(name1);
                 done();
@@ -76,7 +76,7 @@ describe('worker', function(){
   describe('integration', function(){
 
     beforeEach(function(done){
-      worker = new specHelper.AR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+      worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
         done();
       });
     });

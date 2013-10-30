@@ -28,7 +28,7 @@
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
-        queue = new specHelper.AR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, jobs, function(){
+        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, jobs, function(){
           done();
         });
       });
@@ -43,8 +43,8 @@
 
   describe('jobLock',function(){
     it('will not run 2 jobs with the same args at the same time', function(done){
-      worker1 = new specHelper.AR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
-        worker2 = new specHelper.AR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+        worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
           var startTime = new Date().getTime();
           var completed = 0;
 
@@ -74,8 +74,8 @@
     });
 
     it('will run 2 jobs with the different args at the same time', function(done){
-      worker1 = new specHelper.AR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
-        worker2 = new specHelper.AR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+        worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
           var startTime = new Date().getTime();
           var completed = 0;
 

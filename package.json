@@ -1,12 +1,12 @@
 {
   "author":      "Evan Tahler <evantahler@gmail.com>",
-  "name":        "action_resque",
-  "description": "an opinionated implamenation of resque in node",
-  "version":     "0.1.7",
-  "homepage":    "http://github.com/evantahler/action_resque",
+  "name":        "node-resque",
+  "description": "an opinionated implementation of resque in node",
+  "version":     "0.1.0",
+  "homepage":    "http://github.com/taskrabbit/node-resque",
   "repository": {
     "type": "git",
-    "url": "git://github.com/evantahler/action_resque.git"
+    "url": "git://github.com/taskrabbit/node-resque.git"
   },
   "main":        "index.js",
   "keywords": ["delayed", "queue", "resque", "redis"],

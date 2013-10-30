@@ -8,7 +8,7 @@ describe('scheduler', function(){
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
-        queue = new specHelper.AR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
           done();
         });
       });
@@ -22,7 +22,7 @@ describe('scheduler', function(){
   });
 
   it("can connect", function(done){
-    scheduler = new specHelper.AR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, function(){
+    scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, function(){
       should.exist(scheduler);
       done()
     });

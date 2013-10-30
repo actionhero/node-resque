@@ -13,4 +13,4 @@ services:
   - redis-server
 # before_script:
 after_failure: 
-  - "cat /home/travis/builds/evantahler/actionHero/npm-debug.log"
+  - "cat /home/travis/builds/taskrabbit/node-resque/npm-debug.log"

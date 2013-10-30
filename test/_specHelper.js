@@ -3,7 +3,7 @@ var namespace = "resque_test";
 var queue = "test_queue";
 
 exports.specHelper = {
-  AR: require(__dirname + "/../index.js"),
+  NR: require(__dirname + "/../index.js"),
   namespace: namespace,
   queue: queue,
   timeout: 500,
@@ -44,9 +44,9 @@ exports.specHelper = {
   },
   startAll: function(jobs, callback){
     var self = this;
-    self.worker = new self.AR.worker({connection: self.connectionDetails, queues: self.queue, timeout: self.timeout}, jobs, function(){
-      self.scheduler = new self.AR.scheduler({connection: self.connectionDetails, timeout: self.timeout}, function(){
-        self.queue = new self.AR.queue({connection: self.connectionDetails}, function(){
+    self.worker = new self.NR.worker({connection: self.connectionDetails, queues: self.queue, timeout: self.timeout}, jobs, function(){
+      self.scheduler = new self.NR.scheduler({connection: self.connectionDetails, timeout: self.timeout}, function(){
+        self.queue = new self.NR.queue({connection: self.connectionDetails}, function(){
           callback();
         });
       });

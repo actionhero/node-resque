@@ -1,7 +1,7 @@
-# actionQueue
+# node-resque
 Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](https://github.com/resque/resque) and [resque scheduler](https://github.com/resque/resque-scheduler)
 
-[![Build Status](https://secure.travis-ci.org/evantahler/action_resque.png?branch=master)](http://travis-ci.org/evantahler/action_resque)
+[![Build Status](https://secure.travis-ci.org/taskrabbit/node-resque.png?branch=master)](http://travis-ci.org/taskrabbit/node-resque)
 
 ## Usage
 
@@ -12,7 +12,7 @@ I learn best by examples:
 // REQUIRE THE PACKAGE //
 /////////////////////////
 
-var AR = require("action_resque");
+var NR = require("node-resque");
 
 ///////////////////////////
 // SET UP THE CONNECTION //
@@ -48,7 +48,7 @@ var jobs = {
 // START A WORKER //
 ////////////////////
 
-var worker = new AR.worker({connection: connectionDetails, queues: ['math']}, jobs, function(){
+var worker = new NR.worker({connection: connectionDetails, queues: ['math']}, jobs, function(){
   worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers
   worker.start();
 });
@@ -57,7 +57,7 @@ var worker = new AR.worker({connection: connectionDetails, queues: ['math']}, jo
 // START A SCHEDULER //
 ///////////////////////
 
-var scheduler = new AR.scheduler({connection: connectionDetails}, function(){
+var scheduler = new NR.scheduler({connection: connectionDetails}, function(){
   scheduler.start();
 });
 
@@ -79,13 +79,13 @@ scheduler.on('start',             function(){ console.log("scheduler started"); 
 scheduler.on('end',               function(){ console.log("scheduler ended"); })
 scheduler.on('poll',              function(){ console.log("scheduler polling"); })
 scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
-scheduler.on('transfered_job',    function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
+scheduler.on('transferred_job',    function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
 
 ////////////////////////
 // CONNECT TO A QUEUE //
 ////////////////////////
 
-var queue = new AR.queue({connection: connectionDetails}, jobs, function(){
+var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
   queue.enqueue('math', "add", [1,2]);
   queue.enqueue('math', "add", [2,3]);
   queue.enqueueIn(3000, 'math', "subtract", [2,1]);
@@ -118,7 +118,7 @@ var connectionDetails = {
   namespace: "resque",
 }
 
-var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
   worker.start();
 });
 ```
@@ -132,7 +132,7 @@ var worker = new AR.worker({connection: connectionDetails, queues: 'math'}, jobs
 
 ```javascript
 var name = os.hostname() + ":" + process.pid() + counter;
-var worker = new AR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
+var worker = new NR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
 ```
 
 ## Plugins

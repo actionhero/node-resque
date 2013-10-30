@@ -19,7 +19,7 @@ describe('queue', function(){
   });
 
   it("can connect", function(done){
-    queue = new specHelper.AR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+    queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
       should.exist(queue);
       done()
     });
