@@ -146,33 +146,29 @@
 
     it('will not enque a job with the same args if it is already in the delayed queue', function(done){
       queue.enqueueIn((10 * 1000) ,specHelper.queue, "uniqueJob", [1,2], function(){
-        setTimeout(function(){
-          queue.enqueue(specHelper.queue, "uniqueJob", [1,2], function(){
-            specHelper.redis.zcount(specHelper.namespace + ":delayed_queue_schedule", '-inf', '+inf', function(err, delayedLen){
-              queue.length(specHelper.queue, function(err, queueLen){
-                delayedLen.should.equal(1);
-                queueLen.should.equal(0);
-                done();
-              });
+        queue.enqueue(specHelper.queue, "uniqueJob", [1,2], function(){
+          specHelper.redis.zcount(specHelper.namespace + ":delayed_queue_schedule", '-inf', '+inf', function(err, delayedLen){
+            queue.length(specHelper.queue, function(err, queueLen){
+              delayedLen.should.equal(1);
+              queueLen.should.equal(0);
+              done();
             });
           });
-        }, 1001)
+        });
       });
     });
 
     it('will enque a job with the different args', function(done){
       queue.enqueueIn((10 * 1000) ,specHelper.queue, "uniqueJob", [1,2], function(){
-        setTimeout(function(){
-          queue.enqueue(specHelper.queue, "uniqueJob", [3,4], function(){
-            specHelper.redis.zcount(specHelper.namespace + ":delayed_queue_schedule", '-inf', '+inf', function(err, delayedLen){
-              queue.length(specHelper.queue, function(err, queueLen){
-                delayedLen.should.equal(1);
-                queueLen.should.equal(1);
-                done();
-              });
+        queue.enqueue(specHelper.queue, "uniqueJob", [3,4], function(){
+          specHelper.redis.zcount(specHelper.namespace + ":delayed_queue_schedule", '-inf', '+inf', function(err, delayedLen){
+            queue.length(specHelper.queue, function(err, queueLen){
+              delayedLen.should.equal(1);
+              queueLen.should.equal(1);
+              done();
             });
           });
-        }, 1001)
+        });
       });
     });
 

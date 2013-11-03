@@ -6,11 +6,15 @@ describe('queue', function(){
   
   before(function(done){
     specHelper.connect(function(){
-      specHelper.cleanup(function(){
-        done();
-      });
+      done();
     });
   });
+
+  beforeEach(function(done){
+    specHelper.cleanup(function(){
+      done();
+    });
+  })
 
   after(function(done){
     specHelper.cleanup(function(){
@@ -77,6 +81,40 @@ describe('queue', function(){
         })
       });
     })
+  });
+
+  it('can find previously scheduled jobs', function(done){
+    queue.enqueueAt(10000, specHelper.queue, 'someJob', [1,2,3], function(){
+      queue.scheduledAt(specHelper.queue, 'someJob', [1,2,3], function(err, timestamps){
+        timestamps.length.should.equal(1);
+        timestamps[0].should.equal('10');
+        done();
+      });
+    });
+  });
+
+  it('can deleted an enqued job', function(done){
+    queue.enqueue(specHelper.queue, 'someJob', [1,2,3], function(){
+      queue.length(specHelper.queue, function(err, len){
+        len.should.equal(1);
+        queue.del(specHelper.queue, 'someJob', [1,2,3], function(){
+          queue.length(specHelper.queue, function(err, len){
+            len.should.equal(0);
+            done();
+          });
+        }); 
+      });
+    });
+  });
+
+  it('can deleted a delayed job', function(done){
+    queue.enqueueAt(10000, specHelper.queue, 'someJob', [1,2,3], function(){
+      queue.delDelayed(specHelper.queue, 'someJob', [1,2,3], function(err, timestamps){
+        timestamps.length.should.equal(1);
+        timestamps[0].should.equal('10');
+        done();
+      });
+    });
   });
 
 });
