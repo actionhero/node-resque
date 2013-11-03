@@ -140,15 +140,15 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math', 'name
 
 Additonal methods provided on the `queue` object:
 
-- queue.prototype.queues = function(callback) 
+- **queue.prototype.queues** = function(callback) 
   - callback(error, array_of_queues)
-- queue.prototype.length = function(q, callback)
+- **queue.prototype.length** = function(q, callback)
   - callback(error, number_of_elements_in_queue)
-- queue.prototype.del = function(q, func, args, count, callback)
+- **queue.prototype.del** = function(q, func, args, count, callback)
   - callback(error, number_of_items_deleted)
-- queue.prototype.delDelayed = function(q, func, args, callback)
+- **queue.prototype.delDelayed** = function(q, func, args, callback)
   - callback(error, timestamps_the_job_was_removed_from)
-- queue.prototype.scheduledAt = function(q, func, args, callback)
+- **queue.prototype.scheduledAt** = function(q, func, args, callback)
   - callback(error, timestamps_the_job_is_scheduled_for)
 
 ## Plugins
