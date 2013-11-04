@@ -53,15 +53,16 @@ describe('worker', function(){
   describe('crashing workers', function(){
 
     it('can clear previously crashed workers from the same host', function(done){
-      var name1 = os.hostname() + ":" + "000" // fake pid
-      var name2 = os.hostname() + ":" + process.pid // fake pid
+      var name1 = os.hostname() + ":" + "0" // fake pid
+      var name2 = os.hostname() + ":" + process.pid // real pid
       worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs, function(){
         worker1.init(function(){
           worker1.running = false;
           setTimeout(function(){
             worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs, function(){
               worker2.on('cleaning_worker', function(worker, pid){
-                worker.should.equal(name1);
+                worker.should.equal(name1 + ":*");
+                pid.should.equal(0);
                 done();
               });
               worker2.workerCleanup();
