@@ -63,7 +63,6 @@ describe('scheduler', function(){
         });
       });
     });
-    done()
   });
 
 });
