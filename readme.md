@@ -3,6 +3,8 @@ Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](ht
 
 [Find me on the NPM @ node-resque](https://npmjs.org/package/node-resque)
 
+[![Nodei stats](https://nodei.co/npm/node-resque.png?downloads=true)](https://npmjs.org/package/node-resque)
+
 [![Build Status](https://secure.travis-ci.org/taskrabbit/node-resque.png?branch=master)](http://travis-ci.org/taskrabbit/node-resque)
 
 ## Usage
