@@ -9,7 +9,7 @@
       plugins: [ 'jobLock' ],
       pluginOptions: { jobLock: {}, },
       perform: function(a,b,callback){
-        var answer = a + b; 
+        var answer = a + b;
         setTimeout(function(){
           callback(answer);
         }, jobDelay)
@@ -19,10 +19,10 @@
       plugins: [ 'queueLock', 'delayQueueLock' ],
       pluginOptions: { queueLock: {}, delayQueueLock: {} },
       perform: function(a,b,callback){
-        var answer = a + b; 
+        var answer = a + b;
         callback(answer);
       },
-    } 
+    }
   };
 
   before(function(done){
@@ -38,6 +38,27 @@
   after(function(done){
     specHelper.cleanup(function(){
       done();
+    });
+  });
+
+  describe('custom plugins', function(){
+    it('runs a custom plugin outside of the plugins directory', function(done){
+      var jobs = {
+        "myJob": {
+          plugins: [ require('./custom-plugin') ],
+          perform: function(a,b,callback){
+            done(new Error('should not run'))
+          },
+        },
+      };
+      var queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, jobs, function(){
+        queue.enqueue(specHelper.queue, "myJob", [1,2], function(){
+          queue.length(specHelper.queue, function (err, len) {
+            len.should.equal(0);
+            done();
+          })
+        });
+      });
     });
   });
 
@@ -119,7 +140,7 @@
           queue.length(specHelper.queue, function(err, len){
             len.should.equal(1);
             done();
-          }); 
+          });
         });
       });
     });
@@ -130,7 +151,7 @@
           queue.length(specHelper.queue, function(err, len){
             len.should.equal(2);
             done();
-          }); 
+          });
         });
       });
     });
