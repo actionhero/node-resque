@@ -34,13 +34,13 @@ var connectionDetails = {
 var jobs = {
   "add": {
     perform: function(a,b,callback){
-      var answer = a + b; 
+      var answer = a + b;
       callback(answer);
     },
   },
   "subtract": {
     perform: function(a,b,callback){
-      var answer = a - b; 
+      var answer = a - b;
       callback(answer);
     },
   },
@@ -109,7 +109,7 @@ options = {
 }
 ```
 
-The configuration hash passed to `new worker`, `new scheduler` or `new queue` can also take a `connection` option.  
+The configuration hash passed to `new worker`, `new scheduler` or `new queue` can also take a `connection` option.
 
 ```javascript
 var connectionDetails = {
@@ -129,8 +129,8 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs
 - Be sure to call `worker.end()` before shutting down your application if you want to properly clear your worker status from resque
 - When ending your application, be sure to allow your workers time to finsih what they are working on
 - `worker.workerCleanup()` only works for *nix operating systems (osx, unix, solaris, etc)
-- If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor 
-- If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the patern `hostname:pid+unique_id`.  For example: 
+- If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor
+- If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the patern `hostname:pid+unique_id`.  For example:
 
 ```javascript
 var name = os.hostname() + ":" + process.pid() + "+" + counter;
@@ -140,7 +140,7 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math', 'name
 
 Additonal methods provided on the `queue` object:
 
-- **queue.prototype.queues** = function(callback) 
+- **queue.prototype.queues** = function(callback)
   - callback(error, array_of_queues)
 - **queue.prototype.length** = function(q, callback)
   - callback(error, number_of_elements_in_queue)
@@ -152,8 +152,6 @@ Additonal methods provided on the `queue` object:
   - callback(error, timestamps_the_job_is_scheduled_for)
 
 ## Plugins
-
-**TODO: have a way to load plugins so they don't need to be in this package**
 
 Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
 
@@ -205,7 +203,7 @@ var jobs = {
       myPlugin: { thing: 'stuff' },
     },
     perform: function(a,b,callback){
-      var answer = a + b; 
+      var answer = a + b;
       callback(answer);
     },
   },
@@ -215,6 +213,24 @@ var jobs = {
 **notes**
 
 - All plugins which return `(error, toRun)`.  if `toRun = false` on  `beforeEnqueue`, the job beign inqueued will be thrown away, and if `toRun = false` on `beforePerfporm`, the job will be reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
+
+- There are a few included plugins, all in the lib/plugins/* directory. You can rewrite you own and include it like this:
+
+```javascript
+var jobs = {
+  "add": {
+    plugins: [ require('myplugin') ],
+    pluginOptions: {
+      myPlugin: { thing: 'stuff' },
+    },
+    perform: function(a,b,callback){
+      var answer = a + b;
+      callback(answer);
+    },
+  },
+}
+```
+
 
 
 ## Acknowledgments
