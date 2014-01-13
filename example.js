@@ -34,8 +34,8 @@ var jobs = {
         jobsToComplete--;
         shutdown();
 
-        var answer = a + b; 
-        callback(answer);
+        var answer = a + b;
+        callback(null, answer);
       }, 1000);
     },
   },
@@ -44,8 +44,8 @@ var jobs = {
       jobsToComplete--;
       shutdown();
 
-      var answer = a - b; 
-      callback(answer);
+      var answer = a - b;
+      callback(null, answer);
     },
   },
 };
@@ -96,7 +96,7 @@ var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
   queue.enqueue('math', "add", [1,2]);
   queue.enqueue('math', "add", [2,3]);
   queue.enqueueIn(3000, 'math', "subtract", [2,1]);
-  jobsToComplete = 4;  
+  jobsToComplete = 4;
 });
 
 var shutdown = function(){
