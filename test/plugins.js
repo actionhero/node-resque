@@ -11,7 +11,7 @@
       perform: function(a,b,callback){
         var answer = a + b;
         setTimeout(function(){
-          callback(answer);
+          callback(null, answer);
         }, jobDelay)
       },
     },
@@ -20,7 +20,7 @@
       pluginOptions: { queueLock: {}, delayQueueLock: {} },
       perform: function(a,b,callback){
         var answer = a + b;
-        callback(answer);
+        callback(null, answer);
       },
     }
   };

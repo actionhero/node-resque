@@ -9,12 +9,12 @@ describe('worker', function(){
   var jobs = {
     "add": {
       perform: function(a,b,callback){
-        var answer = a + b; 
-        callback(answer);
+        var answer = a + b;
+        callback(null, answer);
       },
-    } 
+    }
   };
-  
+
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
@@ -69,7 +69,7 @@ describe('worker', function(){
             });
           }, 500);
         });
-      });    
+      });
     });
 
   });
@@ -88,7 +88,7 @@ describe('worker', function(){
       });
     });
 
-    it('can work a job and return succesfull things', function(done){
+    it('can work a job and return succesful things', function(done){
       var listener = worker.on('success', function(q, job, result){
         q.should.equal(specHelper.queue);
         job.class.should.equal('add');
@@ -127,6 +127,6 @@ describe('worker', function(){
     });
 
 
-  });  
+  });
 
 });

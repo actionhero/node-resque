@@ -35,13 +35,13 @@ var jobs = {
   "add": {
     perform: function(a,b,callback){
       var answer = a + b;
-      callback(answer);
+      callback(null, answer);
     },
   },
   "subtract": {
     perform: function(a,b,callback){
       var answer = a - b;
-      callback(answer);
+      callback(null, answer);
     },
   },
 };
@@ -204,7 +204,7 @@ var jobs = {
     },
     perform: function(a,b,callback){
       var answer = a + b;
-      callback(answer);
+      callback(null, answer);
     },
   },
 }
@@ -225,7 +225,7 @@ var jobs = {
     },
     perform: function(a,b,callback){
       var answer = a + b;
-      callback(answer);
+      callback(null, answer);
     },
   },
 }
