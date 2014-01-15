@@ -2,7 +2,7 @@
 // REQUIRE THE PACKAGE //
 /////////////////////////
 
-var NR = require(__dirname + "/index.js");
+var NR = require(__dirname + "/../index.js");
 // In your projects: var NR = require("node-resque");
 
 ///////////////////////////
@@ -18,34 +18,57 @@ var connectionDetails = {
   // looping: true
 }
 
+//////////////////////
+// BUILD THE PLUGIN //
+//////////////////////
+
+var myPlugin = function(worker, func, queue, job, args, options){
+  var self = this;
+  self.name = 'myPlugin'
+  self.worker = worker;
+  self.queue = queue;
+  self.func = func;
+  self.job = job;
+  self.args = args;
+  self.options = options;
+}
+
+////////////////////
+// PLUGIN METHODS //
+////////////////////
+
+myPlugin.prototype.before_enqueue = function(callback){
+  callback(null, true);
+}
+
+myPlugin.prototype.after_enqueue = function(callback){
+  callback(null, true);
+}
+
+myPlugin.prototype.before_perform = function(callback){
+  console.log(this.options.messagePrefix + " | " + JSON.stringify(this.args))
+  callback(null, true);
+}
+
+myPlugin.prototype.after_perform = function(callback){
+  callback(null, true);
+}
+
 //////////////////////////////
 // DEFINE YOUR WORKER TASKS //
 //////////////////////////////
 
 var jobsToComplete = 0;
 var jobs = {
-  "add": {
-    plugins: [ 'jobLock' ],
+  "jobby": {
+    plugins: [ myPlugin ],
     pluginOptions: {
-      jobLock: {},
+      myPlugin: {messagePrefix: '!!!'},
     },
-    perform: function(a,b,callback){
-      setTimeout(function(){
-        jobsToComplete--;
-        shutdown();
-
-        var answer = a + b;
-        callback(null, answer);
-      }, 1000);
-    },
-  },
-  "subtract": {
     perform: function(a,b,callback){
       jobsToComplete--;
       shutdown();
-
-      var answer = a - b;
-      callback(null, answer);
+      callback(null);
     },
   },
 };
@@ -54,17 +77,9 @@ var jobs = {
 // START A WORKER //
 ////////////////////
 
-var worker = new NR.worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs, function(){
+var worker = new NR.worker({connection: connectionDetails, queues: ['default']}, jobs, function(){
   worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers
   worker.start();
-});
-
-///////////////////////
-// START A SCHEDULER //
-///////////////////////
-
-var scheduler = new NR.scheduler({connection: connectionDetails}, function(){
-  scheduler.start();
 });
 
 /////////////////////////
@@ -81,31 +96,20 @@ worker.on('success',         function(queue, job, result){ console.log("job succ
 worker.on('error',           function(queue, job, error){ console.log("job failed " + queue + " " + JSON.stringify(job) + " >> " + error); })
 worker.on('pause',           function(){ console.log("worker paused"); })
 
-scheduler.on('start',             function(){ console.log("scheduler started"); })
-scheduler.on('end',               function(){ console.log("scheduler ended"); })
-scheduler.on('poll',              function(){ console.log("scheduler polling"); })
-scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
-scheduler.on('transferred_job',    function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
-
 ////////////////////////
 // CONNECT TO A QUEUE //
 ////////////////////////
 
 var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
-  queue.enqueue('math', "add", [1,2]);
-  queue.enqueue('math', "add", [1,2]);
-  queue.enqueue('math', "add", [2,3]);
-  queue.enqueueIn(3000, 'math', "subtract", [2,1]);
-  jobsToComplete = 4;
+  queue.enqueue('default', "jobby", [1,2]);
+  jobsToComplete = 1;
 });
 
 var shutdown = function(){
   if(jobsToComplete === 0){
     setTimeout(function(){
-      scheduler.end(function(){
-        worker.end(function(){
-          process.exit();
-        });
+      worker.end(function(){
+        process.exit();
       });
     }, 500);
   }
