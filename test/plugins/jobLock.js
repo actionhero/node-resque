@@ -74,6 +74,34 @@ describe('plugins', function(){
       });
     })
 
+    it('allows the key to be specified as a function', function(done) {
+      var calls = 0;
+      var jobs = {
+        jobLockAdd: {
+          plugins: [ 'jobLock' ],
+          pluginOptions: {
+            jobLock: {
+              key: function(){
+                // Once to create, once to delete
+                if (++calls == 2) {
+                  done();
+                }
+                return this.worker.connection.key('customKey', Math.max.apply(Math.max, this.args));
+              }
+            }
+          },
+          perform: function(a,b,callback){
+            callback(null, a + b)
+          }
+        }
+      }
+      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+        queue.enqueue(specHelper.queue, "jobLockAdd", [1,2], function(){
+          worker1.start();
+        });
+      })
+    })
+
     it('will not run 2 jobs with the same args at the same time', function(done){
       worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
         worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
