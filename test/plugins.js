@@ -63,6 +63,37 @@
   });
 
   describe('jobLock',function(){
+    it('will not lock jobs since arg objects are different', function(done){
+      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+        worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+          var startTime = new Date().getTime();
+          var completed = 0;
+
+          var onComplete = function(q, job, result){
+            completed++;
+            if(completed == 2){
+              worker1.end();
+              worker2.end();
+              (new Date().getTime() - startTime).should.be.below(jobDelay * 2);
+              done()
+            }
+          };
+
+          worker1.on('success', onComplete);
+          worker2.on('success', onComplete);
+          queue.enqueue(specHelper.queue, "slowAdd", [{name: 'Walter White'},2], function(){
+            queue.enqueue(specHelper.queue, "slowAdd", [{name: 'Jesse Pinkman'},2], function(){
+              worker1.start();
+              worker2.start();
+            });
+          });
+
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); })
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); })
+        });
+      });
+    })
+
     it('will not run 2 jobs with the same args at the same time', function(done){
       worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
         worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
