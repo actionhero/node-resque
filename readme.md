@@ -159,6 +159,7 @@ Just like ruby's resque, you can write worker plugins.  They look look like this
 
 var myPlugin = function(worker, func, queue, job, args, options){
   var self = this;
+  self.name = 'myPlugin';
   self.worker = worker;
   self.queue = queue;
   self.func = func;
@@ -230,8 +231,6 @@ var jobs = {
   },
 }
 ```
-
-
 
 ## Acknowledgments
 Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!

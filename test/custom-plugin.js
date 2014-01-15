@@ -1,6 +1,7 @@
 // Simple plugin to prevent all jobs
 var CustomPlugin = function(worker, func, queue, job, args, options){
   var self = this;
+  self.name = 'CustomPlugin';
   self.worker = worker;
   self.queue = queue;
   self.func = func;
