@@ -1,7 +1,8 @@
+var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var should = require('should');
+
 describe('worker', function(){
 
-  var specHelper = require(__dirname + "/_specHelper.js").specHelper;
-  var should = require('should');
   var os = require('os');
   var worker;
   var queue;
@@ -34,17 +35,14 @@ describe('worker', function(){
   it("can connect", function(done){
     worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs, function(){
       should.exist(worker);
+      worker.end();
       done()
     });
   });
 
-  it("can boot", function(done){
-    worker.start();
-    done()
-  });
-
-  it('can be stopped', function(done){
+  it("can boot and stop", function(done){
     this.timeout(specHelper.timeout * 3)
+    worker.start();
     worker.end(function(){
       done();
     });
@@ -55,11 +53,11 @@ describe('worker', function(){
     it('can clear previously crashed workers from the same host', function(done){
       var name1 = os.hostname() + ":" + "0" // fake pid
       var name2 = os.hostname() + ":" + process.pid // real pid
-      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs, function(){
+      var worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs, function(){
         worker1.init(function(){
           worker1.running = false;
           setTimeout(function(){
-            worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs, function(){
+            var worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs, function(){
               worker2.on('cleaning_worker', function(worker, pid){
                 worker.should.equal(name1 + ":*");
                 pid.should.equal(0);

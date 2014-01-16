@@ -1,7 +1,8 @@
- describe('plugins', function(){
+var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var should = require('should');
 
-  var specHelper = require(__dirname + "/_specHelper.js").specHelper;
-  var should = require('should');
+describe('plugins', function(){
+
   var jobDelay = 100;
 
   var jobs = {
@@ -35,30 +36,9 @@
     });
   });
 
-  after(function(done){
+  afterEach(function(done){
     specHelper.cleanup(function(){
       done();
-    });
-  });
-
-  describe('custom plugins', function(){
-    it('runs a custom plugin outside of the plugins directory', function(done){
-      var jobs = {
-        "myJob": {
-          plugins: [ require('./custom-plugin') ],
-          perform: function(a,b,callback){
-            done(new Error('should not run'))
-          },
-        },
-      };
-      var queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, jobs, function(){
-        queue.enqueue(specHelper.queue, "myJob", [1,2], function(){
-          queue.length(specHelper.queue, function (err, len) {
-            len.should.equal(0);
-            done();
-          })
-        });
-      });
     });
   });
 
@@ -88,8 +68,8 @@
             });
           });
 
-          worker1.on('error', function(queue, job, error){ console.log(error.stack); })
-          worker2.on('error', function(queue, job, error){ console.log(error.stack); })
+          worker1.on('error', function(queue, job, error){ console.log('A-1'); })
+          worker2.on('error', function(queue, job, error){ console.log('A-2'); })
         });
       });
     })
@@ -119,8 +99,8 @@
             });
           });
 
-          worker1.on('error', function(queue, job, error){ console.log(error.stack); })
-          worker2.on('error', function(queue, job, error){ console.log(error.stack); })
+          worker1.on('error', function(queue, job, error){ console.log('B-1'); })
+          worker2.on('error', function(queue, job, error){ console.log('B-2'); })
         });
       });
     });
@@ -136,8 +116,9 @@
             if(completed == 2){
               worker1.end();
               worker2.end();
-              (new Date().getTime() - startTime).should.be.below(jobDelay * 2);
-              done()
+              var delta = (new Date().getTime() - startTime);
+              delta.should.be.below(jobDelay * 2);
+              done();
             }
           };
 
@@ -157,73 +138,4 @@
     });
   });
 
-  describe('queueLock',function(){
-
-    beforeEach(function(done){
-      specHelper.cleanup(function(){
-        done();
-      });
-    });
-
-    it('will not enque a job with the same args if it is already in the queue', function(done){
-      queue.enqueue(specHelper.queue, "uniqueJob", [1,2], function(){
-        queue.enqueue(specHelper.queue, "uniqueJob", [1,2], function(){
-          queue.length(specHelper.queue, function(err, len){
-            len.should.equal(1);
-            done();
-          });
-        });
-      });
-    });
-
-    it('will enque a job with the different args', function(done){
-      queue.enqueue(specHelper.queue, "uniqueJob", [1,2], function(){
-        queue.enqueue(specHelper.queue, "uniqueJob", [3,4], function(){
-          queue.length(specHelper.queue, function(err, len){
-            len.should.equal(2);
-            done();
-          });
-        });
-      });
-    });
-  });
-
-  describe('delayQueueLock',function(){
-
-    beforeEach(function(done){
-      specHelper.cleanup(function(){
-        done();
-      });
-    });
-
-    it('will not enque a job with the same args if it is already in the delayed queue', function(done){
-      queue.enqueueIn((10 * 1000) ,specHelper.queue, "uniqueJob", [1,2], function(){
-        queue.enqueue(specHelper.queue, "uniqueJob", [1,2], function(){
-          specHelper.redis.zcount(specHelper.namespace + ":delayed_queue_schedule", '-inf', '+inf', function(err, delayedLen){
-            queue.length(specHelper.queue, function(err, queueLen){
-              delayedLen.should.equal(1);
-              queueLen.should.equal(0);
-              done();
-            });
-          });
-        });
-      });
-    });
-
-    it('will enque a job with the different args', function(done){
-      queue.enqueueIn((10 * 1000) ,specHelper.queue, "uniqueJob", [1,2], function(){
-        queue.enqueue(specHelper.queue, "uniqueJob", [3,4], function(){
-          specHelper.redis.zcount(specHelper.namespace + ":delayed_queue_schedule", '-inf', '+inf', function(err, delayedLen){
-            queue.length(specHelper.queue, function(err, queueLen){
-              delayedLen.should.equal(1);
-              queueLen.should.equal(1);
-              done();
-            });
-          });
-        });
-      });
-    });
-
-  });
-
-})
+});

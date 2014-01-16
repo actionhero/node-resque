@@ -32,15 +32,17 @@ exports.specHelper = {
   },
   cleanup: function(callback){
     var self = this;
-    self.redis.keys(self.namespace + "*", function(err, keys){
-      if(keys.length == 0){ 
-        callback(); 
-      }else{
-        self.redis.del(keys, function(){
-          callback();
-        });
-      }
-    });
+    setTimeout(function(){
+      self.redis.keys(self.namespace + "*", function(err, keys){
+        if(keys.length == 0){ 
+          callback(); 
+        }else{
+          self.redis.del(keys, function(){
+            callback();
+          });
+        }
+      });
+    }, 200);
   },
   startAll: function(jobs, callback){
     var self = this;

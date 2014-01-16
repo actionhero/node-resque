@@ -1,7 +1,8 @@
+var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var should = require('should');
+
 describe('queue', function(){
 
-  var specHelper = require(__dirname + "/_specHelper.js").specHelper;
-  var should = require('should');
   var queue;
   
   before(function(done){

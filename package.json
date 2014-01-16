@@ -21,6 +21,6 @@
     "should": "2.1.x"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec"
+    "test": "mocha"
   }
 }

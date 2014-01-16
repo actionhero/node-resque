@@ -1,7 +1,7 @@
-describe('connection', function(){
+var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var should = require('should');
 
-  var specHelper = require(__dirname + "/_specHelper.js").specHelper;
-  var should = require('should');
+describe('connection', function(){
   
   before(function(done){
     specHelper.connect(function(){
