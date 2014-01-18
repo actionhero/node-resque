@@ -36,7 +36,7 @@ describe('plugins', function(){
     });
   });
 
-  after(function(done){
+  afterEach(function(done){
     specHelper.cleanup(function(){
       done();
     });

@@ -68,8 +68,8 @@ describe('plugins', function(){
             });
           });
 
-          worker1.on('error', function(queue, job, error){ console.log('A-1'); })
-          worker2.on('error', function(queue, job, error){ console.log('A-2'); })
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); })
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); })
         });
       });
     })
@@ -127,8 +127,8 @@ describe('plugins', function(){
             });
           });
 
-          worker1.on('error', function(queue, job, error){ console.log('B-1'); })
-          worker2.on('error', function(queue, job, error){ console.log('B-2'); })
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); })
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); })
         });
       });
     });
