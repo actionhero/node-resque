@@ -12,7 +12,12 @@ describe('worker', function(){
       perform: function(a,b,callback){
         var answer = a + b;
         callback(null, answer);
-      },
+      }
+    },
+    "badAdd": {
+      perform: function(a,b,callback){
+        callback(new Error("Blue Smoke"));
+      }
     }
   };
 
@@ -85,6 +90,20 @@ describe('worker', function(){
         done();
       });
     });
+
+    it("will mark a job as failed", function(done){
+      var listener = worker.on('error', function(q, job, err){
+        q.should.equal(specHelper.queue);
+        job.class.should.equal('badAdd');
+        err.message.should.equal('Blue Smoke')
+
+        worker.removeAllListeners('error');
+        done();
+      })
+
+      queue.enqueue(specHelper.queue, "badAdd", [1,2]);
+      worker.start();
+    })
 
     it('can work a job and return succesful things', function(done){
       var listener = worker.on('success', function(q, job, result){
