@@ -125,6 +125,18 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs
 });
 ```
 
+You can also pass redis client directly.
+
+```javascript
+// assume you already initialize redis client before
+
+var connectionDetails = { redis: redisClient }
+
+var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+  worker.start();
+});
+```
+
 ## Notes
 - Be sure to call `worker.end()` before shutting down your application if you want to properly clear your worker status from resque
 - When ending your application, be sure to allow your workers time to finsih what they are working on
