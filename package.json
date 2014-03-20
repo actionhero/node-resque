@@ -17,8 +17,8 @@
     "redis": "~0.10.x"
   },
   "devDependencies": {
-    "mocha": "1.17.x",
-    "should": "2.1.x"
+    "mocha": "latest",
+    "should": "latest"
   },
   "scripts": {
     "test": "mocha"
