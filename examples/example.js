@@ -84,8 +84,9 @@ worker.on('pause',           function(){ console.log("worker paused"); })
 scheduler.on('start',             function(){ console.log("scheduler started"); })
 scheduler.on('end',               function(){ console.log("scheduler ended"); })
 scheduler.on('poll',              function(){ console.log("scheduler polling"); })
+scheduler.on('error',             function(error){ console.log("scheduler error >> " + error); })
 scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
-scheduler.on('transferred_job',    function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
+scheduler.on('transferred_job',   function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
 
 ////////////////////////
 // CONNECT TO A QUEUE //
