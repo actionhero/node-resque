@@ -18,6 +18,13 @@ describe('worker', function(){
       perform: function(a,b,callback){
         callback(new Error("Blue Smoke"));
       }
+    },
+    "doubleCaller":{
+      perform: function(callback){
+        callback(null, 'a');
+        setTimeout(function(){ callback(null, 'b'); }, 500);
+        setTimeout(function(){ callback(null, 'c'); }, 1000);
+      }
     }
   };
 
@@ -143,6 +150,35 @@ describe('worker', function(){
       })
     });
 
+    it('will not double-work with a baddly defined job', function(done){
+      var callbackCounts = 0;
+      var expected = 3;
+      var errorCounter = 0;
+      var successCounter = 0;
+
+      var errorListener = worker.on('error', function(q, job, err){
+        String(err).should.equal('Error: refusing to continue with job, multiple callbacks detected');
+        callbackCounts++;
+        errorCounter++;
+        if(callbackCounts === expected){ complete(); }
+      });
+
+      var successListener = worker.on('success', function(q, job, result){
+        result.should.equal('a');
+        successCounter++;
+        callbackCounts++;
+        if(callbackCounts === expected){ complete(); }
+      });
+
+      var complete = function(){
+        errorCounter.should.equal(2);
+        successCounter.should.equal(1);
+        done();
+      }
+
+      queue.enqueue(specHelper.queue, "doubleCaller", []);
+      worker.start();
+    });
 
   });
 
