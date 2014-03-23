@@ -63,7 +63,7 @@ var jobs = {
   "jobby": {
     plugins: [ myPlugin ],
     pluginOptions: {
-      myPlugin: {messagePrefix: '!!!'},
+      myPlugin: {messagePrefix: '[ custom logger plugin ]'},
     },
     perform: function(a,b,callback){
       jobsToComplete--;

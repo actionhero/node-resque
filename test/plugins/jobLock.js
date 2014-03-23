@@ -3,7 +3,7 @@ var should = require('should');
 
 describe('plugins', function(){
 
-  var jobDelay = 100;
+  var jobDelay = 1000;
 
   var jobs = {
     "slowAdd": {
@@ -85,6 +85,7 @@ describe('plugins', function(){
                 // Once to create, once to delete
                 if (++calls == 2) {
                   done();
+                  worker1.end();
                 }
                 return this.worker.connection.key('customKey', Math.max.apply(Math.max, this.args));
               }
@@ -95,11 +96,14 @@ describe('plugins', function(){
           }
         }
       }
+
       worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
         queue.enqueue(specHelper.queue, "jobLockAdd", [1,2], function(){
           worker1.start();
         });
-      })
+      });
+
+      worker1.on('error', function(queue, job, error){ console.log(error.stack); })
     })
 
     it('will not run 2 jobs with the same args at the same time', function(done){

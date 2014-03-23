@@ -1,26 +1,34 @@
 {
-  "author":      "Evan Tahler <evantahler@gmail.com>",
-  "name":        "node-resque",
+  "author": "Evan Tahler <evantahler@gmail.com>",
+  "name": "node-resque",
   "description": "an opinionated implementation of resque in node",
-  "version":     "0.4.1",
-  "homepage":    "http://github.com/taskrabbit/node-resque",
+  "version": "0.4.1",
+  "homepage": "http://github.com/taskrabbit/node-resque",
   "repository": {
     "type": "git",
     "url": "git://github.com/taskrabbit/node-resque.git"
   },
   "main": "index.js",
-  "keywords": ["delayed", "queue", "resque", "redis", "worker"],
+  "keywords": [
+    "delayed",
+    "queue",
+    "resque",
+    "redis",
+    "worker"
+  ],
   "engines": {
     "node": ">=0.8.0"
   },
   "dependencies": {
-    "redis": "~0.10.x"
+    "redis": "~0.10.x",
+    "async": "^0.2.10"
   },
   "devDependencies": {
-    "mocha": "latest",
-    "should": "latest"
+    "mocha":     "latest",
+    "should":    "latest",
+    "fakeredis": "latest"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "node ./test/runner"
   }
 }
