@@ -102,6 +102,15 @@ describe('queue', function(){
       });
     });
 
+    it('will not match previously scheduled jobs with differnt args', function(done){
+      queue.enqueueAt(10000, specHelper.queue, 'someJob', [1,2,3], function(){
+        queue.scheduledAt(specHelper.queue, 'someJob', [3,2,1], function(err, timestamps){
+          timestamps.length.should.equal(0);
+          done();
+        });
+      });
+    });
+
     it('can deleted an enqued job', function(done){
       queue.enqueue(specHelper.queue, 'someJob', [1,2,3], function(){
         queue.length(specHelper.queue, function(err, len){
