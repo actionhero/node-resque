@@ -3,17 +3,17 @@ var fakeredis = require('fakeredis');
 var namespace = "resque_test";
 var queue = "test_queue";
 
-var toFakeredis = true;
-if(process.env.fakeredis == 'false'){ toFakeredis = false;  }
+var package = 'redis';
+if(process.env.fakeredis == 'true'){ package = 'fakeredis';  }
 
 exports.specHelper = {
-  toFakeredis: toFakeredis,
+  package: package,
   NR: require(__dirname + "/../index.js"),
   namespace: namespace,
   queue: queue,
   timeout: 500,
   connectionDetails: {
-    fake:      toFakeredis, 
+    package:   package, 
     host:      "127.0.0.1",
     password:  "",
     port:      6379,
@@ -23,7 +23,7 @@ exports.specHelper = {
   },
   connect: function(callback){
     var self = this;
-    if(toFakeredis != true){
+    if(package != 'fakeredis'){
       self.redis = redis.createClient(self.connectionDetails.port, self.connectionDetails.host, self.connectionDetails.options);
       if(self.connectionDetails.password != null && self.connectionDetails.password != ""){
         self.redis.auth(self.connectionDetails.password, function(err){

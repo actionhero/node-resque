@@ -10,6 +10,7 @@ var NR = require(__dirname + "/../index.js");
 ///////////////////////////
 
 var connectionDetails = {
+  package:   "redis",
   host:      "127.0.0.1",
   password:  "",
   port:      6379,
