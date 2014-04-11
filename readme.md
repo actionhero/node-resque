@@ -114,6 +114,7 @@ The configuration hash passed to `new worker`, `new scheduler` or `new queue` ca
 
 ```javascript
 var connectionDetails = {
+  package:   "redis",
   host:      "127.0.0.1",
   password:  "",
   port:      6379,
