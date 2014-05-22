@@ -13,7 +13,7 @@ describe('plugins', function(){
         var answer = a + b;
         setTimeout(function(){
           callback(null, answer);
-        }, jobDelay)
+        }, jobDelay);
       },
     },
     "uniqueJob": {

@@ -13,7 +13,7 @@ describe('plugins', function(){
         var answer = a + b;
         setTimeout(function(){
           callback(null, answer);
-        }, jobDelay)
+        }, jobDelay);
       },
     },
     "uniqueJob": {
@@ -55,7 +55,7 @@ describe('plugins', function(){
               worker1.end();
               worker2.end();
               (new Date().getTime() - startTime).should.be.below(jobDelay * 2);
-              done()
+              done();
             }
           };
 
@@ -68,11 +68,11 @@ describe('plugins', function(){
             });
           });
 
-          worker1.on('error', function(queue, job, error){ console.log(error.stack); })
-          worker2.on('error', function(queue, job, error){ console.log(error.stack); })
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); });
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); });
         });
       });
-    })
+    });
 
     it('allows the key to be specified as a function', function(done) {
       var calls = 0;
@@ -92,10 +92,10 @@ describe('plugins', function(){
             }
           },
           perform: function(a,b,callback){
-            callback(null, a + b)
+            callback(null, a + b);
           }
         }
-      }
+      };
 
       worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
         queue.enqueue(specHelper.queue, "jobLockAdd", [1,2], function(){
@@ -103,8 +103,8 @@ describe('plugins', function(){
         });
       });
 
-      worker1.on('error', function(queue, job, error){ console.log(error.stack); })
-    })
+      worker1.on('error', function(queue, job, error){ console.log(error.stack); });
+    });
 
     it('will not run 2 jobs with the same args at the same time', function(done){
       worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
@@ -118,7 +118,7 @@ describe('plugins', function(){
               worker1.end();
               worker2.end();
               (new Date().getTime() - startTime).should.be.above(jobDelay * 2);
-              done()
+              done();
             }
           };
 
@@ -131,8 +131,8 @@ describe('plugins', function(){
             });
           });
 
-          worker1.on('error', function(queue, job, error){ console.log(error.stack); })
-          worker2.on('error', function(queue, job, error){ console.log(error.stack); })
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); });
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); });
         });
       });
     });
@@ -163,8 +163,8 @@ describe('plugins', function(){
             });
           });
 
-          worker1.on('error', function(queue, job, error){ console.log(error.stack); })
-          worker2.on('error', function(queue, job, error){ console.log(error.stack); })
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); });
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); });
         });
       });
     });

@@ -28,156 +28,182 @@ describe('worker', function(){
     }
   };
 
-  before(function(done){
-    specHelper.connect(function(){
-      specHelper.cleanup(function(){
-        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
-          done();
-        });
-      });
-    });
-  });
-
-  after(function(done){
-    specHelper.cleanup(function(){
-      done();
-    });
-  });
-
   it("can connect", function(done){
     worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs, function(){
       should.exist(worker);
       worker.end();
-      done()
-    });
-  });
-
-  it("can boot and stop", function(done){
-    this.timeout(specHelper.timeout * 3)
-    worker.start();
-    worker.end(function(){
       done();
     });
   });
 
-  describe('crashing workers', function(){
+  it("can provide an error if connection failed", function(done) {
+    // Only run this test if this is using real redis
+    if(process.env.fakeredis == 'true') {
+      return done();
+    }
 
-    it('can clear previously crashed workers from the same host', function(done){
-      var name1 = os.hostname() + ":" + "0" // fake pid
-      var name2 = os.hostname() + ":" + process.pid // real pid
-      var worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs, function(){
-        worker1.init(function(){
-          worker1.running = false;
-          setTimeout(function(){
-            var worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs, function(){
-              worker2.on('cleaning_worker', function(worker, pid){
-                worker.should.equal(name1 + ":*");
-                pid.should.equal(0);
-                done();
-              });
-              worker2.workerCleanup();
-            });
-          }, 500);
+    // Make a copy of the connectionDetails so we don't overwrite the original one
+    var connectionDetails = {
+      package:   specHelper.connectionDetails.package,
+      host:      "wronghostname",
+      password:  specHelper.connectionDetails.password,
+      port:      "wrongport",
+      database:  specHelper.connectionDetails.database,
+      namespace: specHelper.connectionDetails.namespace,
+    };
+
+    worker = new specHelper.NR.worker({connection: connectionDetails, timeout: specHelper.timeout}, jobs, function(err){
+      should.exist(err);
+      done();
+    });
+  });
+
+  describe('[with connection]', function() {
+
+    before(function(done){
+      specHelper.connect(function(){
+        specHelper.cleanup(function(){
+          queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+            done();
+          });
         });
       });
     });
 
-  });
-
-  describe('integration', function(){
-
-    beforeEach(function(done){
-      worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+    after(function(done){
+      specHelper.cleanup(function(){
         done();
       });
     });
 
-    afterEach(function(done){
+    it("can boot and stop", function(done){
+      this.timeout(specHelper.timeout * 3);
+      worker.start();
       worker.end(function(){
         done();
       });
     });
 
-    it("will mark a job as failed", function(done){
-      var listener = worker.on('error', function(q, job, err){
-        q.should.equal(specHelper.queue);
-        job.class.should.equal('badAdd');
-        err.message.should.equal('Blue Smoke')
+    describe('crashing workers', function(){
 
-        worker.removeAllListeners('error');
-        done();
-      })
-
-      queue.enqueue(specHelper.queue, "badAdd", [1,2]);
-      worker.start();
-    })
-
-    it('can work a job and return succesful things', function(done){
-      var listener = worker.on('success', function(q, job, result){
-        q.should.equal(specHelper.queue);
-        job.class.should.equal('add');
-        result.should.equal(3);
-
-        worker.removeAllListeners('success');
-        done();
-      })
-
-      queue.enqueue(specHelper.queue, "add", [1,2]);
-      worker.start();
-    });
-
-    it('will not work jobs that are not defined', function(done){
-      var listener = worker.on('error', function(q, job, error){
-        q.should.equal(specHelper.queue);
-        String(error).should.equal == "Error: No job defined for class 'somethingFake'";
-
-        worker.removeAllListeners('error');
-        done();
-      })
-
-      queue.enqueue(specHelper.queue, "somethingFake", []);
-      worker.start();
-    });
-
-    it('will place failed jobs in the failed queue', function(done){
-      specHelper.redis.rpop(specHelper.namespace + ":" + "failed", function(err, data){
-        data = JSON.parse(data);
-        data.queue.should.equal(specHelper.queue);
-        data.exception.should.equal('Error');
-        data.error.should.equal('No job defined for class \'somethingFake\'');
-
-        done();
-      })
-    });
-
-    it('will not double-work with a baddly defined job', function(done){
-      var callbackCounts = 0;
-      var expected = 3;
-      var errorCounter = 0;
-      var successCounter = 0;
-
-      var errorListener = worker.on('error', function(q, job, err){
-        String(err).should.equal('Error: refusing to continue with job, multiple callbacks detected');
-        callbackCounts++;
-        errorCounter++;
-        if(callbackCounts === expected){ complete(); }
+      it('can clear previously crashed workers from the same host', function(done){
+        var name1 = os.hostname() + ":" + "0"; // fake pid
+        var name2 = os.hostname() + ":" + process.pid; // real pid
+        var worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs, function(){
+          worker1.init(function(){
+            worker1.running = false;
+            setTimeout(function(){
+              var worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs, function(){
+                worker2.on('cleaning_worker', function(worker, pid){
+                  worker.should.equal(name1 + ":*");
+                  pid.should.equal(0);
+                  done();
+                });
+                worker2.workerCleanup();
+              });
+            }, 500);
+          });
+        });
       });
 
-      var successListener = worker.on('success', function(q, job, result){
-        result.should.equal('a');
-        successCounter++;
-        callbackCounts++;
-        if(callbackCounts === expected){ complete(); }
+    });
+
+    describe('integration', function(){
+
+      beforeEach(function(done){
+        worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+          done();
+        });
       });
 
-      var complete = function(){
-        errorCounter.should.equal(2);
-        successCounter.should.equal(1);
-        done();
-      }
+      afterEach(function(done){
+        worker.end(function(){
+          done();
+        });
+      });
 
-      queue.enqueue(specHelper.queue, "doubleCaller", []);
-      worker.start();
+      it("will mark a job as failed", function(done){
+        var listener = worker.on('error', function(q, job, err){
+          q.should.equal(specHelper.queue);
+          job.class.should.equal('badAdd');
+          err.message.should.equal('Blue Smoke');
+
+          worker.removeAllListeners('error');
+          done();
+        });
+
+        queue.enqueue(specHelper.queue, "badAdd", [1,2]);
+        worker.start();
+      });
+
+      it('can work a job and return succesful things', function(done){
+        var listener = worker.on('success', function(q, job, result){
+          q.should.equal(specHelper.queue);
+          job.class.should.equal('add');
+          result.should.equal(3);
+
+          worker.removeAllListeners('success');
+          done();
+        });
+
+        queue.enqueue(specHelper.queue, "add", [1,2]);
+        worker.start();
+      });
+
+      it('will not work jobs that are not defined', function(done){
+        var listener = worker.on('error', function(q, job, error){
+          q.should.equal(specHelper.queue);
+          String(error).should.equal == "Error: No job defined for class 'somethingFake'";
+
+          worker.removeAllListeners('error');
+          done();
+        });
+
+        queue.enqueue(specHelper.queue, "somethingFake", []);
+        worker.start();
+      });
+
+      it('will place failed jobs in the failed queue', function(done){
+        specHelper.redis.rpop(specHelper.namespace + ":" + "failed", function(err, data){
+          data = JSON.parse(data);
+          data.queue.should.equal(specHelper.queue);
+          data.exception.should.equal('Error');
+          data.error.should.equal('No job defined for class \'somethingFake\'');
+
+          done();
+        });
+      });
+
+      it('will not double-work with a baddly defined job', function(done){
+        var callbackCounts = 0;
+        var expected = 3;
+        var errorCounter = 0;
+        var successCounter = 0;
+
+        var errorListener = worker.on('error', function(q, job, err){
+          String(err).should.equal('Error: refusing to continue with job, multiple callbacks detected');
+          callbackCounts++;
+          errorCounter++;
+          if(callbackCounts === expected){ complete(); }
+        });
+
+        var successListener = worker.on('success', function(q, job, result){
+          result.should.equal('a');
+          successCounter++;
+          callbackCounts++;
+          if(callbackCounts === expected){ complete(); }
+        });
+
+        var complete = function(){
+          errorCounter.should.equal(2);
+          successCounter.should.equal(1);
+          done();
+        };
+
+        queue.enqueue(specHelper.queue, "doubleCaller", []);
+        worker.start();
+      });
+
     });
 
   });
