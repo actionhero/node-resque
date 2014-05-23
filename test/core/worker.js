@@ -62,10 +62,8 @@ describe('worker', function(){
 
     before(function(done){
       specHelper.connect(function(){
-        specHelper.cleanup(function(){
-          queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
-            done();
-          });
+        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+          done();
         });
       });
     });

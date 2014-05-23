@@ -38,7 +38,9 @@ describe('queue', function(){
 
     before(function(done){
       specHelper.connect(function(){
-        done();
+        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+          done();
+        });
       });
     });
 
@@ -50,12 +52,6 @@ describe('queue', function(){
 
     after(function(done){
       specHelper.cleanup(function(){
-        done();
-      });
-    });
-
-    beforeEach(function(done){
-      queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
         done();
       });
     });

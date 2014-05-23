@@ -6,20 +6,6 @@ describe('scheduler', function(){
   var scheduler;
   var queue;
 
-  before(function(done){
-      specHelper.connect(function(){
-        specHelper.cleanup(function(){
-          done();
-        });
-      });
-    });
-
-  after(function(done){
-    specHelper.cleanup(function(){
-      done();
-    });
-  });
-
   it("can connect", function(done){
     scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, function(){
       should.exist(scheduler);
@@ -27,7 +13,7 @@ describe('scheduler', function(){
     });
   });
 
-  xit("can provide an error if connection failed", function(done) {
+  it("can provide an error if connection failed", function(done) {
     // Only run this test if this is using real redis
     if(process.env.fakeredis == 'true') {
       return done();
@@ -52,11 +38,17 @@ describe('scheduler', function(){
   describe('[with connection]', function() {
     before(function(done){
       specHelper.connect(function(){
-        specHelper.cleanup(function(){
+        scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, function(){
           queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
             done();
           });
         });
+      });
+    });
+
+    beforeEach(function(done) {
+      specHelper.cleanup(function(){
+        done();
       });
     });
 
