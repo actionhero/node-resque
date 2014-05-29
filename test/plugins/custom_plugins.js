@@ -13,7 +13,7 @@ describe('plugins', function(){
         var answer = a + b;
         setTimeout(function(){
           callback(null, answer);
-        }, jobDelay)
+        }, jobDelay);
       },
     },
     "uniqueJob": {
@@ -48,7 +48,7 @@ describe('plugins', function(){
         "myJob": {
           plugins: [ require(__dirname + '/../custom-plugin.js') ],
           perform: function(a,b,callback){
-            done(new Error('should not run'))
+            done(new Error('should not run'));
           },
         },
       };
@@ -57,7 +57,7 @@ describe('plugins', function(){
           queue.length(specHelper.queue, function (err, len) {
             len.should.equal(0);
             done();
-          })
+          });
         });
       });
     });
