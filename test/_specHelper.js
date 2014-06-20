@@ -4,7 +4,9 @@ var namespace = "resque_test";
 var queue = "test_queue";
 
 var package = 'redis';
-if(process.env.fakeredis == 'true'){ package = 'fakeredis';  }
+if(process.env.FAKEREDIS === 'true'){ package = 'fakeredis';  }
+
+console.log("Using " + package);
 
 exports.specHelper = {
   package: package,

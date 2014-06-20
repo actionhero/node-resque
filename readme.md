@@ -227,7 +227,7 @@ var jobs = {
 **notes**
 
 - All plugins which return `(error, toRun)`.  if `toRun = false` on  `beforeEnqueue`, the job beign inqueued will be thrown away, and if `toRun = false` on `beforePerfporm`, the job will be reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
-
+- If you are writing a plugin to deal with errors which may occur during your resque job, you can inspect and modify `worker.error` in your plugin.  If `worker.error` is null, no error will be logged in the resque error queue.
 - There are a few included plugins, all in the lib/plugins/* directory. You can rewrite you own and include it like this:
 
 ```javascript

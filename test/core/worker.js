@@ -38,7 +38,7 @@ describe('worker', function(){
 
   it("can provide an error if connection failed", function(done) {
     // Only run this test if this is using real redis
-    if(process.env.fakeredis == 'true') {
+    if(process.env.FAKEREDIS == 'true') {
       return done();
     }
 
