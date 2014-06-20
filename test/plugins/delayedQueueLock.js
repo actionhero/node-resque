@@ -42,6 +42,12 @@ describe('plugins', function(){
     });
   });
 
+  beforeEach(function(done){
+     specHelper.cleanup(function(){
+       done();
+     });
+   });
+
   describe('delayQueueLock',function(){
 
     it('will not enque a job with the same args if it is already in the delayed queue', function(done){

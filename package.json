@@ -29,6 +29,6 @@
     "fakeredis": "latest"
   },
   "scripts": {
-    "test": "node ./test/runner"
+    "test": "mocha"
   }
 }

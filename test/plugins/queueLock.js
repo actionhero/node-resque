@@ -42,6 +42,12 @@ describe('plugins', function(){
     });
   });
 
+  beforeEach(function(done){
+     specHelper.cleanup(function(){
+       done();
+     });
+   });
+
   describe('queueLock',function(){
 
     it('will not enque a job with the same args if it is already in the queue', function(done){

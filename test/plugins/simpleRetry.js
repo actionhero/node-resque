@@ -35,12 +35,6 @@ describe('plugins', function(){
 
   describe('simpleRetry',function(){
 
-    beforeEach(function(done){
-      specHelper.cleanup(function(){
-        done();
-      });
-    });
-
     it('bad job should not crash with simpleRetry', function(done){
       queue.enqueue(specHelper.queue, "brokenJob", [1,2], function(){
         queue.length(specHelper.queue, function(err, len){
