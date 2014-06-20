@@ -44,12 +44,6 @@ describe('plugins', function(){
 
   describe('queueLock',function(){
 
-    beforeEach(function(done){
-      specHelper.cleanup(function(){
-        done();
-      });
-    });
-
     it('will not enque a job with the same args if it is already in the queue', function(done){
       queue.enqueue(specHelper.queue, "uniqueJob", [1,2], function(){
         queue.enqueue(specHelper.queue, "uniqueJob", [1,2], function(){
