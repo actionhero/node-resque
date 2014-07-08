@@ -141,7 +141,7 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs
 
 ## Notes
 - Be sure to call `worker.end()` before shutting down your application if you want to properly clear your worker status from resque
-- When ending your application, be sure to allow your workers time to finsih what they are working on
+- When ending your application, be sure to allow your workers time to finish what they are working on
 - If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor
 - If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the patern `hostname:pid+unique_id`.  For example:
 
