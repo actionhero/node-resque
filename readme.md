@@ -146,7 +146,7 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs
 - If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the patern `hostname:pid+unique_id`.  For example:
 
 ```javascript
-var name = os.hostname() + ":" + process.pid() + "+" + counter;
+var name = os.hostname() + ":" + process.pid + "+" + counter;
 var worker = new NR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
 ```
 ## Queue Managment
