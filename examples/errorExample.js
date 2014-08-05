@@ -67,7 +67,7 @@ worker.on('pause',           function(){ console.log("worker paused"); })
 ////////////////////////
 
 var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
-  queue.enqueue('default', "brokenJob", [1,2]);
+  queue.enqueue('default', "brokenJob", {a: 1,b: 2} );
   jobsToComplete = 1;
 });
 
