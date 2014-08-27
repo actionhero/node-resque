@@ -121,12 +121,12 @@ describe('worker', function(){
       });
 
       it("will mark a job as failed", function(done){
-        var listener = worker.on('error', function(q, job, err){
+        var listener = worker.on('failure', function(q, job, failire){
           q.should.equal(specHelper.queue);
           job.class.should.equal('badAdd');
-          err.message.should.equal('Blue Smoke');
+          failire.message.should.equal('Blue Smoke');
 
-          worker.removeAllListeners('error');
+          worker.removeAllListeners('failire');
           done();
         });
 
@@ -149,11 +149,11 @@ describe('worker', function(){
       });
 
       it('will not work jobs that are not defined', function(done){
-        var listener = worker.on('error', function(q, job, error){
+        var listener = worker.on('failure', function(q, job, failure){
           q.should.equal(specHelper.queue);
-          String(error).should.equal == "Error: No job defined for class 'somethingFake'";
+          String(failure).should.equal == "Error: No job defined for class 'somethingFake'";
 
-          worker.removeAllListeners('error');
+          worker.removeAllListeners('failure');
           done();
         });
 
@@ -178,7 +178,7 @@ describe('worker', function(){
         var errorCounter = 0;
         var successCounter = 0;
 
-        var errorListener = worker.on('error', function(q, job, err){
+        var errorListener = worker.on('failure', function(q, job, err){
           String(err).should.equal('Error: refusing to continue with job, multiple callbacks detected');
           callbackCounts++;
           errorCounter++;
@@ -195,6 +195,8 @@ describe('worker', function(){
         var complete = function(){
           errorCounter.should.equal(2);
           successCounter.should.equal(1);
+          worker.removeAllListeners('success');
+          worker.removeAllListeners('failure');
           done();
         };
 
