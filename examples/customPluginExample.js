@@ -94,7 +94,8 @@ worker.on('poll',            function(queue){ console.log("worker polling " + qu
 worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); })
 worker.on('reEnqueue',       function(queue, job, plugin){ console.log("reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
 worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
-worker.on('error',           function(queue, job, error){ console.log("job failed " + queue + " " + JSON.stringify(job) + " >> " + error); })
+worker.on('failure',         function(queue, job, failure){ console.log("job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); })
+worker.on('error',           function(queue, job, error){ console.log("error " + queue + " " + JSON.stringify(job) + " >> " + error); })
 worker.on('pause',           function(){ console.log("worker paused"); })
 
 ////////////////////////
