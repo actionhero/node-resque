@@ -18,7 +18,7 @@ From within this directory, run `bundle install`.  This equivalent to `npm insta
 
 4) **run the application**
 
-The ruby-resque package includes a web interface which can be "mounted" within a number of common ruby web frameworks, like sintatra, ruby-on-rails, etc.  I have included the smallest possible application which is a [`rack`](http://rack.github.io/) application.  To run this application, type `bundle exec backup`.  Running this command will boot the server on port `9292` (and the CLI will inform you if this changed).  
+The ruby-resque package includes a web interface which can be "mounted" within a number of common ruby web frameworks, like sintatra, ruby-on-rails, etc.  I have included the smallest possible application which is a [`rack`](http://rack.github.io/) application.  To run this application, type `bundle exec rackup`.  Running this command will boot the server on port `9292` (and the CLI will inform you if this changed).  
 
 This should only be used in development, as there is no security around this web interface, and you can delete everything.
 
