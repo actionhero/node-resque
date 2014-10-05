@@ -96,7 +96,7 @@ var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
 });
 ```
 
-## Configutation Options:
+## Configuration Options:
 
 `new queue` requires only the "queue" variable to be set.  You can also pass the `jobs` hash to it.
 
