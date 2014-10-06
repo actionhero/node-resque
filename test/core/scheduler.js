@@ -29,9 +29,13 @@ describe('scheduler', function(){
       namespace: specHelper.connectionDetails.namespace,
     };
 
+    var resolved = false;
     scheduler = new specHelper.NR.scheduler({connection: connectionDetails, timeout: specHelper.timeout}, function(err){
-      should.exist(err);
-      done();
+      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x... 
+        should.exist(err);
+        resolved = true;
+        done();
+      }
     });
   });
 

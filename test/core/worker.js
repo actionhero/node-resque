@@ -52,9 +52,13 @@ describe('worker', function(){
       namespace: specHelper.connectionDetails.namespace,
     };
 
+    resolved = false;
     worker = new specHelper.NR.worker({connection: connectionDetails, timeout: specHelper.timeout}, jobs, function(err){
-      should.exist(err);
-      done();
+      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x... 
+        should.exist(err);
+        resolved = true;
+        done();
+      }
     });
   });
 

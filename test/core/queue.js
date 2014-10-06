@@ -28,9 +28,13 @@ describe('queue', function(){
       namespace: specHelper.connectionDetails.namespace,
     };
 
+    resolved = false;
     queue = new specHelper.NR.queue({connection: connectionDetails, queue: specHelper.queue}, function(err){
-      should.exist(err);
-      done();
+      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x... 
+        should.exist(err);
+        resolved = true;
+        done();
+      }
     });
   });
 
