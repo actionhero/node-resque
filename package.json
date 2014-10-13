@@ -20,7 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "redis": "~0.10.3",
+    "redis": "~0.12.1",
     "async": "~0.9.x"
   },
   "devDependencies": {
