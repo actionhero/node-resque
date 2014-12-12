@@ -165,6 +165,17 @@ Additonal methods provided on the `queue` object:
 - **queue.prototype.scheduledAt** = function(q, func, args, callback)
   - callback(error, timestamps_the_job_is_scheduled_for)
 
+## Worker Status
+
+You can use the queue object to check on your wokrers:
+
+- **queue.workers** = function(callback)`
+  - returns: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
+- **queue.workingOn** = function(workerName, queues, callback)`
+  - returns: `{"run_at":"Fri Dec 12 2014 14:01:16 GMT-0800 (PST)","queue":"test_queue","payload":{"class":"slowJob","queue":"test_queue","args":[null]},"worker":"workerA"}`
+- **queue.allWorkingOn** = function(callback)`
+  - returns a hash of the results of `queue.workingOn` with the worker names as keys.
+
 ## Plugins
 
 Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
