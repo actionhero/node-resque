@@ -157,6 +157,88 @@ describe('queue', function(){
       });
     });
 
+    describe('worker status', function(){
+      var workerA;
+      var workerB;
+      var timeout = 100;
+
+      var jobs = {
+        "slowJob": {
+          perform: function(callback){
+            setTimeout(function(){
+              callback(null);
+            }, timeout)
+          }
+        }
+      };
+
+      beforeEach(function(done){
+        workerA = new specHelper.NR.worker({
+          connection: specHelper.connectionDetails, 
+          timeout: specHelper.timeout, 
+          queues: specHelper.queue, 
+          name: 'workerA'
+        }, jobs, function(){
+        workerB = new specHelper.NR.worker({
+          connection: specHelper.connectionDetails, 
+          timeout: specHelper.timeout, 
+          queues: specHelper.queue, 
+          name: 'workerB'
+        }, jobs, function(){
+          workerA.init(function(){
+          workerB.init(function(){
+            done();
+          });
+          });
+        }); });
+      });
+
+      afterEach(function(done){
+        workerA.end(function(){
+        workerB.end(function(){
+          done();
+        });
+        });
+      });
+
+      it('can list running workers', function(done){
+        queue.workers(function(err, workers){
+          should.not.exist(err);
+          workers['workerA'].should.equal('test_queue');
+          workers['workerB'].should.equal('test_queue');
+          done();
+        });
+      });
+
+      it('we can see what workers are working on (idle)', function(done){
+        queue.allWorkingOn(function(err, data){
+          should.not.exist(err);
+          data.should.containEql({'workerA': 'started'});
+          data.should.containEql({'workerB': 'started'});
+          done();
+        });
+      });
+
+      it('we can see what workers are working on (active)', function(done){
+        var listener = workerA.on('job', function(q, job, failure){
+          workerA.removeAllListeners('job');
+          
+          queue.allWorkingOn(function(err, data){
+            should.not.exist(err);
+            data.should.containEql({'workerB': 'started'});
+            var paylaod = data['workerA'].payload;
+            paylaod.queue.should.equal('test_queue');
+            paylaod.class.should.equal('slowJob');
+
+            done();
+          });          
+        });
+
+        queue.enqueue(specHelper.queue, "slowJob");
+        workerA.start();
+      });
+    });
+
   });
 
 });
