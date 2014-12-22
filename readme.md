@@ -165,6 +165,17 @@ Additonal methods provided on the `queue` object:
 - **queue.prototype.scheduledAt** = function(q, func, args, callback)
   - callback(error, timestamps_the_job_is_scheduled_for)
 
+## Delayed Status
+
+- **queue.timestamps** = function(callback)
+  - callback(error, timestamps)
+- **queue.delayedAt** = function(timestamp, callback)
+  - callback(error, jobs_enqueued_at_this_timestamp)
+- **queue.allDelayed** = function(timestamp)
+  - callback(error, jobsHash)
+  - jobsHash is an object with its keys being timestamps, and the vales are arrays of jobs at each time.
+  - note that this operation can be very slow and very ram-heavy
+
 ## Worker Status
 
 You can use the queue object to check on your wokrers:

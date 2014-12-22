@@ -157,6 +157,56 @@ describe('queue', function(){
       });
     });
 
+    describe('delayed status', function(){
+
+      beforeEach(function(done){
+        queue.enqueueAt(10000, specHelper.queue, 'job1', [1,2,3], function(){
+        queue.enqueueAt(10000, specHelper.queue, 'job2', [1,2,3], function(){
+        queue.enqueueAt(20000, specHelper.queue, 'job3', [1,2,3], function(){
+          done();
+        });
+        });
+        });
+      });
+
+      it('can list the timestamps that exist', function(done){
+        queue.timestamps(function(err, timestamps){
+          should.not.exist(err);
+          timestamps.length.should.equal(2);
+          timestamps[0].should.equal(10000);
+          timestamps[1].should.equal(20000);
+          done();
+        });
+      });
+
+      it('can list the jobs delayed at a timestamp', function(done){
+        queue.delayedAt(10000, function(err, tasks_a){
+          should.not.exist(err);
+          tasks_a.length.should.equal(2);
+          tasks_a[0].class.should.equal('job1');
+          tasks_a[1].class.should.equal('job2');
+          queue.delayedAt(20000, function(err, tasks_b){ 
+            should.not.exist(err);
+            tasks_b.length.should.equal(1);
+            tasks_b[0].class.should.equal('job3');
+            done();
+          });
+        });
+      });
+
+      it('can also return a hash with all delayed tasks', function(done){
+        queue.allDelayed(function(err, hash){
+          Object.keys(hash).length.should.equal(2);
+          Object.keys(hash)[0].should.equal('10000');
+          Object.keys(hash)[1].should.equal('20000');
+          hash['10000'].length.should.equal(2);
+          hash['20000'].length.should.equal(1);
+          done();
+        });
+      });
+
+    });
+
     describe('worker status', function(){
       var workerA;
       var workerB;
