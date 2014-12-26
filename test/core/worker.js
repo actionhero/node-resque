@@ -25,7 +25,10 @@ describe('worker', function(){
         setTimeout(function(){ callback(null, 'b'); }, 500);
         setTimeout(function(){ callback(null, 'c'); }, 1000);
       }
-    }
+    },
+    "quickDefine": function(callback) {
+      setTimeout(callback.bind(null, null, "ok"));
+    },
   };
 
   it("can connect", function(done){
@@ -151,6 +154,19 @@ describe('worker', function(){
         queue.enqueue(specHelper.queue, "add", [1,2]);
         worker.start();
       });
+
+      it('can accept jobs that are simple functions', function(done){
+        var listener = worker.on('success', function(q, job, result){
+          result.should.equal("ok");
+
+          worker.removeAllListeners('success');
+          done();
+        });
+
+        queue.enqueue(specHelper.queue, "quickDefine", []);
+        worker.start();
+      });
+
 
       it('will not work jobs that are not defined', function(done){
         var listener = worker.on('failure', function(q, job, failure){
