@@ -44,6 +44,9 @@ var jobs = {
       callback(null, answer);
     },
   },
+  "multiply": function(a,b,callback) {
+    callback(null, a * b);
+  },
 };
 
 ////////////////////
