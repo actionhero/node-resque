@@ -270,9 +270,17 @@ var jobs = {
 
 ## Multi Worker
 
-node-resque provides a wrapper around the `worker` object which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low template overhead), we can process many at a time, but if you have a math-heavy operation, we'll stick to 1.  The `multiWorker` handles this.  
+node-resque provides a wrapper around the `worker` object which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low rendering overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1.  The `multiWorker` handles this by spawngning more and more node-resque workers and managing the pool.  
 
 ```javascript
+var NR = require(__dirname + "/../index.js");
+
+var connectionDetails = {
+  package:   "redis",
+  host:      "127.0.0.1",
+  password:  ""
+}
+
 var multiWorker = new NR.multiWorker({
   connection: connectionDetails, 
   queues: ['slowQueue'],
