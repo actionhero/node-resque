@@ -268,5 +268,39 @@ var jobs = {
 }
 ```
 
+## Multi Worker
+
+node-resque provides a wrapper around the `worker` object which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low template overhead), we can process many at a time, but if you have a math-heavy operation, we'll stick to 1.  The `multiWorker` handles this.  
+
+```javascript
+var multiWorker = new NR.multiWorker({
+  connection: connectionDetails, 
+  queues: ['slowQueue'],
+  minWorkers:        1,
+  maxWorkers:        100,
+  checkTimeout:      1000,
+  maxEventLoopDelay: 10,  
+}, jobs, function(){
+
+  // normal worker emitters
+  multiWorker.on('start',             function(workerId){                      console.log("worker["+workerId+"] started"); })
+  multiWorker.on('end',               function(workerId){                      console.log("worker["+workerId+"] ended"); })
+  multiWorker.on('cleaning_worker',   function(workerId, worker, pid){         console.log("cleaning old worker " + worker); })
+  multiWorker.on('poll',              function(workerId, queue){               console.log("worker["+workerId+"] polling " + queue); })
+  multiWorker.on('job',               function(workerId, queue, job){          console.log("worker["+workerId+"] working job " + queue + " " + JSON.stringify(job)); })
+  multiWorker.on('reEnqueue',         function(workerId, queue, job, plugin){  console.log("worker["+workerId+"] reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
+  multiWorker.on('success',           function(workerId, queue, job, result){  console.log("worker["+workerId+"] job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
+  multiWorker.on('failure',           function(workerId, queue, job, failure){ console.log("worker["+workerId+"] job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); })
+  multiWorker.on('error',             function(workerId, queue, job, error){   console.log("worker["+workerId+"] error " + queue + " " + JSON.stringify(job) + " >> " + error); })
+  multiWorker.on('pause',             function(workerId){                      console.log("worker["+workerId+"] paused"); })
+  
+  // multiWorker emitters
+  multiWorker.on('internalError',     function(error){                         console.log(error); })
+  multiWorker.on('miltiWorkerAction', function(verb, delay){                   console.log("*** checked for worker status: " + verb + " (event loop delay: " + delay + "ms)"); })
+
+  multiWorker.start();
+});
+```
+
 ## Acknowledgments
 Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
