@@ -293,7 +293,7 @@ var multiWorker = new NR.multiWorker({
   maxTaskProcessors:   100,
   checkTimeout:        1000,
   maxEventLoopDelay:   10,  
-  toDisconnectWorkers: true,
+  toDisconnectProcessors: true,
 }, jobs, function(){
 
   // normal worker emitters

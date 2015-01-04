@@ -12,7 +12,7 @@ if(specHelper.package === 'fakeredis'){
     var minTaskProcessors = 1
     var maxTaskProcessors = 5
 
-    var toDisconnectWorkers = true;
+    var toDisconnectProcessors = true;
 
     var blockingSleep = function(naptime){
       var sleeping = true;
@@ -65,7 +65,7 @@ if(specHelper.package === 'fakeredis'){
         minTaskProcessors: minTaskProcessors,
         maxTaskProcessors: maxTaskProcessors,
         queue: specHelper.queue,
-        toDisconnectWorkers: toDisconnectWorkers,
+        toDisconnectProcessors: toDisconnectProcessors,
       }, jobs, function(err){
         should.not.exist(err);
         should.exist(multiWorker);
