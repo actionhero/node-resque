@@ -31,7 +31,7 @@ exports.specHelper = {
       if(self.connectionDetails.password != null && self.connectionDetails.password != ""){
         self.redis.auth(self.connectionDetails.password, function(err){
           self.redis.select(self.connectionDetails.database, function(err){
-            self.connectionDetails.redis = self.redis;
+            // self.connectionDetails.redis = self.redis;
             callback(err);
           });
         }); 
@@ -88,5 +88,19 @@ exports.specHelper = {
     self.redis.lpop(self.namespace + ":queue:" + self.queue, function(err, obj){
       callback(err, obj)
     });
+  },
+  cleanConnectionDetails: function(){
+    var self = this;
+    var out = {};
+    if(self.package === 'fakeredis'){
+      return self.connectionDetails;
+    }
+    for(var i in self.connectionDetails){
+      if(i !== 'redis'){
+        out[i] = self.connectionDetails[i];
+      }
+    }
+
+    return out;
   }
 }

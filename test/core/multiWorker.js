@@ -8,6 +8,9 @@ describe('multiWorker', function(){
   var minTaskProcessors = 1
   var maxTaskProcessors = 5
 
+  var toDisconnectWorkers = true;
+  if(specHelper.package === 'fakeredis'){ toDisconnectWorkers = false; }
+
   var jobs = {
     "slowSleepJob": {
       plugins: [],
@@ -30,7 +33,10 @@ describe('multiWorker', function(){
 
   before(function(done){
     specHelper.connect(function(){
-      queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+      queue = new specHelper.NR.queue({
+        connection: specHelper.cleanConnectionDetails(), 
+        queue: specHelper.queue
+      }, function(){
         done();
       });
     });
@@ -38,12 +44,13 @@ describe('multiWorker', function(){
 
   before(function(done){
     multiWorker = new specHelper.NR.multiWorker({
-      connection: specHelper.connectionDetails, 
+      connection: specHelper.cleanConnectionDetails(), 
       timeout: specHelper.timeout,
       checkTimeout: checkTimeout,
       minTaskProcessors: minTaskProcessors,
       maxTaskProcessors: maxTaskProcessors,
       queue: specHelper.queue,
+      toDisconnectWorkers: toDisconnectWorkers,
     }, jobs, function(err){
       should.not.exist(err);
       should.exist(multiWorker);
@@ -86,6 +93,8 @@ describe('multiWorker', function(){
   });
 
   it('should not add workers when CPU utilization is high', function(done){
+    this.timeout(10 * 1000);
+
     var i = 0;
     while(i < 100){
       queue.enqueue(specHelper.queue, 'slowCPUJob', []);
@@ -106,7 +115,7 @@ describe('multiWorker', function(){
     var listener = multiWorker.on('failure', function(workerId, queue, job, error){
       String(error).should.equal('Error: No job defined for class \'crazyJob\'');
       multiWorker.removeAllListeners('error');
-      done();
+      multiWorker.end(done);
     });
 
     multiWorker.start();

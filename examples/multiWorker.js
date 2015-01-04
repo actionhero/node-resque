@@ -4,6 +4,7 @@ var NR = require(__dirname + "/../index.js");
 
 var connectionDetails = {
   package:   "redis",
+  // package:   "fakeredis",
   host:      "127.0.0.1",
   password:  "",
   port:      6379,
@@ -31,8 +32,9 @@ var jobs = {
     plugins: [],
     pluginOptions: {},
     perform: function(callback){
+      var start = new Date().getTime();
       setTimeout(function(){
-        callback(null, new Date().getTime() );
+        callback(null, (new Date().getTime() - start) );
       }, 1000);
     },
   },
@@ -40,8 +42,9 @@ var jobs = {
     plugins: [],
     pluginOptions: {},
     perform: function(callback){
+      var start = new Date().getTime();
       blockingSleep(1000);
-      callback(null, new Date().getTime() );
+      callback(null, (new Date().getTime() - start) );
     },
   },
 };

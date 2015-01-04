@@ -29,7 +29,7 @@ describe('plugins', function(){
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
-        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, jobs, function(){
+        queue = new specHelper.NR.queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs, function(){
           done();
         });
       });
@@ -44,8 +44,8 @@ describe('plugins', function(){
 
   describe('jobLock',function(){
     it('will not lock jobs since arg objects are different', function(done){
-      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
-        worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+      worker1 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+        worker2 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
           var startTime = new Date().getTime();
           var completed = 0;
 
@@ -97,7 +97,7 @@ describe('plugins', function(){
         }
       };
 
-      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+      worker1 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
         queue.enqueue(specHelper.queue, "jobLockAdd", [1,2], function(){
           worker1.start();
         });
@@ -107,8 +107,8 @@ describe('plugins', function(){
     });
 
     it('will not run 2 jobs with the same args at the same time', function(done){
-      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
-        worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+      worker1 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+        worker2 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
           var startTime = new Date().getTime();
           var completed = 0;
 
@@ -138,8 +138,8 @@ describe('plugins', function(){
     });
 
     it('will run 2 jobs with the different args at the same time', function(done){
-      worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
-        worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+      worker1 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
+        worker2 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
           var startTime = new Date().getTime();
           var completed = 0;
 

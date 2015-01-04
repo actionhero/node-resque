@@ -29,7 +29,7 @@ describe('plugins', function(){
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
-        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, jobs, function(){
+        queue = new specHelper.NR.queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs, function(){
           done();
         });
       });
@@ -52,7 +52,7 @@ describe('plugins', function(){
           },
         },
       };
-      var queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, jobs, function(){
+      var queue = new specHelper.NR.queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs, function(){
         queue.enqueue(specHelper.queue, "myJob", [1,2], function(){
           queue.length(specHelper.queue, function (err, len) {
             len.should.equal(0);

@@ -289,10 +289,11 @@ var connectionDetails = {
 var multiWorker = new NR.multiWorker({
   connection: connectionDetails, 
   queues: ['slowQueue'],
-  minTaskProcessors: 1,
-  maxTaskProcessors: 100,
-  checkTimeout:      1000,
-  maxEventLoopDelay: 10,  
+  minTaskProcessors:   1,
+  maxTaskProcessors:   100,
+  checkTimeout:        1000,
+  maxEventLoopDelay:   10,  
+  toDisconnectWorkers: true,
 }, jobs, function(){
 
   // normal worker emitters

@@ -25,7 +25,7 @@ describe('connection', function(){
   });
 
   it("will properly build namespace strings", function(done){
-    var connection = new specHelper.NR.connection(specHelper.connectionDetails);
+    var connection = new specHelper.NR.connection(specHelper.cleanConnectionDetails());
     connection.connect(function(){
       connection.key("thing").should.equal(specHelper.namespace + ":thing");
       done();

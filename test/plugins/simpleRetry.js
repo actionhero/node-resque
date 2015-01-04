@@ -20,7 +20,7 @@ describe('plugins', function(){
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
-        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, jobs, function(){
+        queue = new specHelper.NR.queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs, function(){
           done();
         });
       });
