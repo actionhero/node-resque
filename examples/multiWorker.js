@@ -88,7 +88,7 @@ var multiWorker = new NR.multiWorker({
   
   // multiWorker emitters
   multiWorker.on('internalError',     function(error){                         console.log(error); })
-  multiWorker.on('miltiWorkerAction', function(verb, delay){                   console.log("*** checked for worker status: " + verb + " (event loop delay: " + delay + "ms)"); })
+  multiWorker.on('multiWorkerAction', function(verb, delay){                   console.log("*** checked for worker status: " + verb + " (event loop delay: " + delay + "ms)"); })
 
   multiWorker.start();
 });
