@@ -27,6 +27,7 @@ exports.specHelper = {
     var self = this;
     if(package != 'fakeredis'){
       self.redis = redis.createClient(self.connectionDetails.port, self.connectionDetails.host, self.connectionDetails.options);
+      self.redis.setMaxListeners(9999);
       if(self.connectionDetails.password != null && self.connectionDetails.password != ""){
         self.redis.auth(self.connectionDetails.password, function(err){
           self.redis.select(self.connectionDetails.database, function(err){

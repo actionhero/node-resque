@@ -159,6 +159,8 @@ Additonal methods provided on the `queue` object:
 
 - **queue.prototype.queues** = function(callback)
   - callback(error, array_of_queues)
+- **queue.prototype.delQueue** = function(q, callback)
+  - callback(error)
 - **queue.prototype.length** = function(q, callback)
   - callback(error, number_of_elements_in_queue)
 - **queue.prototype.del** = function(q, func, args, count, callback)
