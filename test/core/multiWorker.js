@@ -2,15 +2,15 @@ var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
 var should = require('should');
 
 if(specHelper.package === 'fakeredis'){
-  console.log("multiWorker does not work with fakeredis for now...")
+  console.log("multiWorker does not work with fakeredis for now...");
 }else{
 
   describe('multiWorker', function(){
 
     var queue, multiWorker;
     var checkTimeout = specHelper.timeout / 10;
-    var minTaskProcessors = 1
-    var maxTaskProcessors = 5
+    var minTaskProcessors = 1;
+    var maxTaskProcessors = 5;
 
     var toDisconnectProcessors = true;
 
@@ -22,9 +22,9 @@ if(specHelper.package === 'fakeredis'){
       while(sleeping){
         alarm = new Date();
         var alarmMSeconds = alarm.getTime();
-        if(alarmMSeconds - startingMSeconds > naptime){ sleeping = false }
+        if(alarmMSeconds - startingMSeconds > naptime){ sleeping = false; }
       }
-    }
+    };
 
     var jobs = {
       "slowSleepJob": {
@@ -76,7 +76,7 @@ if(specHelper.package === 'fakeredis'){
     afterEach(function(done){
       queue.delQueue(specHelper.queue, function(err){
         should.not.exist(err);
-        done()
+        done();
       });
     });
 
@@ -120,7 +120,7 @@ if(specHelper.package === 'fakeredis'){
         setTimeout(function(){
           multiWorker.workers.length.should.equal(1);
           multiWorker.end(done);
-        }, checkTimeout * 20);
+        }, checkTimeout * 30);
       });
     });
 
