@@ -67,7 +67,7 @@ var scheduler = new NR.scheduler({connection: connectionDetails}, function(){
 });
 
 /////////////////////////
-// REGESTER FOR EVENTS //
+// REGISTER FOR EVENTS //
 /////////////////////////
 
 worker.on('start',           function(){ console.log("worker started"); })
