@@ -57,7 +57,7 @@ describe('worker', function(){
 
     resolved = false;
     worker = new specHelper.NR.worker({connection: connectionDetails, timeout: specHelper.timeout}, jobs, function(err){
-      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x...
+      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x... 
         should.exist(err);
         resolved = true;
         done();
@@ -167,17 +167,6 @@ describe('worker', function(){
         worker.start();
       });
 
-      it('allows omitting arguments for jobs that dont have any', function(done){
-        var listener = worker.on('success', function(q, job, result){
-          result.should.equal("ok");
-
-          worker.removeAllListeners('success');
-          done();
-        });
-
-        queue.enqueue(specHelper.queue, "quickDefine");
-        worker.start();
-      });
 
       it('will not work jobs that are not defined', function(done){
         var listener = worker.on('failure', function(q, job, failure){
