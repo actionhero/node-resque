@@ -157,6 +157,15 @@ describe('queue', function(){
       });
     });
 
+    it('can handle single arguments without explicit array', function(done){
+      queue.enqueue(specHelper.queue, 'someJob', 1, function(){
+        specHelper.popFromQueue(function(err, obj){
+          JSON.parse(obj)['args'].should.eql([1]);
+          done();
+        });
+      });
+    });
+
     it('allows omitting arguments when enqueuing', function(done){
       queue.enqueue(specHelper.queue, 'noParams'); // no callback here, but in practice will finish before next enqueue calls back
       queue.enqueue(specHelper.queue, 'noParams', function(){
