@@ -30,7 +30,7 @@ describe('queue', function(){
 
     resolved = false;
     queue = new specHelper.NR.queue({connection: connectionDetails, queue: specHelper.queue}, function(err){
-      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x... 
+      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x...
         should.exist(err);
         resolved = true;
         done();
@@ -157,6 +157,84 @@ describe('queue', function(){
       });
     });
 
+    it('allows omitting arguments when enqueuing', function(done){
+      queue.enqueue(specHelper.queue, 'noParams'); // no callback here, but in practice will finish before next enqueue calls back
+      queue.enqueue(specHelper.queue, 'noParams', function(){
+        queue.length(specHelper.queue, function(err, len){
+          len.should.equal(2);
+          specHelper.popFromQueue(function(err, obj){
+            obj = JSON.parse(obj);
+            obj['class'].should.equal('noParams');
+            obj['args'].should.be.empty;
+            specHelper.popFromQueue(function(err, obj){
+              obj = JSON.parse(obj);
+              obj['class'].should.equal('noParams');
+              obj['args'].should.be.empty;
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    it('allows omitting arguments when deleting', function(done){
+      queue.enqueue(specHelper.queue, 'noParams', [], function(){
+        queue.enqueue(specHelper.queue, 'noParams', [], function(){
+          queue.length(specHelper.queue, function(err, len){
+            len.should.equal(2);
+            queue.del(specHelper.queue, 'noParams');
+            queue.del(specHelper.queue, 'noParams', function(err, len){
+              queue.length(specHelper.queue, function(err, len){
+                len.should.equal(0);
+                done();
+              });
+            });
+          });
+        });
+       });
+    });
+
+    it('allows omitting arguments when adding delayed job', function(done){
+      queue.allDelayed(function(err, hash){
+        hash.should.be.empty;
+        queue.enqueueAt(10000, specHelper.queue, 'noParams');
+        queue.enqueueIn(11000, specHelper.queue, 'noParams');
+        queue.enqueueAt(12000, specHelper.queue, 'noParams', function(){
+          queue.enqueueIn(13000, specHelper.queue, 'noParams', function(){
+            queue.scheduledAt(specHelper.queue, 'noParams', function(err, timestamps){
+              timestamps.length.should.equal(4);
+              queue.allDelayed(function(err, hash){
+                Object.keys(hash).length.should.equal(4);
+                for(var key in hash){
+                  hash[key][0].args.should.be.empty;
+                }
+                done();
+              });
+            });
+          });
+        });
+      });
+    });
+
+    it('allows omitting arguments when deleting a delayed job', function(done){
+      queue.allDelayed(function(err, hash){
+        hash.should.be.empty;
+        queue.enqueueAt(10000, specHelper.queue, 'noParams');
+        queue.enqueueAt(12000, specHelper.queue, 'noParams', function(){
+          queue.allDelayed(function(err, hash){
+            Object.keys(hash).length.should.equal(2);
+            queue.delDelayed(specHelper.queue, 'noParams');
+            queue.delDelayed(specHelper.queue, 'noParams', function(){
+              queue.allDelayed(function(err, hash){
+                hash.should.be.empty;
+                done();
+              });
+            });
+          });
+        });
+      });
+    });
+
     describe('delayed status', function(){
 
       beforeEach(function(done){
@@ -185,7 +263,7 @@ describe('queue', function(){
           tasks_a.length.should.equal(2);
           tasks_a[0].class.should.equal('job1');
           tasks_a[1].class.should.equal('job2');
-          queue.delayedAt(20000, function(err, tasks_b){ 
+          queue.delayedAt(20000, function(err, tasks_b){
             should.not.exist(err);
             tasks_b.length.should.equal(1);
             tasks_b[0].class.should.equal('job3');
@@ -224,15 +302,15 @@ describe('queue', function(){
 
       beforeEach(function(done){
         workerA = new specHelper.NR.worker({
-          connection: specHelper.connectionDetails, 
-          timeout: specHelper.timeout, 
-          queues: specHelper.queue, 
+          connection: specHelper.connectionDetails,
+          timeout: specHelper.timeout,
+          queues: specHelper.queue,
           name: 'workerA'
         }, jobs, function(){
         workerB = new specHelper.NR.worker({
-          connection: specHelper.connectionDetails, 
-          timeout: specHelper.timeout, 
-          queues: specHelper.queue, 
+          connection: specHelper.connectionDetails,
+          timeout: specHelper.timeout,
+          queues: specHelper.queue,
           name: 'workerB'
         }, jobs, function(){
           workerA.init(function(){
@@ -272,7 +350,7 @@ describe('queue', function(){
       it('we can see what workers are working on (active)', function(done){
         var listener = workerA.on('job', function(q, job, failure){
           workerA.removeAllListeners('job');
-          
+
           queue.allWorkingOn(function(err, data){
             should.not.exist(err);
             data.should.containEql({'workerB': 'started'});
@@ -281,7 +359,7 @@ describe('queue', function(){
             paylaod.class.should.equal('slowJob');
 
             done();
-          });          
+          });
         });
 
         queue.enqueue(specHelper.queue, "slowJob");
