@@ -31,7 +31,7 @@ describe('scheduler', function(){
 
     var resolved = false;
     scheduler = new specHelper.NR.scheduler({connection: connectionDetails, timeout: specHelper.timeout}, function(err){
-      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x... 
+      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x...
         should.exist(err);
         resolved = true;
         done();
@@ -81,7 +81,7 @@ describe('scheduler', function(){
             should.exist(obj);
             obj = JSON.parse(obj);
             obj['class'].should.equal('someJob');
-            // obj['args'].should.equal([1,2,3]);
+            obj['args'].should.eql([1,2,3]);
             done();
           });
         });

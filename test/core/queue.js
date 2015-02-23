@@ -66,7 +66,7 @@ describe('queue', function(){
           should.exist(obj);
           obj = JSON.parse(obj);
           obj['class'].should.equal('someJob');
-          // obj['args'].should.equal([1,2,3]);
+          obj['args'].should.eql([1,2,3]);
           done();
         });
       });
@@ -80,7 +80,7 @@ describe('queue', function(){
             should.exist(obj);
             obj = JSON.parse(obj);
             obj['class'].should.equal('someJob');
-            // obj['args'].should.equal([1,2,3]);
+            obj['args'].should.eql([1,2,3]);
             done();
           });
         });
@@ -96,7 +96,7 @@ describe('queue', function(){
             should.exist(obj);
             obj = JSON.parse(obj);
             obj['class'].should.equal('someJob');
-            // obj['args'].should.equal([1,2,3]);
+            obj['args'].should.eql([1,2,3]);
             done();
           });
         });
