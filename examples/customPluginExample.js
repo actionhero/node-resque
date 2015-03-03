@@ -79,7 +79,7 @@ var jobs = {
 ////////////////////
 
 var worker = new NR.worker({connection: connectionDetails, queues: ['default']}, jobs, function(){
-  worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers
+  worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers on this host
   worker.start();
 });
 
