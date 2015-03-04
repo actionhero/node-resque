@@ -385,7 +385,7 @@ describe('queue', function(){
             paylaod.queue.should.equal('test_queue');
             paylaod.class.should.equal('slowJob');
 
-            queue.cleanOldWorkers(age, specHelper.queue, function(err, data){
+            queue.cleanOldWorkers(age, function(err, data){
               should.not.exist(err);
               Object.keys(data).length.should.equal(1);
               data.workerA.queue.should.equal('test_queue');
@@ -418,14 +418,14 @@ describe('queue', function(){
         var listener = workerA.on('job', function(q, job, failure){
           workerA.removeAllListeners('job');
 
-          queue.cleanOldWorkers(age, specHelper.queue, function(err, data){
+          queue.cleanOldWorkers(age, function(err, data){
             should.not.exist(err);
             Object.keys(data).length.should.equal(0);
             queue.allWorkingOn(function(err, data){
               var paylaod = data['workerA'].payload;
               paylaod.queue.should.equal('test_queue');
               paylaod.class.should.equal('slowJob');
-              
+
               done();
             });
           });
