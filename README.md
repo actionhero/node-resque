@@ -199,7 +199,7 @@ You can use the queue object to check on your wokrers:
 
 From time to time, your jobs/workers may fail.  Resque workers will move failed jobs to a special `failed` queue which will store the original arguments of your job, the failing stack trace, and additional medatadata.
 
-![error example](LINKHERE)
+![error example](https://raw.githubusercontent.com/taskrabbit/node-resque/master/images/error_payload.png)
 
 You can work with these failed jobs with the following methods:
 
