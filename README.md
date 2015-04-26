@@ -195,9 +195,9 @@ You can use the queue object to check on your wokrers:
 - **queue.allWorkingOn** = function(callback)`
   - returns a hash of the results of `queue.workingOn` with the worker names as keys.
 
-## Failed Job Managmet
+## Failed Job Managment
 
-From time to time, your jobs/workers may fail.  Resque workers will move failed jobs to a specail `failed` queue which will store the original arguments of your job, the failing stack trace, and additional medatadata.
+From time to time, your jobs/workers may fail.  Resque workers will move failed jobs to a special `failed` queue which will store the original arguments of your job, the failing stack trace, and additional medatadata.
 
 ![error example](LINKHERE)
 
@@ -209,7 +209,7 @@ You can work with these failed jobs with the following methods:
 
 - **queue.failed** = function(start, stop, callback)
   - callback(error, failedJobs)
-  - `failedJobs` is an array listing the data of the failed jobs.  Each elemet looks like:
+  - `failedJobs` is an array listing the data of the failed jobs.  Each element looks like:
 
 ```javascript
 { worker: 'busted-worker-3',
@@ -222,12 +222,14 @@ You can work with these failed jobs with the following methods:
 
 - **queue.removeFailed** = function(failedJob, callback)
   - callback(error)
-  - the input `failedJob` is an expanded node object representing the failed job, retrived via `queue.failed`
+  - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
 
 - **queue.retryAndRemoveFailed** = function(failedJob, callback)
   - callback(error)
-  - the input `failedJob` is an expanded node object representing the failed job, retrived via `queue.failed`
+  - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
   - this method will instantly re-enqueue a failed job back to its original queue, and delete the failed entry for that job
+
+
 
 
 ## Plugins
