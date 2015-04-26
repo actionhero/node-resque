@@ -229,9 +229,6 @@ You can work with these failed jobs with the following methods:
   - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
   - this method will instantly re-enqueue a failed job back to its original queue, and delete the failed entry for that job
 
-
-
-
 ## Plugins
 
 Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
