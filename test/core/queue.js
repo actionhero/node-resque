@@ -308,12 +308,9 @@ describe('queue', function(){
           queue.removeFailed(failedJobs[0], function(err, removedJobs){
             should.not.exist(err);
             removedJobs.should.equal(1);
-            queue.removeFailed(failedJobs[1], function(err, removedJobs){
-              removedJobs.should.equal(0);
-              queue.failedCount(function(err, failedCount){
-                failedCount.should.equal(2);
-                done();
-              });
+            queue.failedCount(function(err, failedCount){
+              failedCount.should.equal(2);
+              done();
             });
           });
         });
