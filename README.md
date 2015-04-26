@@ -195,6 +195,41 @@ You can use the queue object to check on your wokrers:
 - **queue.allWorkingOn** = function(callback)`
   - returns a hash of the results of `queue.workingOn` with the worker names as keys.
 
+## Failed Job Managmet
+
+From time to time, your jobs/workers may fail.  Resque workers will move failed jobs to a specail `failed` queue which will store the original arguments of your job, the failing stack trace, and additional medatadata.
+
+![error example](LINKHERE)
+
+You can work with these failed jobs with the following methods:
+
+- **queue.failedCount** = function(callback)
+  - callback(error, failedCount)
+  - `failedCount` is the number of jobs in the failed queue
+
+- **queue.failed** = function(start, stop, callback)
+  - callback(error, failedJobs)
+  - `failedJobs` is an array listing the data of the failed jobs.  Each elemet looks like:
+
+```javascript
+{ worker: 'busted-worker-3',
+  queue: 'busted-queue',
+  payload: { class: 'busted_job', queue: 'busted-queue', args: [ 1, 2, 3 ] },
+  exception: 'ERROR_NAME',
+  error: 'I broke',
+  failed_at: 'Sun Apr 26 2015 14:00:44 GMT+0100 (BST)' }
+```
+
+- **queue.removeFailed** = function(failedJob, callback)
+  - callback(error)
+  - the input `failedJob` is an expanded node object representing the failed job, retrived via `queue.failed`
+
+- **queue.retryAndRemoveFailed** = function(failedJob, callback)
+  - callback(error)
+  - the input `failedJob` is an expanded node object representing the failed job, retrived via `queue.failed`
+  - this method will instantly re-enqueue a failed job back to its original queue, and delete the failed entry for that job
+
+
 ## Plugins
 
 Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`

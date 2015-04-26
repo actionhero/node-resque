@@ -244,6 +244,114 @@ describe('queue', function(){
       });
     });
 
+    describe('failed job managment', function(){
+
+      beforeEach(function(done){
+
+        var errorPayload = function(id){ 
+          return JSON.stringify({
+            worker: 'busted-worker-' + id,
+            queue: 'busted-queue',
+            payload: {
+              "class": 'busted_job',
+              queue: 'busted-queue',
+              args: [1,2,3]
+            },
+            exception: 'ERROR_NAME',
+            error: 'I broke',
+            failed_at: (new Date()).toString()
+          });
+        };
+
+        queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(1), function(){
+        queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(2), function(){
+        queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(3), function(){
+          done();
+        });
+        });
+        });
+
+      });
+
+      it('can list how many failed jobs there are', function(done){
+        queue.failedCount(function(err, failedCount){
+          should.not.exist(err);
+          failedCount.should.equal(3);
+          done();
+        });
+      });
+
+      it('can get the body content for a collection of failed jobs', function(done){
+        queue.failed(1,2, function(err, failedJobs){
+          should.not.exist(err);
+          failedJobs.length.should.equal(2);
+          
+          failedJobs[0].worker.should.equal('busted-worker-2');
+          failedJobs[0].queue.should.equal('busted-queue');
+          failedJobs[0].exception.should.equal('ERROR_NAME');
+          failedJobs[0].error.should.equal('I broke');
+          failedJobs[0].payload.args.should.eql([1,2,3]);
+
+          failedJobs[1].worker.should.equal('busted-worker-3');
+          failedJobs[1].queue.should.equal('busted-queue');
+          failedJobs[1].exception.should.equal('ERROR_NAME');
+          failedJobs[1].error.should.equal('I broke');
+          failedJobs[1].payload.args.should.eql([1,2,3]);
+
+          done();
+        });
+      });
+
+      it('can remove a failed job by payload', function(done){
+        queue.failed(1,1, function(err, failedJobs){
+          failedJobs.length.should.equal(1);
+          queue.removeFailed(failedJobs[0], function(err, removedJobs){
+            should.not.exist(err);
+            removedJobs.should.equal(1);
+            queue.removeFailed(failedJobs[1], function(err, removedJobs){
+              removedJobs.should.equal(0);
+              queue.failedCount(function(err, failedCount){
+                failedCount.should.equal(2);
+                done();
+              });
+            });
+          });
+        });
+      });
+
+      it('can re-enqueue a specific job, removing it from the failed queue', function(done){
+        queue.failed(0,999, function(err, failedJobs){
+          failedJobs.length.should.equal(3);
+          failedJobs[2].worker.should.equal('busted-worker-3');
+          queue.retryAndRemoveFailed(failedJobs[2], function(err, retriedJob){
+            should.not.exist(err);
+            queue.failed(0,999, function(err, failedJobs){
+              failedJobs.length.should.equal(2);
+              failedJobs[0].worker.should.equal('busted-worker-1');
+              failedJobs[1].worker.should.equal('busted-worker-2');
+              done();
+            });
+          });
+        });
+      });
+
+      it('will return an error when trying to retry a job not in the failed queue', function(done){
+        queue.failed(0,999, function(err, failedJobs){
+          failedJobs.length.should.equal(3);
+          var failedJob = failedJobs[2];
+          failedJob.worker = 'a-fake-worker';
+          queue.retryAndRemoveFailed(failedJob, function(err, retriedJob){
+            String(err).should.eql('Error: This job is not in failed queue');
+            queue.failed(0,999, function(err, failedJobs){
+              failedJobs.length.should.equal(3);
+              done();
+            });
+          });
+        });
+      });
+
+    });
+
     describe('delayed status', function(){
 
       beforeEach(function(done){
