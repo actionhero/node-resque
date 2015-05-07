@@ -229,6 +229,14 @@ You can work with these failed jobs with the following methods:
   - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
   - this method will instantly re-enqueue a failed job back to its original queue, and delete the failed entry for that job
 
+## Failed Worker Managment
+
+Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance to notifiy redis that it is leaving the pool (this happens all the time on PAAS providers like Heroku).  When this happens, you will not only need to extract the job from the now-zombie worker's "working on" status, but also remove the stuck worker.  To aid you in these edge cases, ``queue.cleanOldWorkers(age, callback)` is available.  
+
+Because there are no 'heartbeats' in resque, it is imposable for the application to know if a worker has been working on a long job or it is dead.  You are required to provide an "age" for how long a worker has been "working", and all those older than that age will be removed, and the job they are working on moved to the error queue (where you can then use `queue.retryAndRemoveFailed`) to re-enqueue the job.
+
+If you know the name of a worker that should be removed, you can also call `queue.forceCleanWorker(workerName, callback)` directly, and that will also remove the worker and move any job it was working on into the error queue.
+
 ## Plugins
 
 Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
