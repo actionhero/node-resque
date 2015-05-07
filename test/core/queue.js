@@ -402,7 +402,7 @@ describe('queue', function(){
     describe('worker status', function(){
       var workerA;
       var workerB;
-      var timeout = 100;
+      var timeout = 500;
 
       var jobs = {
         "slowJob": {
@@ -479,6 +479,67 @@ describe('queue', function(){
         queue.enqueue(specHelper.queue, "slowJob");
         workerA.start();
       });
+
+      it('can remove stuck workers', function(done){
+        var age = 1;
+        var listener = workerA.on('job', function(q, job, failure){
+          workerA.removeAllListeners('job');
+
+          queue.allWorkingOn(function(err, data){
+            var paylaod = data['workerA'].payload;
+            paylaod.queue.should.equal('test_queue');
+            paylaod.class.should.equal('slowJob');
+
+            queue.cleanOldWorkers(age, function(err, data){
+              should.not.exist(err);
+              Object.keys(data).length.should.equal(1);
+              data.workerA.queue.should.equal('test_queue');
+              data.workerA.worker.should.equal('workerA');
+              data.workerA.payload.class.should.equal('slowJob');
+
+              specHelper.redis.rpop(specHelper.namespace + ":" + "failed", function(err, data){
+                data = JSON.parse(data);
+                data.queue.should.equal(specHelper.queue);
+                data.exception.should.equal('Worker Timeout (killed manually)');
+                data.error.should.equal('Worker Timeout (killed manually)');
+                data.payload.class.should.equal('slowJob');
+
+                queue.allWorkingOn(function(err, data){
+                  Object.keys(data).length.should.equal(1);
+                  data.workerB.should.equal('started');
+                  done();
+                });
+              });
+            });
+          });
+        });
+
+        queue.enqueue(specHelper.queue, "slowJob");
+        workerA.start();
+      });
+
+      it('will not remove stuck jobs within the timelimit', function(done){
+        var age = 999;
+        var listener = workerA.on('job', function(q, job, failure){
+          workerA.removeAllListeners('job');
+
+          queue.cleanOldWorkers(age, function(err, data){
+            should.not.exist(err);
+            Object.keys(data).length.should.equal(0);
+            queue.allWorkingOn(function(err, data){
+              var paylaod = data['workerA'].payload;
+              paylaod.queue.should.equal('test_queue');
+              paylaod.class.should.equal('slowJob');
+
+              done();
+            });
+          });
+        });
+
+        queue.enqueue(specHelper.queue, "slowJob");
+        workerA.start();
+      });
+
     });
 
   });
