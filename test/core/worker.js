@@ -55,13 +55,20 @@ describe('worker', function(){
       namespace: specHelper.connectionDetails.namespace,
     };
 
-    resolved = false;
-    worker = new specHelper.NR.worker({connection: connectionDetails, timeout: specHelper.timeout}, jobs, function(err){
-      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x...
-        should.exist(err);
-        resolved = true;
-        done();
-      }
+    var resolved = false;
+    worker = new specHelper.NR.worker({
+      connection: connectionDetails,
+      timeout: specHelper.timeout
+    }, jobs, function(err){
+      if (!resolved) should.exist(err);
+      if (!resolved) worker.workerCleanup(function (err) {
+        // new versions of redis will keep retrying in node v0.11x...
+        if(!resolved){
+          should.exist(err);
+          resolved = true;
+          done();
+        }
+      });
     });
   });
 
