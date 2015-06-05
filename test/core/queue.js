@@ -114,6 +114,19 @@ describe('queue', function(){
       });
     });
 
+    it ('can get the jobs in the queue', function(done){
+      queue.enqueue(specHelper.queue, 'someJob', [1,2,3], function(){
+        queue.enqueue(specHelper.queue, 'someJob', [4,5,6], function(){
+          queue.queued(specHelper.queue, 0, -1, function(err, jobs){
+            jobs.length.should.equal(2);
+            jobs[0]['args'].should.eql([1,2,3]);
+            jobs[1]['args'].should.eql([4,5,6]);
+            done();
+          })
+        })
+      })
+    });
+
     it('can find previously scheduled jobs', function(done){
       queue.enqueueAt(10000, specHelper.queue, 'someJob', [1,2,3], function(){
         queue.scheduledAt(specHelper.queue, 'someJob', [1,2,3], function(err, timestamps){
