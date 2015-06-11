@@ -2,7 +2,7 @@
   "author": "Evan Tahler <evantahler@gmail.com>",
   "name": "node-resque",
   "description": "an opinionated implementation of resque in node",
-  "version": "0.16.1",
+  "version": "0.16.2",
   "homepage": "http://github.com/taskrabbit/node-resque",
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "redis": "~0.12.1",
-    "async": "~0.9.x"
+    "async": "~1.2.x"
   },
   "devDependencies": {
     "mocha":     "latest",
