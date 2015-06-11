@@ -27,7 +27,7 @@ exports.specHelper = {
     var self = this;
     if(package != 'fakeredis'){
       self.redis = redis.createClient(self.connectionDetails.port, self.connectionDetails.host, self.connectionDetails.options);
-      self.redis.setMaxListeners(9999);
+      self.redis.setMaxListeners(0);
       if(self.connectionDetails.password != null && self.connectionDetails.password != ""){
         self.redis.auth(self.connectionDetails.password, function(err){
           self.redis.select(self.connectionDetails.database, function(err){
@@ -43,6 +43,7 @@ exports.specHelper = {
       }
     }else{
       self.redis = fakeredis.createClient('test');
+      self.redis.setMaxListeners(0);
       self.redis.select(self.connectionDetails.database, function(err){
         process.nextTick(function(){
           self.connectionDetails.redis = self.redis;
