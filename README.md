@@ -251,6 +251,10 @@ Assuming you are running node-resque across multiple machines, you will need to 
 ``` javascript
 var schedule = require('node-schedule');
 
+var scheduler = new NR.scheduler({connection: connectionDetails}, function(){
+  scheduler.start();
+});
+
 var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
   schedule.scheduleJob('10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, cron style
     // we want to ensure that only one instance of this job is scheduled in our enviornment at once, 
