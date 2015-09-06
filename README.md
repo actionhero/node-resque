@@ -242,6 +242,26 @@ Because there are no 'heartbeats' in resque, it is imposable for the application
 
 If you know the name of a worker that should be removed, you can also call `queue.forceCleanWorker(workerName, callback)` directly, and that will also remove the worker and move any job it was working on into the error queue.
 
+## Job Schedules
+
+You may want to use node-resque to schedule jobs every minute/hour/day, like a distribued CRON job.  There are a nuber of excelent node packages to help you with this, like (node-schedule)[https://github.com/tejasmanohar/node-schedule] and (node-cron)[https://github.com/ncb000gt/node-cron].  Node-resque makes it possible for you to use the packages to schedule jobs with.  
+Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduluing the jobs.  To help you with this, you can inspect which of the scheduler processes is corrently acting as master, and flag only the master scheduler process to run the schedule.  A full example can be found at [/examples/scheduledJobs.js](https://github.com/taskrabbit/node-resque/blob/master/examples/scheduledJobs.js), but the relevent section is:
+
+``` javascript
+var schedule = require('node-schedule');
+
+var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
+  schedule.scheduleJob('10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, cron style
+    // we want to ensure that only one instance of this job is scheduled in our enviornment at once, 
+    // no matter how many schedulers we have running
+    if(scheduler.master){ 
+      console.log(">>> enquing a job");
+      queue.enqueue('time', "ticktock", new Date().toString() ); 
+    }
+  });
+});
+```
+
 ## Plugins
 
 Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
