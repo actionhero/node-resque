@@ -148,20 +148,20 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs
 ## Notes
 - Be sure to call `worker.end()` before shutting down your application if you want to properly clear your worker status from resque
 - When ending your application, be sure to allow your workers time to finish what they are working on
-- This project impements the "scheduler" part of rescue-scheduler (the daemon which can promote enqueued delayed jobs into the work queues when it is time), but not the CRON scheduler proxy. 
+- This project implements the "scheduler" part of rescue-scheduler (the daemon which can promote enqueued delayed jobs into the work queues when it is time), but not the CRON scheduler proxy. 
 - If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor
-- If a job fails, it will be added to a special `failed` queue.  You can then inspect these jobs, write a plugin to manage them, move them back to the normal queues, etc.  Failure behavior by default is just to enter the `failed` queue, but there are many options.  Check out these examples from the ruby ecosystem for insperation:
+- If a job fails, it will be added to a special `failed` queue.  You can then inspect these jobs, write a plugin to manage them, move them back to the normal queues, etc.  Failure behavior by default is just to enter the `failed` queue, but there are many options.  Check out these examples from the ruby ecosystem for inspiration:
   - https://github.com/lantins/resque-retry
   - https://github.com/resque/resque/wiki/Failure-Backends
-- If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the patern `hostname:pid+unique_id`.  For example:
+- If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the pattern `hostname:pid+unique_id`.  For example:
 
 ```javascript
 var name = os.hostname() + ":" + process.pid + "+" + counter;
 var worker = new NR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
 ```
-## Queue Managment
+## Queue Management
 
-Additonal methods provided on the `queue` object:
+Additional methods provided on the `queue` object:
 
 - **queue.prototype.queues** = function(callback)
   - callback(error, array_of_queues)
@@ -191,7 +191,7 @@ Additonal methods provided on the `queue` object:
 
 ## Worker Status
 
-You can use the queue object to check on your wokrers:
+You can use the queue object to check on your workers:
 
 - **queue.workers** = function(callback)`
   - returns: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
@@ -200,9 +200,9 @@ You can use the queue object to check on your wokrers:
 - **queue.allWorkingOn** = function(callback)`
   - returns a hash of the results of `queue.workingOn` with the worker names as keys.
 
-## Failed Job Managment
+## Failed Job Management
 
-From time to time, your jobs/workers may fail.  Resque workers will move failed jobs to a special `failed` queue which will store the original arguments of your job, the failing stack trace, and additional medatadata.
+From time to time, your jobs/workers may fail.  Resque workers will move failed jobs to a special `failed` queue which will store the original arguments of your job, the failing stack trace, and additional metadata.
 
 ![error example](https://raw.githubusercontent.com/taskrabbit/node-resque/master/images/error_payload.png)
 
@@ -234,9 +234,9 @@ You can work with these failed jobs with the following methods:
   - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
   - this method will instantly re-enqueue a failed job back to its original queue, and delete the failed entry for that job
 
-## Failed Worker Managment
+## Failed Worker Management
 
-Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance to notifiy redis that it is leaving the pool (this happens all the time on PAAS providers like Heroku).  When this happens, you will not only need to extract the job from the now-zombie worker's "working on" status, but also remove the stuck worker.  To aid you in these edge cases, ``queue.cleanOldWorkers(age, callback)` is available.  
+Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance to notify redis that it is leaving the pool (this happens all the time on PAAS providers like Heroku).  When this happens, you will not only need to extract the job from the now-zombie worker's "working on" status, but also remove the stuck worker.  To aid you in these edge cases, ``queue.cleanOldWorkers(age, callback)` is available.  
 
 Because there are no 'heartbeats' in resque, it is imposable for the application to know if a worker has been working on a long job or it is dead.  You are required to provide an "age" for how long a worker has been "working", and all those older than that age will be removed, and the job they are working on moved to the error queue (where you can then use `queue.retryAndRemoveFailed`) to re-enqueue the job.
 
@@ -244,9 +244,9 @@ If you know the name of a worker that should be removed, you can also call `queu
 
 ## Job Schedules
 
-You may want to use node-resque to schedule jobs every minute/hour/day, like a distribued CRON job.  There are a nuber of excelent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and [node-cron](https://github.com/ncb000gt/node-cron).  Node-resque makes it possible for you to use the packages to schedule jobs with.  
+You may want to use node-resque to schedule jobs every minute/hour/day, like a distributed CRON job.  There are a number of excellent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and [node-cron](https://github.com/ncb000gt/node-cron).  Node-resque makes it possible for you to use the packages to schedule jobs with.  
 
-Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduluing the jobs.  To help you with this, you can inspect which of the scheduler processes is corrently acting as master, and flag only the master scheduler process to run the schedule.  A full example can be found at [/examples/scheduledJobs.js](https://github.com/taskrabbit/node-resque/blob/master/examples/scheduledJobs.js), but the relevent section is:
+Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduling the jobs.  To help you with this, you can inspect which of the scheduler processes is corrently acting as master, and flag only the master scheduler process to run the schedule.  A full example can be found at [/examples/scheduledJobs.js](https://github.com/taskrabbit/node-resque/blob/master/examples/scheduledJobs.js), but the relevant section is:
 
 ``` javascript
 var schedule = require('node-schedule');
@@ -256,8 +256,8 @@ var scheduler = new NR.scheduler({connection: connectionDetails}, function(){
 });
 
 var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
-  schedule.scheduleJob('10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, cron style
-    // we want to ensure that only one instance of this job is scheduled in our enviornment at once, 
+  schedule.scheduleJob('10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, CRON style
+    // we want to ensure that only one instance of this job is scheduled in our environment at once, 
     // no matter how many schedulers we have running
     if(scheduler.master){ 
       console.log(">>> enquing a job");
@@ -329,7 +329,7 @@ var jobs = {
 
 **notes**
 
-- All plugins which return `(error, toRun)`.  if `toRun = false` on  `beforeEnqueue`, the job beign inqueued will be thrown away, and if `toRun = false` on `beforePerfporm`, the job will be reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
+- All plugins which return `(error, toRun)`.  if `toRun = false` on  `beforeEnqueue`, the job begin enqueued will be thrown away, and if `toRun = false` on `beforePerfporm`, the job will be reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
 - If you are writing a plugin to deal with errors which may occur during your resque job, you can inspect and modify `worker.error` in your plugin.  If `worker.error` is null, no error will be logged in the resque error queue.
 - There are a few included plugins, all in the lib/plugins/* directory. You can rewrite you own and include it like this:
 
@@ -350,7 +350,7 @@ var jobs = {
 
 ## Multi Worker
 
-node-resque provides a wrapper around the `worker` object which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low rendering overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1.  The `multiWorker` handles this by spawngning more and more node-resque workers and managing the pool.  
+node-resque provides a wrapper around the `worker` object which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low rendering overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1.  The `multiWorker` handles this by spawning more and more node-resque workers and managing the pool.  
 
 ```javascript
 var NR = require(__dirname + "/../index.js");
@@ -392,7 +392,7 @@ var multiWorker = new NR.multiWorker({
 ```
 
 ## Presentation
-This package was featued heavily in [this presentation I gave](http://blog.evantahler.com/blog/background-tasks-for-node.html) about background jobs + node.js.  It contains more examples! 
+This package was featured heavily in [this presentation I gave](http://blog.evantahler.com/blog/background-tasks-for-node.html) about background jobs + node.js.  It contains more examples! 
 
 ## Acknowledgments
 Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
