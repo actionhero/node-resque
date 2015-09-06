@@ -5,6 +5,10 @@
 var NR = require(__dirname + "/../index.js");
 // In your projects: var NR = require("node-resque");
 
+// we'll use https://github.com/tejasmanohar/node-schedule for this example, 
+// but there are many other excelent node scheduling projects
+var schedule = require('node-schedule');
+
 ///////////////////////////
 // SET UP THE CONNECTION //
 ///////////////////////////
@@ -15,39 +19,16 @@ var connectionDetails = {
   password:  "",
   port:      6379,
   database:  0,
-  // namespace: "resque",
-  // looping: true
-}
+};
 
 //////////////////////////////
 // DEFINE YOUR WORKER TASKS //
 //////////////////////////////
 
-var jobsToComplete = 0;
 var jobs = {
-  "add": {
-    plugins: [ 'jobLock' ],
-    pluginOptions: {
-      jobLock: {},
-    },
-    perform: function(a,b,callback){
-      setTimeout(function(){
-        jobsToComplete--;
-        shutdown();
-
-        var answer = a + b;
-        callback(null, answer);
-      }, 1000);
-    },
-  },
-  "subtract": {
-    perform: function(a,b,callback){
-      jobsToComplete--;
-      shutdown();
-
-      var answer = a - b;
-      callback(null, answer);
-    },
+  ticktock: function(time, callback){
+    console.log('*** THE TIME IS ' + time + ' ***');
+    callback(null, true);
   },
 };
 
@@ -55,7 +36,7 @@ var jobs = {
 // START A WORKER //
 ////////////////////
 
-var worker = new NR.worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs, function(){
+var worker = new NR.worker({connection: connectionDetails, queues: ['time']}, jobs, function(){
   worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers on this host
   worker.start();
 });
@@ -91,26 +72,34 @@ scheduler.on('error',             function(error){ console.log("scheduler error 
 scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
 scheduler.on('transferred_job',   function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
 
-////////////////////////
-// CONNECT TO A QUEUE //
-////////////////////////
+
+/////////////////
+// DEFINE JOBS //
+/////////////////
 
 var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
-  queue.enqueue('math', "add", [1,2]);
-  queue.enqueue('math', "add", [1,2]);
-  queue.enqueue('math', "add", [2,3]);
-  queue.enqueueIn(3000, 'math', "subtract", [2,1]);
-  jobsToComplete = 4;
+  schedule.scheduleJob('10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, cron style
+    // we want to ensure that only one instance of this job is scheduled in our enviornment at once, 
+    // no matter how many schedulers we have running
+    if(scheduler.master){ 
+      console.log(">>> enquing a job");
+      queue.enqueue('time', "ticktock", new Date().toString() ); 
+    }
+  });
 });
 
+//////////////////////
+// SHUTDOWN HELPERS //
+//////////////////////
+
 var shutdown = function(){
-  if(jobsToComplete === 0){
-    setTimeout(function(){
-      scheduler.end(function(){
-        worker.end(function(){
-          process.exit();
-        });
-      });
-    }, 500);
-  }
-}
+  scheduler.end(function(){
+    worker.end(function(){
+      console.log('bye.');
+      process.exit();
+    });
+  });
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

@@ -85,6 +85,7 @@ worker.on('pause',           function(){ console.log("worker paused"); })
 scheduler.on('start',             function(){ console.log("scheduler started"); })
 scheduler.on('end',               function(){ console.log("scheduler ended"); })
 scheduler.on('error',             function(error){ console.log("scheduler error >> " + error); })
+scheduler.on('master',            function(){ console.log("scheduler became master"); })
 scheduler.on('poll',              function(){ console.log("scheduler polling"); })
 scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); })
 scheduler.on('transferred_job',    function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); })
@@ -240,6 +241,26 @@ Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance
 Because there are no 'heartbeats' in resque, it is imposable for the application to know if a worker has been working on a long job or it is dead.  You are required to provide an "age" for how long a worker has been "working", and all those older than that age will be removed, and the job they are working on moved to the error queue (where you can then use `queue.retryAndRemoveFailed`) to re-enqueue the job.
 
 If you know the name of a worker that should be removed, you can also call `queue.forceCleanWorker(workerName, callback)` directly, and that will also remove the worker and move any job it was working on into the error queue.
+
+## Job Schedules
+
+You may want to use node-resque to schedule jobs every minute/hour/day, like a distribued CRON job.  There are a nuber of excelent node packages to help you with this, like (node-schedule)[https://github.com/tejasmanohar/node-schedule] and (node-cron)[https://github.com/ncb000gt/node-cron].  Node-resque makes it possible for you to use the packages to schedule jobs with.  
+Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduluing the jobs.  To help you with this, you can inspect which of the scheduler processes is corrently acting as master, and flag only the master scheduler process to run the schedule.  A full example can be found at [/examples/scheduledJobs.js](https://github.com/taskrabbit/node-resque/blob/master/examples/scheduledJobs.js), but the relevent section is:
+
+``` javascript
+var schedule = require('node-schedule');
+
+var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
+  schedule.scheduleJob('10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, cron style
+    // we want to ensure that only one instance of this job is scheduled in our enviornment at once, 
+    // no matter how many schedulers we have running
+    if(scheduler.master){ 
+      console.log(">>> enquing a job");
+      queue.enqueue('time', "ticktock", new Date().toString() ); 
+    }
+  });
+});
+```
 
 ## Plugins
 

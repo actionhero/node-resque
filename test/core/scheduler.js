@@ -39,6 +39,31 @@ describe('scheduler', function(){
     });
   });
 
+  describe('locking', function(){
+    before(function(done){ specHelper.connect(done); });
+    beforeEach(function(done){ specHelper.cleanup(done); });
+    after(function(done){ specHelper.cleanup(done); });
+
+    it('should only have one master; and can failover', function(done){
+      sheduler_1 = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout});
+      sheduler_2 = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout});
+
+      sheduler_1.start();
+      sheduler_2.start();
+
+      setTimeout(function(){
+        sheduler_1.master.should.equal(true);
+        sheduler_2.master.should.equal(false);
+        sheduler_1.end();
+        setTimeout(function(){
+          sheduler_1.master.should.equal(false);
+          sheduler_2.master.should.equal(true);
+          sheduler_2.end(function(){ done(); });
+        }, (specHelper.timeout * 2));
+      }, (specHelper.timeout * 2));
+    });
+  });
+
   describe('[with connection]', function() {
     before(function(done){
       specHelper.connect(function(){
@@ -50,17 +75,8 @@ describe('scheduler', function(){
       });
     });
 
-    beforeEach(function(done) {
-      specHelper.cleanup(function(){
-        done();
-      });
-    });
-
-    after(function(done){
-      specHelper.cleanup(function(){
-        done();
-      });
-    });
+    beforeEach(function(done){ specHelper.cleanup(done); });
+    after(function(done){ specHelper.cleanup(done); });
 
     it("can boot", function(done){
       scheduler.start();
