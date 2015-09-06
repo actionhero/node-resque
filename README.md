@@ -244,7 +244,7 @@ If you know the name of a worker that should be removed, you can also call `queu
 
 ## Job Schedules
 
-You may want to use node-resque to schedule jobs every minute/hour/day, like a distribued CRON job.  There are a nuber of excelent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and pnode-cron](https://github.com/ncb000gt/node-cron).  Node-resque makes it possible for you to use the packages to schedule jobs with.  
+You may want to use node-resque to schedule jobs every minute/hour/day, like a distribued CRON job.  There are a nuber of excelent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and [node-cron](https://github.com/ncb000gt/node-cron).  Node-resque makes it possible for you to use the packages to schedule jobs with.  
 Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduluing the jobs.  To help you with this, you can inspect which of the scheduler processes is corrently acting as master, and flag only the master scheduler process to run the schedule.  A full example can be found at [/examples/scheduledJobs.js](https://github.com/taskrabbit/node-resque/blob/master/examples/scheduledJobs.js), but the relevent section is:
 
 ``` javascript
