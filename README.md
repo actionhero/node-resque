@@ -148,7 +148,7 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs
 ## Notes
 - Be sure to call `worker.end()` before shutting down your application if you want to properly clear your worker status from resque
 - When ending your application, be sure to allow your workers time to finish what they are working on
-- This project implements the "scheduler" part of rescue-scheduler (the daemon which can promote enqueued delayed jobs into the work queues when it is time), but not the CRON scheduler proxy.  To learn more about how to use a CRON-like scheduler, read the [Job Scheduled](#job-schedules)section of this document.
+- This project implements the "scheduler" part of rescue-scheduler (the daemon which can promote enqueued delayed jobs into the work queues when it is time), but not the CRON scheduler proxy.  To learn more about how to use a CRON-like scheduler, read the [Job Schedules](#job-schedules) section of this document.
 - If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor
 - If a job fails, it will be added to a special `failed` queue.  You can then inspect these jobs, write a plugin to manage them, move them back to the normal queues, etc.  Failure behavior by default is just to enter the `failed` queue, but there are many options.  Check out these examples from the ruby ecosystem for inspiration:
   - https://github.com/lantins/resque-retry
