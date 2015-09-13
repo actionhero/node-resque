@@ -7,7 +7,8 @@ describe('scheduler', function(){
   var queue;
 
   it("can connect", function(done){
-    scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, function(){
+    scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout});
+    scheduler.connect(function(){
       should.exist(scheduler);
       done();
     });
@@ -19,23 +20,24 @@ describe('scheduler', function(){
       return done();
     }
 
-    // Make a copy of the connectionDetails so we don't overwrite the original one
     var connectionDetails = {
       package:   specHelper.connectionDetails.package,
       host:      "wronghostname",
       password:  specHelper.connectionDetails.password,
-      port:      "wrongport",
+      port:      specHelper.connectionDetails.port,
       database:  specHelper.connectionDetails.database,
       namespace: specHelper.connectionDetails.namespace,
     };
 
-    var resolved = false;
-    scheduler = new specHelper.NR.scheduler({connection: connectionDetails, timeout: specHelper.timeout}, function(err){
-      if(resolved === false){ // new versions of redis will keep retrying in node v0.11x...
-        should.exist(err);
-        resolved = true;
-        done();
-      }
+    scheduler = new specHelper.NR.scheduler({connection: connectionDetails, timeout: specHelper.timeout});
+    scheduler.connect(function(){
+      throw new Error('should not get here');
+    });
+
+    scheduler.on('error', function(error){
+      error.message.should.equal('getaddrinfo ENOTFOUND wronghostname');
+      scheduler.end();
+      done();
     });
   });
 
@@ -47,6 +49,9 @@ describe('scheduler', function(){
     it('should only have one master; and can failover', function(done){
       sheduler_1 = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout});
       sheduler_2 = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout});
+
+      sheduler_1.connect();
+      sheduler_2.connect();
 
       sheduler_1.start();
       sheduler_2.start();
@@ -66,16 +71,21 @@ describe('scheduler', function(){
 
   describe('[with connection]', function() {
     before(function(done){
-      specHelper.connect(function(){
-        scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, function(){
-          queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+      specHelper.connect(done);
+    });
+
+    beforeEach(function(done){ 
+      specHelper.cleanup(function(){
+        scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}); 
+        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue});
+        scheduler.connect(function(){
+          queue.connect(function(){
             done();
           });
         });
-      });
+      }); 
     });
 
-    beforeEach(function(done){ specHelper.cleanup(done); });
     after(function(done){ specHelper.cleanup(done); });
 
     it("can boot", function(done){
@@ -96,8 +106,8 @@ describe('scheduler', function(){
           specHelper.popFromQueue(function(err, obj){
             should.exist(obj);
             obj = JSON.parse(obj);
-            obj['class'].should.equal('someJob');
-            obj['args'].should.eql([1,2,3]);
+            obj.class.should.equal('someJob');
+            obj.args.should.eql([1,2,3]);
             done();
           });
         });

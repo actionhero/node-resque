@@ -12,7 +12,7 @@ if(specHelper.package === 'fakeredis'){
     var minTaskProcessors = 1;
     var maxTaskProcessors = 5;
 
-    var toDisconnectProcessors = true;
+    var toDisconnectProcessors = false;
 
     var blockingSleep = function(naptime){
       var sleeping = true;
@@ -51,9 +51,9 @@ if(specHelper.package === 'fakeredis'){
         queue = new specHelper.NR.queue({
           connection: specHelper.cleanConnectionDetails(), 
           queue: specHelper.queue
-        }, function(){
-          done();
         });
+
+        queue.connect(done);
       });
     });
 
@@ -66,11 +66,13 @@ if(specHelper.package === 'fakeredis'){
         maxTaskProcessors: maxTaskProcessors,
         queue: specHelper.queue,
         toDisconnectProcessors: toDisconnectProcessors,
-      }, jobs, function(err){
-        should.not.exist(err);
-        should.exist(multiWorker);
-        multiWorker.end(done);
-      });
+      }, jobs);
+
+      multiWorker.end(done);
+
+      // multiWorker.on('error', function(error){
+      //   console.log(error);
+      // });
     });
 
     afterEach(function(done){
@@ -108,7 +110,7 @@ if(specHelper.package === 'fakeredis'){
     });
 
     it('should not add workers when CPU utilization is high', function(done){
-      this.timeout(10 * 1000);
+      this.timeout(30 * 1000);
 
       var i = 0;
       while(i < 100){

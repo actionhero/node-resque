@@ -2,8 +2,8 @@ GEM
   remote: http://rubygems.org/
   specs:
     mono_logger (1.1.0)
-    multi_json (1.11.0)
-    rack (1.6.0)
+    multi_json (1.11.2)
+    rack (1.6.4)
     rack-protection (1.5.3)
       rack
     rake (10.4.2)
@@ -21,7 +21,7 @@ GEM
       redis (~> 3.0)
       resque (~> 1.25)
       rufus-scheduler (~> 3.0)
-    rufus-scheduler (3.1.1)
+    rufus-scheduler (3.1.4)
     sinatra (1.4.6)
       rack (~> 1.4)
       rack-protection (~> 1.4)

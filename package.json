@@ -21,13 +21,13 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "redis": "~0.12.1",
-    "async": "~1.2.x"
+    "async": "~1.2.x",
+    "ioredis": "^1.8.0"
   },
   "devDependencies": {
-    "mocha":         "latest",
-    "should":        "latest",
-    "fakeredis":     "latest",
+    "mocha": "latest",
+    "should": "latest",
+    "fakeredis": "latest",
     "node-schedule": "latest"
   },
   "scripts": {

@@ -17,6 +17,31 @@ describe('connection', function(){
     });
   });
 
+  it("can provide an error if connection failed", function(done) {
+    // Only run this test if this is using real redis
+    if(process.env.FAKEREDIS == 'true') {
+      return done();
+    }
+
+    var connectionDetails = {
+      package:   specHelper.connectionDetails.package,
+      host:      "wronghostname",
+      password:  specHelper.connectionDetails.password,
+      port:      specHelper.connectionDetails.port,
+      database:  specHelper.connectionDetails.database,
+      namespace: specHelper.connectionDetails.namespace,
+    };
+
+    var connection = new specHelper.NR.connection(connectionDetails);
+    connection.connect(function(){ throw new Error('should not get here'); });
+
+    connection.on('error', function(error){
+      error.message.should.equal('getaddrinfo ENOTFOUND wronghostname');
+      connection.end();
+      done();
+    });
+  });
+
   it("should stat with no redis keys in the namespace", function(done){
     specHelper.redis.keys(specHelper.namespace + "*", function(err, keys){
       keys.length.should.equal(0);
@@ -28,6 +53,7 @@ describe('connection', function(){
     var connection = new specHelper.NR.connection(specHelper.cleanConnectionDetails());
     connection.connect(function(){
       connection.key("thing").should.equal(specHelper.namespace + ":thing");
+      connection.end();
       done();
     });    
   });
