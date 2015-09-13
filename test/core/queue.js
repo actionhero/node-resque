@@ -35,7 +35,7 @@ describe('queue', function(){
     });
 
     queue.on('error', function(error){
-      error.message.should.match('getaddrinfo ENOTFOUND');
+      error.message.should.match(/getaddrinfo ENOTFOUND/);
       queue.end();
       done();
     });

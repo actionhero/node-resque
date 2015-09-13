@@ -35,7 +35,7 @@ describe('scheduler', function(){
     });
 
     scheduler.on('error', function(error){
-      error.message.should.match('getaddrinfo ENOTFOUND');
+      error.message.should.match(/getaddrinfo ENOTFOUND/);
       scheduler.end();
       done();
     });
