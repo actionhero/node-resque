@@ -35,7 +35,6 @@ var connectionDetails = {
 // DEFINE YOUR WORKER TASKS //
 //////////////////////////////
 
-var jobsToComplete = 0;
 var jobs = {
   "add": {
     plugins: [ 'jobLock' ],
@@ -139,7 +138,13 @@ var connectionDetails = {
   namespace: "resque",
 }
 
-var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs);
+
+worker.on('error', function(){
+	// handler errors
+});
+
+worker.connect(function(){
   worker.start();
 });
 ```
@@ -149,15 +154,22 @@ You can also pass redis client directly.
 ```javascript
 // assume you already initialize redis client before
 
+var redisClient = new Redis();
 var connectionDetails = { redis: redisClient }
 
-var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs, function(){
+var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs, 
+
+worker.on('error', function(){
+	// handler errors
+});
+
+worker.connect(function(){
   worker.start();
 });
 ```
 
 ## Notes
-- Be sure to call `worker.end()` before shutting down your application if you want to properly clear your worker status from resque
+- Be sure to call `worker.end()`, `queue.end()` and `scheduler.end()` before shutting down your application if you want to properly clear your worker status from resque
 - When ending your application, be sure to allow your workers time to finish what they are working on
 - This project implements the "scheduler" part of rescue-scheduler (the daemon which can promote enqueued delayed jobs into the work queues when it is time), but not the CRON scheduler proxy.  To learn more about how to use a CRON-like scheduler, read the [Job Schedules](#job-schedules) section of this document.
 - If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor
@@ -386,23 +398,23 @@ var multiWorker = new NR.multiWorker({
   checkTimeout:        1000,
   maxEventLoopDelay:   10,  
   toDisconnectProcessors: true,
-}, jobs, function(){
+}, jobs);
 
-  // normal worker emitters
-  multiWorker.on('start',             function(workerId){                      console.log("worker["+workerId+"] started"); })
-  multiWorker.on('end',               function(workerId){                      console.log("worker["+workerId+"] ended"); })
-  multiWorker.on('cleaning_worker',   function(workerId, worker, pid){         console.log("cleaning old worker " + worker); })
-  multiWorker.on('poll',              function(workerId, queue){               console.log("worker["+workerId+"] polling " + queue); })
-  multiWorker.on('job',               function(workerId, queue, job){          console.log("worker["+workerId+"] working job " + queue + " " + JSON.stringify(job)); })
-  multiWorker.on('reEnqueue',         function(workerId, queue, job, plugin){  console.log("worker["+workerId+"] reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
-  multiWorker.on('success',           function(workerId, queue, job, result){  console.log("worker["+workerId+"] job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
-  multiWorker.on('failure',           function(workerId, queue, job, failure){ console.log("worker["+workerId+"] job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); })
-  multiWorker.on('error',             function(workerId, queue, job, error){   console.log("worker["+workerId+"] error " + queue + " " + JSON.stringify(job) + " >> " + error); })
-  multiWorker.on('pause',             function(workerId){                      console.log("worker["+workerId+"] paused"); })
-  
-  // multiWorker emitters
-  multiWorker.on('internalError',     function(error){                         console.log(error); })
-  multiWorker.on('multiWorkerAction', function(verb, delay){                   console.log("*** checked for worker status: " + verb + " (event loop delay: " + delay + "ms)"); })
+// normal worker emitters
+multiWorker.on('start',             function(workerId){                      console.log("worker["+workerId+"] started"); })
+multiWorker.on('end',               function(workerId){                      console.log("worker["+workerId+"] ended"); })
+multiWorker.on('cleaning_worker',   function(workerId, worker, pid){         console.log("cleaning old worker " + worker); })
+multiWorker.on('poll',              function(workerId, queue){               console.log("worker["+workerId+"] polling " + queue); })
+multiWorker.on('job',               function(workerId, queue, job){          console.log("worker["+workerId+"] working job " + queue + " " + JSON.stringify(job)); })
+multiWorker.on('reEnqueue',         function(workerId, queue, job, plugin){  console.log("worker["+workerId+"] reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
+multiWorker.on('success',           function(workerId, queue, job, result){  console.log("worker["+workerId+"] job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
+multiWorker.on('failure',           function(workerId, queue, job, failure){ console.log("worker["+workerId+"] job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); })
+multiWorker.on('error',             function(workerId, queue, job, error){   console.log("worker["+workerId+"] error " + queue + " " + JSON.stringify(job) + " >> " + error); })
+multiWorker.on('pause',             function(workerId){                      console.log("worker["+workerId+"] paused"); })
+
+// multiWorker emitters
+multiWorker.on('internalError',     function(error){                         console.log(error); })
+multiWorker.on('multiWorkerAction', function(verb, delay){                   console.log("*** checked for worker status: " + verb + " (event loop delay: " + delay + "ms)");
 
   multiWorker.start();
 });
