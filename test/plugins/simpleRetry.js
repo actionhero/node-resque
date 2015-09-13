@@ -20,17 +20,14 @@ describe('plugins', function(){
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
-        queue = new specHelper.NR.queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs, function(){
-          done();
-        });
+        queue = new specHelper.NR.queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs);
+        queue.connect(done);
       });
     });
   });
 
   afterEach(function(done){
-    specHelper.cleanup(function(){
-      done();
-    });
+    specHelper.cleanup(done);
   });
 
   describe('simpleRetry',function(){
@@ -39,11 +36,14 @@ describe('plugins', function(){
       queue.enqueue(specHelper.queue, "brokenJob", [1,2], function(){
         queue.length(specHelper.queue, function(err, len){
           len.should.equal(1);
+          
           var worker = new specHelper.NR.worker({
             connection: specHelper.connectionDetails, 
             timeout:    specHelper.timeout, 
             queues:     specHelper.queue
-          }, jobs, function(){
+          }, jobs);
+
+          worker.connect(function(){
 
             worker.on('success', function(q, job, result){
               errorCollector.length.should.equal(1);

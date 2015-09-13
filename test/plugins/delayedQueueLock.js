@@ -29,23 +29,19 @@ describe('plugins', function(){
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
-        queue = new specHelper.NR.queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs, function(){
-          done();
-        });
+        queue = new specHelper.NR.queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs);
+        queue.connect(done);
       });
     });
   });
 
   after(function(done){
-    specHelper.cleanup(function(){
-      done();
-    });
+    queue.end();
+    specHelper.cleanup(done);
   });
 
   beforeEach(function(done){
-     specHelper.cleanup(function(){
-       done();
-     });
+     specHelper.cleanup(done);
    });
 
   describe('delayQueueLock',function(){

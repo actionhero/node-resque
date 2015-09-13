@@ -32,7 +32,8 @@ describe('worker', function(){
   };
 
   it("can connect", function(done){
-    worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs, function(){
+    worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, queues: specHelper.queue});
+    worker.connect(function(){
       should.exist(worker);
       worker.end();
       done();
@@ -45,30 +46,24 @@ describe('worker', function(){
       return done();
     }
 
-    // Make a copy of the connectionDetails so we don't overwrite the original one
     var connectionDetails = {
       package:   specHelper.connectionDetails.package,
       host:      "wronghostname",
       password:  specHelper.connectionDetails.password,
-      port:      "wrongport",
+      port:      specHelper.connectionDetails.port,
       database:  specHelper.connectionDetails.database,
       namespace: specHelper.connectionDetails.namespace,
     };
 
-    var resolved = false;
-    worker = new specHelper.NR.worker({
-      connection: connectionDetails,
-      timeout: specHelper.timeout
-    }, jobs, function(err){
-      if (!resolved) should.exist(err);
-      if (!resolved) worker.workerCleanup(function (err) {
-        // new versions of redis will keep retrying in node v0.11x...
-        if(!resolved){
-          should.exist(err);
-          resolved = true;
-          done();
-        }
-      });
+    worker = new specHelper.NR.worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue});
+    worker.connect(function(){
+      throw new Error('should not get here');
+    });
+
+    worker.on('error', function(error){
+      error.message.should.match(/getaddrinfo ENOTFOUND/);
+      worker.end();
+      done();
     });
   });
 
@@ -76,7 +71,8 @@ describe('worker', function(){
 
     before(function(done){
       specHelper.connect(function(){
-        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue}, function(){
+        queue = new specHelper.NR.queue({connection: specHelper.connectionDetails});
+        queue.connect(function(){
           done();
         });
       });
@@ -90,9 +86,12 @@ describe('worker', function(){
 
     it("can boot and stop", function(done){
       this.timeout(specHelper.timeout * 3);
-      worker.start();
-      worker.end(function(){
-        done();
+      worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
+      worker.connect(function(){
+        worker.start();
+        worker.end(function(){
+          done();
+        });
       });
     });
 
@@ -101,11 +100,13 @@ describe('worker', function(){
       it('can clear previously crashed workers from the same host', function(done){
         var name1 = os.hostname() + ":" + "0"; // fake pid
         var name2 = os.hostname() + ":" + process.pid; // real pid
-        var worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs, function(){
+        var worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs);
+        worker1.connect(function(){
           worker1.init(function(){
             worker1.running = false;
             setTimeout(function(){
-              var worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs, function(){
+              var worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs);
+              worker2.connect(function(){
                 worker2.on('cleaning_worker', function(worker, pid){
                   worker.should.equal(name1 + ":*");
                   pid.should.equal(0);
@@ -123,15 +124,12 @@ describe('worker', function(){
     describe('integration', function(){
 
       beforeEach(function(done){
-        worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs, function(){
-          done();
-        });
+        worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+        worker.connect(done);
       });
 
       afterEach(function(done){
-        worker.end(function(){
-          done();
-        });
+        worker.end(done);
       });
 
       it("will mark a job as failed", function(done){

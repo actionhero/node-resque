@@ -1,9 +1,9 @@
-var redis = require('redis');
+var redis = require('ioredis');
 var fakeredis = require('fakeredis');
 var namespace = "resque_test";
 var queue = "test_queue";
 
-var package = 'redis';
+var package = 'ioredis';
 if(process.env.FAKEREDIS === 'true'){ package = 'fakeredis';  }
 
 console.log("Using " + package);
