@@ -35,7 +35,7 @@ describe('queue', function(){
     });
 
     queue.on('error', function(error){
-      error.message.should.equal('getaddrinfo ENOTFOUND wronghostname');
+      error.message.should.match('getaddrinfo ENOTFOUND wronghostname');
       queue.end();
       done();
     });
