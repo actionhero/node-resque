@@ -15,8 +15,7 @@ I learn best by examples:
 // REQUIRE THE PACKAGE //
 /////////////////////////
 
-var NR = require(__dirname + "/../index.js");
-// In your projects: var NR = require("node-resque");
+var NR = require("node-resque");
 
 ///////////////////////////
 // SET UP THE CONNECTION //
@@ -44,20 +43,12 @@ var jobs = {
       jobLock: {},
     },
     perform: function(a,b,callback){
-      setTimeout(function(){
-        jobsToComplete--;
-        shutdown();
-
-        var answer = a + b;
-        callback(null, answer);
-      }, 1000);
+      var answer = a + b;
+      callback(null, answer);
     },
   },
   "subtract": {
     perform: function(a,b,callback){
-      jobsToComplete--;
-      shutdown();
-
       var answer = a - b;
       callback(null, answer);
     },
@@ -117,20 +108,7 @@ queue.connect(function(){
   queue.enqueue('math', "add", [1,2]);
   queue.enqueue('math', "add", [2,3]);
   queue.enqueueIn(3000, 'math', "subtract", [2,1]);
-  jobsToComplete = 4;
 });
-
-var shutdown = function(){
-  if(jobsToComplete === 0){
-    setTimeout(function(){
-      scheduler.end(function(){
-        worker.end(function(){
-          process.exit();
-        });
-      });
-    }, 500);
-  }
-};
 
 ```
 
