@@ -36,7 +36,7 @@ describe('connection', function(){
     connection.connect(function(){ throw new Error('should not get here'); });
 
     connection.on('error', function(error){
-      error.message.should.match('getaddrinfo ENOTFOUND wronghostname');
+      error.message.should.match('getaddrinfo ENOTFOUND');
       connection.end();
       done();
     });

@@ -61,7 +61,7 @@ describe('worker', function(){
     });
 
     worker.on('error', function(error){
-      error.message.should.match('getaddrinfo ENOTFOUND wronghostname');
+      error.message.should.match('getaddrinfo ENOTFOUND');
       worker.end();
       done();
     });
