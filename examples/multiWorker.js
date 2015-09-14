@@ -9,7 +9,8 @@ var connectionDetails = {
   port:      6379,
   database:  0,
   // namespace: 'resque',
-  // looping: true
+  // looping: true,
+  // options: {password: 'abc'},
 };
 
 /////////////////
