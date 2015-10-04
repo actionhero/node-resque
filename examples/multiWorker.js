@@ -13,6 +13,11 @@ var connectionDetails = {
   // options: {password: 'abc'},
 };
 
+// OR
+
+// var ioredis = require('ioredis');
+// connectionDetails = { redis: new ioredis() };
+
 /////////////////
 // DEFINE JOBS //
 /////////////////
