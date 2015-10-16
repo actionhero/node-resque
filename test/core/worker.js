@@ -130,7 +130,7 @@ describe('worker', function(){
     describe('integration', function(){
 
       beforeEach(function(done){
-        worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+        worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
         worker.connect(done);
       });
 
