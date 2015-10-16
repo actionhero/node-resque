@@ -19,6 +19,12 @@ describe('worker', function(){
         callback(new Error("Blue Smoke"));
       }
     },
+    "messWithData": {
+      perform: function(a, callback){
+        a.data = 'new thing';
+        callback(null, a);
+      }
+    },
     "doubleCaller":{
       perform: function(callback){
         callback(null, 'a');
@@ -124,7 +130,7 @@ describe('worker', function(){
     describe('integration', function(){
 
       beforeEach(function(done){
-        worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+        worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
         worker.connect(done);
       });
 
@@ -160,6 +166,17 @@ describe('worker', function(){
         worker.start();
       });
 
+      it('job arguments are immutable', function(done){
+        var listener = worker.on('success', function(q, job, result){
+          result.a.should.equal('starting value');
+          worker.removeAllListeners('success');
+          done();
+        });
+
+        queue.enqueue(specHelper.queue, "messWithData", {a: 'starting value'});
+        worker.start();
+      });
+
       it('can accept jobs that are simple functions', function(done){
         var listener = worker.on('success', function(q, job, result){
           result.should.equal("ok");
@@ -175,7 +192,7 @@ describe('worker', function(){
       it('will not work jobs that are not defined', function(done){
         var listener = worker.on('failure', function(q, job, failure){
           q.should.equal(specHelper.queue);
-          String(failure).should.equal == "Error: No job defined for class 'somethingFake'";
+          String(failure).should.equal("Error: No job defined for class 'somethingFake'");
 
           worker.removeAllListeners('failure');
           done();
