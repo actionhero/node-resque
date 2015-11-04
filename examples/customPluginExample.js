@@ -39,20 +39,9 @@ var myPlugin = function(worker, func, queue, job, args, options){
 // PLUGIN METHODS //
 ////////////////////
 
-myPlugin.prototype.before_enqueue = function(callback){
-  callback(null, true);
-};
-
-myPlugin.prototype.after_enqueue = function(callback){
-  callback(null, true);
-};
-
+// Learn all the callbacks you can use from the Readme.
 myPlugin.prototype.before_perform = function(callback){
   console.log(this.options.messagePrefix + " | " + JSON.stringify(this.args));
-  callback(null, true);
-};
-
-myPlugin.prototype.after_perform = function(callback){
   callback(null, true);
 };
 
@@ -119,4 +108,4 @@ var shutdown = function(){
       });
     }, 500);
   }
-}
+};
