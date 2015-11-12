@@ -21,7 +21,7 @@ describe('scheduler', function(){
     }
 
     var connectionDetails = {
-      package:   specHelper.connectionDetails.package,
+      pkg:   specHelper.connectionDetails.pkg,
       host:      "wronghostname",
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,
@@ -74,16 +74,16 @@ describe('scheduler', function(){
       specHelper.connect(done);
     });
 
-    beforeEach(function(done){ 
+    beforeEach(function(done){
       specHelper.cleanup(function(){
-        scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}); 
+        scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout});
         queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue});
         scheduler.connect(function(){
           queue.connect(function(){
             done();
           });
         });
-      }); 
+      });
     });
 
     after(function(done){ specHelper.cleanup(done); });

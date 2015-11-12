@@ -5,7 +5,7 @@
 var NR = require(__dirname + "/../index.js");
 // In your projects: var NR = require("node-resque");
 
-// we'll use https://github.com/tejasmanohar/node-schedule for this example, 
+// we'll use https://github.com/tejasmanohar/node-schedule for this example,
 // but there are many other excelent node scheduling projects
 var schedule = require('node-schedule');
 
@@ -14,7 +14,7 @@ var schedule = require('node-schedule');
 ///////////////////////////
 
 var connectionDetails = {
-  package:   'ioredis',
+  pkg:   'ioredis',
   host:      '127.0.0.1',
   password:  null,
   port:      6379,
@@ -86,11 +86,11 @@ var queue = new NR.queue({connection: connectionDetails}, jobs);
 queue.on('error', function(error){ console.log(error); });
 queue.connect(function(){
   schedule.scheduleJob('0,10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, cron style
-    // we want to ensure that only one instance of this job is scheduled in our enviornment at once, 
+    // we want to ensure that only one instance of this job is scheduled in our enviornment at once,
     // no matter how many schedulers we have running
-    if(scheduler.master){ 
+    if(scheduler.master){
       console.log(">>> enquing a job");
-      queue.enqueue('time', "ticktock", new Date().toString() ); 
+      queue.enqueue('time', "ticktock", new Date().toString() );
     }
   });
 });

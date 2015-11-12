@@ -3,7 +3,7 @@
 var NR = require(__dirname + "/../index.js");
 
 var connectionDetails = {
-  package:   'ioredis',
+  pkg:   'ioredis',
   host:      '127.0.0.1',
   password:  null,
   port:      6379,
@@ -58,7 +58,7 @@ var jobs = {
 
 ///////////////////
 // ENQUEUE TASKS //
-/////////////////// 
+///////////////////
 
 var queue = new NR.queue({connection: connectionDetails}, jobs);
 queue.connect(function(){
@@ -82,7 +82,7 @@ queue.connect(function(){
 
 
 var multiWorker = new NR.multiWorker({
-  connection: connectionDetails, 
+  connection: connectionDetails,
   queues: ['slowQueue'],
 }, jobs);
 

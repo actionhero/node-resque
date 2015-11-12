@@ -1,7 +1,7 @@
 var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
 var should = require('should');
 
-if(specHelper.package === 'fakeredis'){
+if(specHelper.pkg === 'fakeredis'){
   console.log("multiWorker does not work with fakeredis for now...");
 }else{
 
@@ -49,7 +49,7 @@ if(specHelper.package === 'fakeredis'){
     before(function(done){
       specHelper.connect(function(){
         queue = new specHelper.NR.queue({
-          connection: specHelper.cleanConnectionDetails(), 
+          connection: specHelper.cleanConnectionDetails(),
           queue: specHelper.queue
         });
 
@@ -59,7 +59,7 @@ if(specHelper.package === 'fakeredis'){
 
     before(function(done){
       multiWorker = new specHelper.NR.multiWorker({
-        connection: specHelper.cleanConnectionDetails(), 
+        connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
         checkTimeout: checkTimeout,
         minTaskProcessors: minTaskProcessors,
