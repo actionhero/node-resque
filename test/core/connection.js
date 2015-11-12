@@ -2,7 +2,7 @@ var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
 var should = require('should');
 
 describe('connection', function(){
-  
+
   before(function(done){
     specHelper.connect(function(){
       specHelper.cleanup(function(){
@@ -24,7 +24,7 @@ describe('connection', function(){
     }
 
     var connectionDetails = {
-      package:   specHelper.connectionDetails.package,
+      pkg:   specHelper.connectionDetails.pkg,
       host:      "wronghostname",
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,
@@ -55,7 +55,7 @@ describe('connection', function(){
       connection.key("thing").should.equal(specHelper.namespace + ":thing");
       connection.end();
       done();
-    });    
+    });
   });
 
 });

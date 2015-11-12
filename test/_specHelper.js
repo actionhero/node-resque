@@ -3,19 +3,19 @@ var fakeredis = require('fakeredis');
 var namespace = "resque_test";
 var queue = "test_queue";
 
-var package = 'ioredis';
-if(process.env.FAKEREDIS === 'true'){ package = 'fakeredis';  }
+var pkg = 'ioredis';
+if(process.env.FAKEREDIS === 'true'){ pkg = 'fakeredis';  }
 
-console.log("Using " + package);
+console.log("Using " + pkg);
 
 exports.specHelper = {
-  package: package,
+  pkg: pkg,
   NR: require(__dirname + "/../index.js"),
   namespace: namespace,
   queue: queue,
   timeout: 500,
   connectionDetails: {
-    package:   package, 
+    pkg:   pkg,
     host:      "127.0.0.1",
     password:  "",
     port:      6379,
@@ -25,7 +25,7 @@ exports.specHelper = {
   },
   connect: function(callback){
     var self = this;
-    if(package != 'fakeredis'){
+    if(pkg != 'fakeredis'){
       self.redis = redis.createClient(self.connectionDetails.port, self.connectionDetails.host, self.connectionDetails.options);
       self.redis.setMaxListeners(0);
       if(self.connectionDetails.password != null && self.connectionDetails.password != ""){
@@ -34,7 +34,7 @@ exports.specHelper = {
             // self.connectionDetails.redis = self.redis;
             callback(err);
           });
-        }); 
+        });
       }else{
         self.redis.select(self.connectionDetails.database, function(err){
           self.connectionDetails.redis = self.redis;
@@ -56,8 +56,8 @@ exports.specHelper = {
     var self = this;
     setTimeout(function(){
       self.redis.keys(self.namespace + "*", function(err, keys){
-        if(keys.length == 0){ 
-          callback(); 
+        if(keys.length == 0){
+          callback();
         }else{
           self.redis.del(keys, function(){
             callback();
@@ -93,7 +93,7 @@ exports.specHelper = {
   cleanConnectionDetails: function(){
     var self = this;
     var out = {};
-    if(self.package === 'fakeredis'){
+    if(self.pkg === 'fakeredis'){
       return self.connectionDetails;
     }
     for(var i in self.connectionDetails){
