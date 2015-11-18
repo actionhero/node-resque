@@ -14,6 +14,39 @@ describe('scheduler', function(){
     });
   });
 
+  it("can provide an error if connection does not establish for a long period", function(done) {
+    var connectionDetails = {
+      package:   specHelper.connectionDetails.package,
+      host:      "wronghostname",
+      password:  specHelper.connectionDetails.password,
+      port:      specHelper.connectionDetails.port,
+      database:  specHelper.connectionDetails.database,
+      namespace: specHelper.connectionDetails.namespace,
+    };
+
+    scheduler = new specHelper.NR.scheduler({connection: connectionDetails, timeout: specHelper.timeout});
+    scheduler.queue.connect = function(callback) {
+      setTimeout(function() {
+        callback(new Error('Cannot connect'));
+      }, 1000);
+    }
+
+    scheduler.connect();
+
+    scheduler.start();
+
+    scheduler.on('poll', function() {
+      throw new Error('Should not emit poll')
+    })
+
+    scheduler.on('master', function() {
+      throw new Error('Should not emit master')
+    })
+
+    setTimeout(done, 2000);
+
+  });
+
   it("can provide an error if connection failed", function(done) {
     // Only run this test if this is using real redis
     if(process.env.FAKEREDIS == 'true') {
