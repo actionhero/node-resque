@@ -275,7 +275,8 @@ Assuming you are running node-resque across multiple machines, you will need to 
 ``` javascript
 var schedule = require('node-schedule');
 
-var scheduler = new NR.scheduler({connection: connectionDetails}, function(){
+var scheduler = new NR.scheduler({connection: connectionDetails});
+scheduler.connect(function(){
   scheduler.start();
 });
 
