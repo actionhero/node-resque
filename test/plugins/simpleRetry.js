@@ -3,13 +3,11 @@ var should = require('should');
 
 describe('plugins', function(){
 
-  var errorCollector = [];
   var jobs = {
     "brokenJob": {
       plugins: [ 'simpleRetry' ],
       pluginOptions: { simpleRetry: {
-        sleep: 100,
-        errorCollector: errorCollector,
+        retryInterval: [100]
       },},
       perform: function(a,b,callback){
         callback(new Error("BROKEN"), null);
@@ -31,25 +29,25 @@ describe('plugins', function(){
   });
 
   describe('simpleRetry',function(){
-
     it('bad job should not crash with simpleRetry', function(done){
       queue.enqueue(specHelper.queue, "brokenJob", [1,2], function(){
         queue.length(specHelper.queue, function(err, len){
           len.should.equal(1);
-          
+
           var worker = new specHelper.NR.worker({
-            connection: specHelper.connectionDetails, 
-            timeout:    specHelper.timeout, 
+            connection: specHelper.connectionDetails,
+            timeout:    specHelper.timeout,
             queues:     specHelper.queue
           }, jobs);
 
           worker.connect(function(){
-
             worker.on('success', function(q, job, result){
-              errorCollector.length.should.equal(1);
-              String(errorCollector[0]).should.equal('Error: BROKEN');
-              worker.end();
-              done();
+              specHelper.queue.should.equal(q);
+              queue.scheduledAt(specHelper.queue, "brokenJob", [1,2], function(err, timestamps){
+                timestamps.length.should.be.equal(1);
+                worker.end();
+                done();
+              });
             });
 
             worker.on('error', function(q, job, error){
