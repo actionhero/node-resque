@@ -54,7 +54,7 @@ describe('scheduler', function(){
     }
 
     var connectionDetails = {
-      package:   specHelper.connectionDetails.package,
+      pkg:       specHelper.connectionDetails.pkg,
       host:      "wronghostname",
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,
