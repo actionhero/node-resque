@@ -14,7 +14,7 @@ var schedule = require('node-schedule');
 ///////////////////////////
 
 var connectionDetails = {
-  package:   'ioredis',
+  pkg:   'ioredis',
   host:      '127.0.0.1',
   password:  null,
   port:      6379,
