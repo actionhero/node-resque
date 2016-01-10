@@ -16,7 +16,7 @@ describe('scheduler', function(){
 
   it("can provide an error if connection does not establish for a long period", function(done) {
     var connectionDetails = {
-      package:   specHelper.connectionDetails.package,
+      pkg:       specHelper.connectionDetails.pkg,
       host:      "wronghostname",
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,
@@ -54,7 +54,7 @@ describe('scheduler', function(){
     }
 
     var connectionDetails = {
-      package:   specHelper.connectionDetails.package,
+      pkg:       specHelper.connectionDetails.pkg,
       host:      "wronghostname",
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,

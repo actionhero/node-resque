@@ -1,7 +1,7 @@
 var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
 var should = require('should');
 
-if(specHelper.package === 'fakeredis'){
+if(specHelper.pkg === 'fakeredis'){
   console.log("multiWorker does not work with fakeredis for now...");
 }else{
 

@@ -22,7 +22,7 @@ var NR = require("node-resque");
 ///////////////////////////
 
 var connectionDetails = {
-  package:   'ioredis',
+  pkg:       'ioredis',
   host:      '127.0.0.1',
   password:  null,
   port:      6379,
@@ -131,7 +131,7 @@ The configuration hash passed to `new worker`, `new scheduler` or `new queue` ca
 
 ```javascript
 var connectionDetails = {
-  package:   "ioredis",
+  pkg:       "ioredis",
   host:      "127.0.0.1",
   password:  "",
   port:      6379,
@@ -387,7 +387,7 @@ node-resque provides a wrapper around the `worker` object which will auto-scale 
 var NR = require(__dirname + "/../index.js");
 
 var connectionDetails = {
-  package:   "ioredis",
+  pkg:       "ioredis",
   host:      "127.0.0.1",
   password:  ""
 }
