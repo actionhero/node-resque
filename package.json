@@ -15,7 +15,10 @@
     "queue",
     "resque",
     "redis",
-    "worker"
+    "work",
+    "worker",
+    "background",
+    "job",
   ],
   "engines": {
     "node": ">=0.10.0"
