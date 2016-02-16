@@ -18,7 +18,7 @@
     "work",
     "worker",
     "background",
-    "job",
+    "job"
   ],
   "engines": {
     "node": ">=0.10.0"
