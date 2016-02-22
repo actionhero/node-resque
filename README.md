@@ -421,6 +421,15 @@ multiWorker.on('multiWorkerAction', function(verb, delay){                   con
 multiWorker.start();
 ```
 
+The Options available for the multiWorker are:
+- `connection`: The redis configuration options (same as worker)
+- `queues`: Array of ordred queue names (or `*`) (same as worker)
+- `minTaskProcessors`: The minimum number of workers to spawn under this multiWorker, even if there is no work to do.  You need at least one, or no work will ever be processed or checked
+- `maxTaskProcessors`: The maximum number of workers to spawn under this multiWorker, even if the queues are long and there is available CPU (the event loop isn't entierly blocked) to this node process.
+  checkTimeout: How often to check if the event loop is blocked (in ms) (for adding or removing multiWorker children),
+  maxEventLoopDelay: How long the event loop has to be delayed before considering it blocked (in ms),  
+  toDisconnectProcessors: If false, all multiWorker children will share a single redis connection.  If false, each child will connect and disconnect seperatly.  This will lead to more redis connections, but faster retrival of events.
+
 ## Presentation
 This package was featured heavily in [this presentation I gave](http://blog.evantahler.com/blog/background-tasks-for-node.html) about background jobs + node.js.  It contains more examples! 
 
