@@ -81,6 +81,8 @@ describe('plugins', function(){
   });
 
   it('can have a retry count set', function(done){
+    this.timeout(1000 * 10);
+
     var customJobs = {
       "jobWithRetryCount": {
         plugins: [ 'retry' ],
@@ -136,6 +138,8 @@ describe('plugins', function(){
   });
 
   it('can have custom retry times set', function(done){
+    this.timeout(1000 * 10);
+
     var customJobs = {
       "jobWithBackoffStrategy": {
         plugins: [ 'retry' ],
@@ -191,6 +195,8 @@ describe('plugins', function(){
   });
 
   it('when a job fails it should be re-enqueued (and not go to the failure queue)', function(done){
+    this.timeout(1000 * 10);
+
     queue.enqueue(specHelper.queue, "brokenJob", [1,2], function(){
       var worker = new specHelper.NR.worker({
         connection: specHelper.cleanConnectionDetails(),
@@ -216,6 +222,8 @@ describe('plugins', function(){
   });
 
   it('will handle the stats properly for failing jobs', function(done){
+    this.timeout(1000 * 10);
+
     queue.enqueue(specHelper.queue, "brokenJob", [1,2], function(){
       var worker = new specHelper.NR.worker({
         connection: specHelper.cleanConnectionDetails(),
@@ -228,10 +236,10 @@ describe('plugins', function(){
         specHelper.redis.get('resque_test:stat:failed', function(error, global_failed){
         specHelper.redis.get('resque_test:stat:processed:' + worker.name, function(error, worker_processed){
         specHelper.redis.get('resque_test:stat:failed:' + worker.name, function(error, worker_failed){
-          global_processed.should.equal('0');
-          global_failed.should.equal('1');
-          worker_processed.should.equal('0');
-          worker_failed.should.equal('1');
+          String(global_processed).should.equal('0');
+          String(global_failed).should.equal('1');
+          String(worker_processed).should.equal('0');
+          String(worker_failed).should.equal('1');
           worker.end(done);
         });
         });
@@ -247,6 +255,8 @@ describe('plugins', function(){
   });
 
   it('will set the retry counter & retry data', function(done){
+    this.timeout(1000 * 10);
+
     queue.enqueue(specHelper.queue, "brokenJob", [1,2], function(){
       var worker = new specHelper.NR.worker({
         connection: specHelper.cleanConnectionDetails(),
@@ -257,7 +267,7 @@ describe('plugins', function(){
       var complete = function(){
         specHelper.redis.get('resque_test:resque-retry:brokenJob:1-2', function(error, retryAttempts){
         specHelper.redis.get('resque_test:failure-resque-retry:brokenJob:1-2', function(error, failureData){
-          retryAttempts.should.equal('0');
+          String(retryAttempts).should.equal('0');
           failureData = JSON.parse(failureData);
           failureData.payload.should.deepEqual([1,2]);
           failureData.exception.should.equal('Error: BUSTED');
