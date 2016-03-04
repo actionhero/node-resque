@@ -1,6 +1,6 @@
 # node-resque
 
-Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](https://github.com/resque/resque) and [resque scheduler](https://github.com/resque/resque-scheduler).  Resque is a background job system based on redis.  It includes priority queus, plugins, locking, delayed jobs, and more! 
+Delayed Tasks in nodejs.  A very opinionated but compatible API with [resque](https://github.com/resque/resque) and [resque scheduler](https://github.com/resque/resque-scheduler).  Resque is a background job system based on redis.  It includes priority queus, plugins, locking, delayed jobs, and more!
 
 [![Nodei stats](https://nodei.co/npm/node-resque.png?downloads=true)](https://npmjs.org/package/node-resque)
 
@@ -38,9 +38,13 @@ var connectionDetails = {
 
 var jobs = {
   "add": {
-    plugins: [ 'jobLock' ],
+    plugins: [ 'jobLock', 'retry' ],
     pluginOptions: {
       jobLock: {},
+      retry: {
+        retryLimit: 3,
+        retryDelay: (1000 * 5),
+      }
     },
     perform: function(a,b,callback){
       var answer = a + b;
@@ -158,7 +162,7 @@ You can also pass redis client directly.
 var redisClient = new Redis();
 var connectionDetails = { redis: redisClient }
 
-var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs, 
+var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs,
 
 worker.on('error', function(){
 	// handler errors
@@ -282,11 +286,11 @@ scheduler.connect(function(){
 
 var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
   schedule.scheduleJob('10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, CRON style
-    // we want to ensure that only one instance of this job is scheduled in our environment at once, 
+    // we want to ensure that only one instance of this job is scheduled in our environment at once,
     // no matter how many schedulers we have running
-    if(scheduler.master){ 
+    if(scheduler.master){
       console.log(">>> enquing a job");
-      queue.enqueue('time', "ticktock", new Date().toString() ); 
+      queue.enqueue('time', "ticktock", new Date().toString() );
     }
   });
 });
@@ -379,6 +383,16 @@ var jobs = {
 }
 ```
 
+The plugins which are included with this package are:
+- `delayQueueLock`
+  - If a job with the same name, queue, and args is already in the delayed queue(s), do not enqueue it again
+- `jobLock`
+  - If a job with the same name, queue, and args is already running, put this job back in the queue and try later
+- `queueLock`
+  - If a job with the same name, queue, and args is already in the queue, do not enqueue it again
+- `retry`
+  - If a job fails, retry it N times before finally placing it into the failed queue
+
 ## Multi Worker
 
 node-resque provides a wrapper around the `worker` object which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low rendering overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1.  The `multiWorker` handles this by spawning more and more node-resque workers and managing the pool.  
@@ -393,7 +407,7 @@ var connectionDetails = {
 }
 
 var multiWorker = new NR.multiWorker({
-  connection: connectionDetails, 
+  connection: connectionDetails,
   queues: ['slowQueue'],
   minTaskProcessors:   1,
   maxTaskProcessors:   100,
@@ -433,7 +447,7 @@ The Options available for the multiWorker are:
 - `toDisconnectProcessors`: If false, all multiWorker children will share a single redis connection.  If false, each child will connect and disconnect seperatly.  This will lead to more redis connections, but faster retrival of events.
 
 ## Presentation
-This package was featured heavily in [this presentation I gave](http://blog.evantahler.com/blog/background-tasks-for-node.html) about background jobs + node.js.  It contains more examples! 
+This package was featured heavily in [this presentation I gave](http://blog.evantahler.com/blog/background-tasks-for-node.html) about background jobs + node.js.  It contains more examples!
 
 ## Acknowledgments
 Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
