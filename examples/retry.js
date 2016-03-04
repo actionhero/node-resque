@@ -31,7 +31,7 @@ var jobs = {
       retry: {
         retryLimit: 3,
         // retryDelay: 1000,
-        backoffStrategy: [1000, 5000, 10000],
+        backoffStrategy: [1000 * 10, 1000 * 20, 1000 * 30],
       },
     },
     perform: function(a,b,callback){
@@ -76,9 +76,12 @@ worker.on('poll',            function(queue){ console.log("worker polling " + qu
 worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); });
 worker.on('reEnqueue',       function(queue, job, plugin){ console.log("reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); });
 worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); });
-worker.on('failure',         function(queue, job, failure){ console.log("job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); });
-worker.on('error',           function(queue, job, error){ console.log("error " + queue + " " + JSON.stringify(job) + " >> " + error); });
 worker.on('pause',           function(){ console.log("worker paused"); });
+worker.on('error',           function(queue, job, error){ console.log("error " + queue + " " + JSON.stringify(job) + " >> " + error); });
+worker.on('failure',         function(queue, job, failure){
+  console.log("job failure " + queue + " " + JSON.stringify(job) + " >> " + failure);
+  setTimeout(process.exit, 2000);
+});
 
 scheduler.on('start',             function(){ console.log("scheduler started"); });
 scheduler.on('end',               function(){ console.log("scheduler ended"); });
