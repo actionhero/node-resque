@@ -35,10 +35,8 @@ var jobs = {
       },
     },
     perform: function(a,b,callback){
-      var broken = true;
-
-      if(broken){
-        return callback(new Error('BUSTED'));
+      if(a < 0){
+        return callback(new Error('NEGATIVE NUMBERS ARE HARD :('));
       }else{
         return callback(null, (a + b));
       }
@@ -99,4 +97,5 @@ var queue = new NR.queue({connection: connectionDetails}, jobs);
 queue.on('error', function(error){ console.log(error); });
 queue.connect(function(){
   queue.enqueue('math', "add", [1,2]);
+  queue.enqueue('math', "add", [-1,2]);
 });
