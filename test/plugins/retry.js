@@ -14,6 +14,16 @@ describe('plugins', function(){
       perform: function(a,b,callback){
         callback(new Error("BUSTED"), null);
       },
+    },
+    "happyJob": {
+      plugins: [ 'retry' ],
+      pluginOptions: { retry: {
+        retryLimit: 3,
+        retryDelay: 100,
+      },},
+      perform: function(a,b,callback){
+        callback(null, null);
+      },
     }
   };
 
@@ -36,6 +46,40 @@ describe('plugins', function(){
 
   afterEach(function(done){
     specHelper.cleanup(done);
+  });
+
+  it('will work fine with non-crashing jobs', function(done){
+    queue.enqueue(specHelper.queue, "happyJob", [1,2], function(){
+      queue.length(specHelper.queue, function(err, length){
+        length.should.equal(1);
+
+        var worker = new specHelper.NR.worker({
+          connection: specHelper.cleanConnectionDetails(),
+          timeout:    specHelper.timeout,
+          queues:     specHelper.queue
+        }, jobs);
+
+        var complete = function(){
+          specHelper.redis.llen('resque_test:failed', function(error, length){
+            length.should.equal(0);
+            worker.end(done);
+          });
+        };
+
+        worker.connect(function(){
+
+          worker.on('success', function(){
+            complete();
+          });
+
+          worker.on('failure', function(){
+            throw new Error('should never get here');
+          });
+
+          worker.start();
+        });
+      });
+    });
   });
 
   it('will retry the job n times before finally failing', function(done){
