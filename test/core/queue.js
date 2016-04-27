@@ -172,6 +172,19 @@ describe('queue', function(){
       });
     });
 
+    it('can delete a delayed job, and delayed queue should be empty', function(done){
+      queue.enqueueAt(10000, specHelper.queue, 'someJob', [1,2,3], function(){
+        queue.delDelayed(specHelper.queue, 'someJob', [1,2,3], function(err, timestamps){
+          queue.allDelayed(function(err, hash){
+            hash.should.be.empty();
+            timestamps.length.should.equal(1);
+            timestamps[0].should.equal('10');
+            done();
+          });
+        });
+      });
+    });
+
     it('can handle single arguments without explicit array', function(done){
       queue.enqueue(specHelper.queue, 'someJob', 1, function(){
         specHelper.popFromQueue(function(err, obj){
@@ -247,11 +260,12 @@ describe('queue', function(){
         queue.enqueueAt(12000, specHelper.queue, 'noParams', function(){
           queue.allDelayed(function(err, hash){
             Object.keys(hash).length.should.equal(2);
-            queue.delDelayed(specHelper.queue, 'noParams');
             queue.delDelayed(specHelper.queue, 'noParams', function(){
-              queue.allDelayed(function(err, hash){
-                hash.should.be.empty;
-                done();
+              queue.delDelayed(specHelper.queue, 'noParams', function(){
+                queue.allDelayed(function(err, hash){
+                  hash.should.be.empty;
+                  done();
+                });
               });
             });
           });
