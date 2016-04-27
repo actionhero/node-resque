@@ -172,7 +172,7 @@ describe('queue', function(){
       });
     });
 
-    it('can delete a delayed job and delayed queue should be empty', function(done){
+    it('can delete a delayed job, and delayed queue should be empty', function(done){
       queue.enqueueAt(10000, specHelper.queue, 'someJob', [1,2,3], function(){
         queue.delDelayed(specHelper.queue, 'someJob', [1,2,3], function(err, timestamps){
           queue.allDelayed(function(err, hash){
