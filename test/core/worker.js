@@ -157,6 +157,7 @@ describe('worker', function(){
           q.should.equal(specHelper.queue);
           job.class.should.equal('add');
           result.should.equal(3);
+          worker.result.should.equal(result);
 
           worker.removeAllListeners('success');
           done();
@@ -169,6 +170,8 @@ describe('worker', function(){
       it('job arguments are immutable', function(done){
         var listener = worker.on('success', function(q, job, result){
           result.a.should.equal('starting value');
+          worker.result.should.equal(result);
+
           worker.removeAllListeners('success');
           done();
         });
