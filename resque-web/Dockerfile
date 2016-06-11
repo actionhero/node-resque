@@ -11,4 +11,6 @@ RUN bundle install
 
 COPY . /usr/src/app
 
+EXPOSE 9292
+
 CMD ["/bin/sh", "-c", "bundle exec rackup --host=0.0.0.0"]
