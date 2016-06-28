@@ -24,7 +24,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "ioredis": "^2.0.0"
+    "ioredis": "^2.2.0"
   },
   "devDependencies": {
     "mocha": "latest",
