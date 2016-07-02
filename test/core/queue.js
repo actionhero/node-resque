@@ -273,11 +273,22 @@ describe('queue', function(){
       });
     });
 
+    it('can load stats', function(done){
+      queue.connection.redis.set(specHelper.namespace + ':stat:failed', 1);
+      queue.connection.redis.set(specHelper.namespace + ':stat:processed', 2);
+      queue.stats(function(err, stats){
+        should.not.exist(err);
+        stats.processed.should.equal('2');
+        stats.failed.should.equal('1');
+        done();
+      });
+    });
+
     describe('failed job managment', function(){
 
       beforeEach(function(done){
 
-        var errorPayload = function(id){ 
+        var errorPayload = function(id){
           return JSON.stringify({
             worker: 'busted-worker-' + id,
             queue: 'busted-queue',
@@ -314,7 +325,7 @@ describe('queue', function(){
         queue.failed(1,2, function(err, failedJobs){
           should.not.exist(err);
           failedJobs.length.should.equal(2);
-          
+
           failedJobs[0].worker.should.equal('busted-worker-2');
           failedJobs[0].queue.should.equal('busted-queue');
           failedJobs[0].exception.should.equal('ERROR_NAME');

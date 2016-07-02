@@ -191,19 +191,21 @@ var worker = new NR.worker({connection: connectionDetails, queues: 'math', 'name
 
 Additional methods provided on the `queue` object:
 
-- **queue.prototype.queues** = function(callback)
+- **queue.stats** = function(callback)
+  - callback(error, stats_from_your_cluster)
+- **queue.queues** = function(callback)
   - callback(error, array_of_queues)
-- **queue.prototype.delQueue** = function(q, callback)
+- **queue.delQueue** = function(q, callback)
   - callback(error)
-- **queue.prototype.queued** = function(q, start, stop, callback)
+- **queue.queued** = function(q, start, stop, callback)
   - callback(error, jobs_in_queue)
-- **queue.prototype.length** = function(q, callback)
+- **queue.length** = function(q, callback)
   - callback(error, number_of_elements_in_queue)
-- **queue.prototype.del** = function(q, func, args, count, callback)
+- **queue.del** = function(q, func, args, count, callback)
   - callback(error, number_of_items_deleted)
-- **queue.prototype.delDelayed** = function(q, func, args, callback)
+- **queue.delDelayed** = function(q, func, args, callback)
   - callback(error, timestamps_the_job_was_removed_from)
-- **queue.prototype.scheduledAt** = function(q, func, args, callback)
+- **queue.scheduledAt** = function(q, func, args, callback)
   - callback(error, timestamps_the_job_is_scheduled_for)
 
 ## Delayed Status
