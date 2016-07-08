@@ -284,6 +284,36 @@ describe('queue', function(){
       });
     });
 
+    describe('locks', function(){
+      beforeEach(function(done){ queue.connection.redis.set(queue.connection.key('lock:lists:queueName:jobName:[{}]'), 123, done); });
+      beforeEach(function(done){ queue.connection.redis.set(queue.connection.key('workerslock:lists:queueName:jobName:[{}]'), 456, done); });
+
+      afterEach(function(done){ queue.connection.redis.del(queue.connection.key('lock:lists:queueName:jobName:[{}]'), done); });
+      afterEach(function(done){ queue.connection.redis.del(queue.connection.key('workerslock:lists:queueName:jobName:[{}]'), done); });
+
+      it('can get locks', function(done){
+        queue.locks(function(err, locks){
+          should.not.exist(err);
+          Object.keys(locks).length.should.equal(2);
+          locks['lock:lists:queueName:jobName:[{}]'].should.equal('123');
+          locks['workerslock:lists:queueName:jobName:[{}]'].should.equal('456');
+          done();
+        });
+      });
+
+      it('can remove locks', function(done){
+        queue.locks(function(err, locks){
+          should.not.exist(err);
+          Object.keys(locks).length.should.equal(2);
+          queue.delLock('workerslock:lists:queueName:jobName:[{}]', function(err, count){
+            should.not.exist(err);
+            count.should.equal(1);
+            done();
+          });
+        });
+      });
+    });
+
     describe('failed job managment', function(){
 
       beforeEach(function(done){
