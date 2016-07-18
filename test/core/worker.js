@@ -73,6 +73,50 @@ describe('worker', function(){
     });
   });
 
+  describe('performInline', function(){
+    before(function(done){
+      worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
+      done();
+    });
+
+    it('can run a successful job', function(done){
+      worker.performInline('add', [1,2], function(error, result){
+        should.not.exist(error);
+        result.should.equal(3);
+        done();
+      });
+    });
+
+    it('can run a failing job', function(done){
+      worker.performInline('badAdd', [1, 2], function(error, result){
+        String(error).should.equal('Error: Blue Smoke');
+        should.not.exist(result);
+        done();
+      });
+    });
+
+    it('handles double callbacks properly', function(done){
+      var count = 0;
+      worker.performInline('doubleCaller', [], function(error, result){
+        if(count === 0){
+          should.not.exist(error);
+        }
+
+        if(count === 1){
+          String(error).should.equal('Error: refusing to continue with job, multiple callbacks detected');
+          should.not.exist(result);
+        }
+
+        if(count === 2){
+          String(error).should.equal('Error: refusing to continue with job, multiple callbacks detected');
+          should.not.exist(result);
+          done();
+        }
+        count++;
+      });
+    })
+  });
+
   describe('[with connection]', function() {
 
     before(function(done){
