@@ -187,6 +187,11 @@ worker.connect(function(){
 var name = os.hostname() + ":" + process.pid + "+" + counter;
 var worker = new NR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
 ```
+
+###  worker#performDirectly
+
+In tests or special cases, you may want to process/work a job in-line.  To do so, you can use `worker.performDirectly(jobName, arguments, callback)`.  If you are planning on running a job via #performInline, this worker should also not be started, nor should be using event emitters to monitor this worker.  This method will also not write to redis at all, including logging errors, modify resque's stats, etc.
+
 ## Queue Management
 
 Additional methods provided on the `queue` object:
