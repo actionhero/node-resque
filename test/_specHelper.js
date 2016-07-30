@@ -23,6 +23,7 @@ exports.specHelper = {
     namespace: namespace,
     // looping: true
   },
+
   connect: function(callback){
     var self = this;
     if(pkg !== 'fakeredis'){
@@ -42,7 +43,7 @@ exports.specHelper = {
         });
       }
     }else{
-      self.redis = fakeredis.createClient('test');
+      self.redis = fakeredis.createClient('test', 123, {fast: true});
       self.redis.setMaxListeners(0);
       self.redis.select(self.connectionDetails.database, function(err){
         process.nextTick(function(){
@@ -52,6 +53,7 @@ exports.specHelper = {
       });
     }
   },
+
   cleanup: function(callback){
     var self = this;
     setTimeout(function(){
@@ -66,6 +68,7 @@ exports.specHelper = {
       });
     }, 200);
   },
+
   startAll: function(jobs, callback){
     var self = this;
     self.worker = new self.NR.worker({connection: {redis: self.redis}, queues: self.queue, timeout: self.timeout}, jobs, function(){
@@ -76,6 +79,7 @@ exports.specHelper = {
       });
     });
   },
+
   endAll: function(callback){
     var self = this;
     self.worker.end(function(){
@@ -84,12 +88,14 @@ exports.specHelper = {
       });
     });
   },
+
   popFromQueue: function(callback){
     var self = this;
     self.redis.lpop(self.namespace + ':queue:' + self.queue, function(err, obj){
       callback(err, obj);
     });
   },
+
   cleanConnectionDetails: function(){
     var self = this;
     var out = {};

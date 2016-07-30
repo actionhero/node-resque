@@ -596,7 +596,6 @@ describe('queue', function(){
               data.workerA.queue.should.equal('test_queue');
               data.workerA.worker.should.equal('workerA');
               data.workerA.payload['class'].should.equal('slowJob');
-
               specHelper.redis.rpop(specHelper.namespace + ':' + 'failed', function(err, data){
                 data = JSON.parse(data);
                 data.queue.should.equal(specHelper.queue);
