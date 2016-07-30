@@ -6,7 +6,6 @@ notifications:
 language: node_js
 node_js:
   - "4"
-  - "5"
   - "6"
 env:
   - "FAKEREDIS=true"
@@ -17,5 +16,5 @@ branches:
 services:
   - redis-server
 # before_script:
-after_failure: 
+after_failure:
   - "cat /home/travis/builds/taskrabbit/node-resque/npm-debug.log"

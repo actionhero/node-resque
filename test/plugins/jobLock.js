@@ -1,25 +1,25 @@
-var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var specHelper = require(__dirname + '/../_specHelper.js').specHelper;
 var should = require('should');
 
 describe('plugins', function(){
-
+  var queue;
   var jobDelay = 1000;
 
   var jobs = {
-    "slowAdd": {
-      plugins: [ 'jobLock' ],
+    'slowAdd': {
+      plugins: ['jobLock'],
       pluginOptions: { jobLock: {}, },
-      perform: function(a,b,callback){
+      perform: function(a, b, callback){
         var answer = a + b;
         setTimeout(function(){
           callback(null, answer);
         }, jobDelay);
       },
     },
-    "uniqueJob": {
-      plugins: [ 'queueLock', 'delayQueueLock' ],
+    'uniqueJob': {
+      plugins: ['queueLock', 'delayQueueLock'],
       pluginOptions: { queueLock: {}, delayQueueLock: {} },
-      perform: function(a,b,callback){
+      perform: function(a, b, callback){
         var answer = a + b;
         callback(null, answer);
       },
@@ -39,53 +39,56 @@ describe('plugins', function(){
     specHelper.cleanup(done);
   });
 
-  describe('jobLock',function(){
+  describe('jobLock', function(){
+    var worker1;
+    var worker2;
+
     it('will not lock jobs since arg objects are different', function(done){
       worker1 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
       worker2 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
-          
+
       worker1.connect(function(){
-      worker2.connect(function(){
+        worker2.connect(function(){
 
-        var startTime = new Date().getTime();
-        var completed = 0;
+          var startTime = new Date().getTime();
+          var completed = 0;
 
-        var onComplete = function(q, job, result){
-          completed++;
-          if(completed == 2){
-            worker1.end();
-            worker2.end();
-            (new Date().getTime() - startTime).should.be.below(jobDelay * 2);
-            done();
-          }
-        };
+          var onComplete = function(q, job, result){
+            completed++;
+            if(completed === 2){
+              worker1.end();
+              worker2.end();
+              (new Date().getTime() - startTime).should.be.below(jobDelay * 2);
+              done();
+            }
+          };
 
-        worker1.on('success', onComplete);
-        worker2.on('success', onComplete);
-        queue.enqueue(specHelper.queue, "slowAdd", [{name: 'Walter White'},2], function(){
-          queue.enqueue(specHelper.queue, "slowAdd", [{name: 'Jesse Pinkman'},2], function(){
-            worker1.start();
-            worker2.start();
+          worker1.on('success', onComplete);
+          worker2.on('success', onComplete);
+          queue.enqueue(specHelper.queue, 'slowAdd', [{name: 'Walter White'}, 2], function(){
+            queue.enqueue(specHelper.queue, 'slowAdd', [{name: 'Jesse Pinkman'}, 2], function(){
+              worker1.start();
+              worker2.start();
+            });
           });
-        });
 
-        worker1.on('error', function(queue, job, error){ console.log(error.stack); });
-        worker2.on('error', function(queue, job, error){ console.log(error.stack); });
-      
-      });
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); });
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); });
+
+        });
       });
     });
 
-    it('allows the key to be specified as a function', function(done) {
+    it('allows the key to be specified as a function', function(done){
       var calls = 0;
       var jobs = {
         jobLockAdd: {
-          plugins: [ 'jobLock' ],
+          plugins: ['jobLock'],
           pluginOptions: {
             jobLock: {
               key: function(){
                 // Once to create, once to delete
-                if (++calls == 2) {
+                if(++calls === 2){
                   done();
                   worker1.end();
                 }
@@ -93,7 +96,7 @@ describe('plugins', function(){
               }
             }
           },
-          perform: function(a,b,callback){
+          perform: function(a, b, callback){
             callback(null, a + b);
           }
         }
@@ -101,7 +104,7 @@ describe('plugins', function(){
 
       worker1 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
       worker1.connect(function(){
-        queue.enqueue(specHelper.queue, "jobLockAdd", [1,2], function(){
+        queue.enqueue(specHelper.queue, 'jobLockAdd', [1, 2], function(){
           worker1.start();
         });
       });
@@ -114,71 +117,71 @@ describe('plugins', function(){
       worker2 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
 
       worker1.connect(function(){
-      worker2.connect(function(){
+        worker2.connect(function(){
 
-        var startTime = new Date().getTime();
-        var completed = 0;
+          var startTime = new Date().getTime();
+          var completed = 0;
 
-        var onComplete = function(q, job, result){
-          completed++;
-          if(completed == 2){
-            worker1.end();
-            worker2.end();
-            (new Date().getTime() - startTime).should.be.above(jobDelay * 2);
-            done();
-          }
-        };
+          var onComplete = function(q, job, result){
+            completed++;
+            if(completed === 2){
+              worker1.end();
+              worker2.end();
+              (new Date().getTime() - startTime).should.be.above(jobDelay * 2);
+              done();
+            }
+          };
 
-        worker1.on('success', onComplete);
-        worker2.on('success', onComplete);
-        queue.enqueue(specHelper.queue, "slowAdd", [1,2], function(){
-          queue.enqueue(specHelper.queue, "slowAdd", [1,2], function(){
-            worker1.start();
-            worker2.start();
+          worker1.on('success', onComplete);
+          worker2.on('success', onComplete);
+          queue.enqueue(specHelper.queue, 'slowAdd', [1, 2], function(){
+            queue.enqueue(specHelper.queue, 'slowAdd', [1, 2], function(){
+              worker1.start();
+              worker2.start();
+            });
           });
+
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); });
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); });
         });
 
-        worker1.on('error', function(queue, job, error){ console.log(error.stack); });
-        worker2.on('error', function(queue, job, error){ console.log(error.stack); });
       });
-      
-    });
     });
 
     it('will run 2 jobs with the different args at the same time', function(done){
       worker1 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
       worker2 = new specHelper.NR.worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
-          
+
       worker1.connect(function(){
-      worker2.connect(function(){
+        worker2.connect(function(){
 
-        var startTime = new Date().getTime();
-        var completed = 0;
+          var startTime = new Date().getTime();
+          var completed = 0;
 
-        var onComplete = function(q, job, result){
-          completed++;
-          if(completed == 2){
-            worker1.end();
-            worker2.end();
-            var delta = (new Date().getTime() - startTime);
-            delta.should.be.below(jobDelay * 2);
-            done();
-          }
-        };
+          var onComplete = function(q, job, result){
+            completed++;
+            if(completed === 2){
+              worker1.end();
+              worker2.end();
+              var delta = (new Date().getTime() - startTime);
+              delta.should.be.below(jobDelay * 2);
+              done();
+            }
+          };
 
-        worker1.on('success', onComplete);
-        worker2.on('success', onComplete);
-        queue.enqueue(specHelper.queue, "slowAdd", [1,2], function(){
-          queue.enqueue(specHelper.queue, "slowAdd", [3,4], function(){
-            worker1.start();
-            worker2.start();
+          worker1.on('success', onComplete);
+          worker2.on('success', onComplete);
+          queue.enqueue(specHelper.queue, 'slowAdd', [1, 2], function(){
+            queue.enqueue(specHelper.queue, 'slowAdd', [3, 4], function(){
+              worker1.start();
+              worker2.start();
+            });
           });
-        });
 
-        worker1.on('error', function(queue, job, error){ console.log(error.stack); });
-        worker2.on('error', function(queue, job, error){ console.log(error.stack); });
-          
-      });
+          worker1.on('error', function(queue, job, error){ console.log(error.stack); });
+          worker2.on('error', function(queue, job, error){ console.log(error.stack); });
+
+        });
       });
     });
   });

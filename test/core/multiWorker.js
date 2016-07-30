@@ -1,13 +1,14 @@
-var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var specHelper = require(__dirname + '/../_specHelper.js').specHelper;
 var should = require('should');
 
 if(specHelper.pkg === 'fakeredis'){
-  console.log("multiWorker does not work with fakeredis for now...");
+  console.log('multiWorker does not work with fakeredis for now...');
 }else{
 
   describe('multiWorker', function(){
 
-    var queue, multiWorker;
+    var queue;
+    var multiWorker;
     var checkTimeout = specHelper.timeout / 10;
     var minTaskProcessors = 1;
     var maxTaskProcessors = 5;
@@ -27,21 +28,21 @@ if(specHelper.pkg === 'fakeredis'){
     };
 
     var jobs = {
-      "slowSleepJob": {
+      'slowSleepJob': {
         plugins: [],
         pluginOptions: {},
         perform: function(callback){
           setTimeout(function(){
-            callback(null, new Date().getTime() );
+            callback(null, new Date().getTime());
           }, 1000);
         },
       },
-      "slowCPUJob": {
+      'slowCPUJob': {
         plugins: [],
         pluginOptions: {},
         perform: function(callback){
           blockingSleep(1000);
-          callback(null, new Date().getTime() );
+          callback(null, new Date().getTime());
         },
       },
     };
@@ -49,7 +50,7 @@ if(specHelper.pkg === 'fakeredis'){
     before(function(done){
       specHelper.connect(function(){
         queue = new specHelper.NR.queue({
-          connection: specHelper.cleanConnectionDetails(), 
+          connection: specHelper.cleanConnectionDetails(),
           queue: specHelper.queue
         });
 
@@ -59,7 +60,7 @@ if(specHelper.pkg === 'fakeredis'){
 
     before(function(done){
       multiWorker = new specHelper.NR.multiWorker({
-        connection: specHelper.cleanConnectionDetails(), 
+        connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
         checkTimeout: checkTimeout,
         minTaskProcessors: minTaskProcessors,
@@ -127,10 +128,10 @@ if(specHelper.pkg === 'fakeredis'){
     });
 
     it('should pass on all worker emits to the instance of multiWorker', function(done){
-      queue.enqueue(specHelper.queue, 'crazyJob', []);
+      queue.enqueue(specHelper.queue, 'missingJob', []);
 
       var listener = multiWorker.on('failure', function(workerId, queue, job, error){
-        String(error).should.equal('Error: No job defined for class \'crazyJob\'');
+        String(error).should.equal('Error: No job defined for class "missingJob"');
         multiWorker.removeAllListeners('error');
         multiWorker.end(done);
       });

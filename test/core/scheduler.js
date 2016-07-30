@@ -1,4 +1,4 @@
-var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var specHelper = require(__dirname + '/../_specHelper.js').specHelper;
 var should = require('should');
 
 describe('scheduler', function(){
@@ -6,7 +6,7 @@ describe('scheduler', function(){
   var scheduler;
   var queue;
 
-  it("can connect", function(done){
+  it('can connect', function(done){
     scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout});
     scheduler.connect(function(){
       should.exist(scheduler);
@@ -14,10 +14,10 @@ describe('scheduler', function(){
     });
   });
 
-  it("can provide an error if connection does not establish for a long period", function(done) {
+  it('can provide an error if connection does not establish for a long period', function(done){
     var connectionDetails = {
       pkg:       specHelper.connectionDetails.pkg,
-      host:      "wronghostname",
+      host:      'wronghostname',
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,
       database:  specHelper.connectionDetails.database,
@@ -25,37 +25,36 @@ describe('scheduler', function(){
     };
 
     scheduler = new specHelper.NR.scheduler({connection: connectionDetails, timeout: specHelper.timeout});
-    scheduler.queue.connect = function(callback) {
-      setTimeout(function() {
+    scheduler.queue.connect = function(callback){
+      setTimeout(function(){
         callback(new Error('Cannot connect'));
       }, 1000);
-    }
+    };
 
     scheduler.connect();
 
     scheduler.start();
 
-    scheduler.on('poll', function() {
-      throw new Error('Should not emit poll')
-    })
+    scheduler.on('poll', function(){
+      throw new Error('Should not emit poll');
+    });
 
-    scheduler.on('master', function() {
-      throw new Error('Should not emit master')
-    })
+    scheduler.on('master', function(){
+      throw new Error('Should not emit master');
+    });
 
     setTimeout(done, 2000);
-
   });
 
-  it("can provide an error if connection failed", function(done) {
+  it('can provide an error if connection failed', function(done){
     // Only run this test if this is using real redis
-    if(process.env.FAKEREDIS == 'true') {
+    if(process.env.FAKEREDIS === 'true' || process.env.FAKEREDIS === true){
       return done();
     }
 
     var connectionDetails = {
       pkg:       specHelper.connectionDetails.pkg,
-      host:      "wronghostname",
+      host:      'wronghostname',
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,
       database:  specHelper.connectionDetails.database,
@@ -80,8 +79,8 @@ describe('scheduler', function(){
     after(function(done){ specHelper.cleanup(done); });
 
     it('should only have one master; and can failover', function(done){
-      sheduler_1 = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout});
-      sheduler_2 = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout});
+      var sheduler_1 = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout});
+      var sheduler_2 = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout});
 
       sheduler_1.connect();
       sheduler_2.connect();
@@ -102,26 +101,26 @@ describe('scheduler', function(){
     });
   });
 
-  describe('[with connection]', function() {
+  describe('[with connection]', function(){
     before(function(done){
       specHelper.connect(done);
     });
 
-    beforeEach(function(done){ 
+    beforeEach(function(done){
       specHelper.cleanup(function(){
-        scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout}); 
+        scheduler = new specHelper.NR.scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout});
         queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue});
         scheduler.connect(function(){
           queue.connect(function(){
             done();
           });
         });
-      }); 
+      });
     });
 
     after(function(done){ specHelper.cleanup(done); });
 
-    it("can boot", function(done){
+    it('can boot', function(done){
       scheduler.start();
       done();
     });
@@ -133,22 +132,22 @@ describe('scheduler', function(){
       });
     });
 
-    it("will move enqueued jobs when the time comes", function(done){
-      queue.enqueueAt(1000 * 10, specHelper.queue, 'someJob', [1,2,3], function(){
+    it('will move enqueued jobs when the time comes', function(done){
+      queue.enqueueAt(1000 * 10, specHelper.queue, 'someJob', [1, 2, 3], function(){
         scheduler.poll(function(){
           specHelper.popFromQueue(function(err, obj){
             should.exist(obj);
             obj = JSON.parse(obj);
-            obj.class.should.equal('someJob');
-            obj.args.should.eql([1,2,3]);
+            obj['class'].should.equal('someJob');
+            obj.args.should.eql([1, 2, 3]);
             done();
           });
         });
       });
     });
 
-    it("will not move jobs in the future", function(done){
-      queue.enqueueAt((new Date().getTime() + 10000),  specHelper.queue, 'someJob', [1,2,3], function(){
+    it('will not move jobs in the future', function(done){
+      queue.enqueueAt((new Date().getTime() + 10000),  specHelper.queue, 'someJob', [1, 2, 3], function(){
         scheduler.poll(function(){
           specHelper.popFromQueue(function(err, obj){
             should.not.exist(obj);
