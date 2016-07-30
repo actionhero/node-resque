@@ -2,8 +2,8 @@
 // REQUIRE THE PACKAGE //
 /////////////////////////
 
-var NR = require(__dirname + "/../index.js");
-// In your projects: var NR = require("node-resque");
+var NR = require(__dirname + '/../index.js');
+// In your projects: var NR = require('node-resque');
 
 ///////////////////////////
 // SET UP THE CONNECTION //
@@ -25,8 +25,8 @@ var connectionDetails = {
 //////////////////////////////
 
 var jobs = {
-  "add": {
-    plugins: [ 'retry' ],
+  'add': {
+    plugins: ['retry'],
     pluginOptions: {
       retry: {
         retryLimit: 3,
@@ -34,7 +34,7 @@ var jobs = {
         backoffStrategy: [1000 * 10, 1000 * 20, 1000 * 30],
       },
     },
-    perform: function(a,b,callback){
+    perform: function(a, b, callback){
       if(a < 0){
         return callback(new Error('NEGATIVE NUMBERS ARE HARD :('));
       }else{
@@ -67,27 +67,27 @@ scheduler.connect(function(){
 // REGESTER FOR EVENTS //
 /////////////////////////
 
-worker.on('start',           function(){ console.log("worker started"); });
-worker.on('end',             function(){ console.log("worker ended"); });
-worker.on('cleaning_worker', function(worker, pid){ console.log("cleaning old worker " + worker); });
-worker.on('poll',            function(queue){ console.log("worker polling " + queue); });
-worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); });
-worker.on('reEnqueue',       function(queue, job, plugin){ console.log("reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); });
-worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); });
-worker.on('pause',           function(){ console.log("worker paused"); });
-worker.on('error',           function(queue, job, error){ console.log("error " + queue + " " + JSON.stringify(job) + " >> " + error); });
+worker.on('start',           function(){ console.log('worker started'); });
+worker.on('end',             function(){ console.log('worker ended'); });
+worker.on('cleaning_worker', function(worker, pid){ console.log('cleaning old worker ' + worker); });
+worker.on('poll',            function(queue){ console.log('worker polling ' + queue); });
+worker.on('job',             function(queue, job){ console.log('working job ' + queue + ' ' + JSON.stringify(job)); });
+worker.on('reEnqueue',       function(queue, job, plugin){ console.log('reEnqueue job (' + plugin + ') ' + queue + ' ' + JSON.stringify(job)); });
+worker.on('success',         function(queue, job, result){ console.log('job success ' + queue + ' ' + JSON.stringify(job) + ' >> ' + result); });
+worker.on('pause',           function(){ console.log('worker paused'); });
+worker.on('error',           function(queue, job, error){ console.log('error ' + queue + ' ' + JSON.stringify(job) + ' >> ' + error); });
 worker.on('failure',         function(queue, job, failure){
-  console.log("job failure " + queue + " " + JSON.stringify(job) + " >> " + failure);
+  console.log('job failure ' + queue + ' ' + JSON.stringify(job) + ' >> ' + failure);
   setTimeout(process.exit, 2000);
 });
 
-scheduler.on('start',             function(){ console.log("scheduler started"); });
-scheduler.on('end',               function(){ console.log("scheduler ended"); });
-scheduler.on('poll',              function(){ console.log("scheduler polling"); });
-scheduler.on('master',            function(state){ console.log("scheduler became master"); });
-scheduler.on('error',             function(error){ console.log("scheduler error >> " + error); });
-scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); });
-scheduler.on('transferred_job',   function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); });
+scheduler.on('start',             function(){ console.log('scheduler started'); });
+scheduler.on('end',               function(){ console.log('scheduler ended'); });
+scheduler.on('poll',              function(){ console.log('scheduler polling'); });
+scheduler.on('master',            function(state){ console.log('scheduler became master'); });
+scheduler.on('error',             function(error){ console.log('scheduler error >> ' + error); });
+scheduler.on('working_timestamp', function(timestamp){ console.log('scheduler working timestamp ' + timestamp); });
+scheduler.on('transferred_job',   function(timestamp, job){ console.log('scheduler enquing job ' + timestamp + ' >> ' + JSON.stringify(job)); });
 
 ////////////////////////////////////
 // CONNECT TO A QUEUE AND WORK IT //
@@ -96,6 +96,6 @@ scheduler.on('transferred_job',   function(timestamp, job){ console.log("schedul
 var queue = new NR.queue({connection: connectionDetails}, jobs);
 queue.on('error', function(error){ console.log(error); });
 queue.connect(function(){
-  queue.enqueue('math', "add", [1,2]);
-  queue.enqueue('math', "add", [-1,2]);
+  queue.enqueue('math', 'add', [1, 2]);
+  queue.enqueue('math', 'add', [-1, 2]);
 });

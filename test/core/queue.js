@@ -1,11 +1,11 @@
-var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var specHelper = require(__dirname + '/../_specHelper.js').specHelper;
 var should = require('should');
 
 describe('queue', function(){
 
   var queue;
 
-  it("can connect", function(done){
+  it('can connect', function(done){
     queue = new specHelper.NR.queue({connection: specHelper.connectionDetails, queue: specHelper.queue});
     queue.connect(function(){
       should.exist(queue);
@@ -14,7 +14,7 @@ describe('queue', function(){
     });
   });
 
-  it("can provide an error if connection failed", function(done) {
+  it('can provide an error if connection failed', function(done) {
     // Only run this test if this is using real redis
     if(process.env.FAKEREDIS == 'true') {
       return done();
@@ -22,7 +22,7 @@ describe('queue', function(){
 
     var connectionDetails = {
       pkg:       specHelper.connectionDetails.pkg,
-      host:      "wronghostname",
+      host:      'wronghostname',
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,
       database:  specHelper.connectionDetails.database,
@@ -76,9 +76,9 @@ describe('queue', function(){
 
     it('can add delayed job (enqueueAt)', function(done){
       queue.enqueueAt(10000, specHelper.queue, 'someJob', [1,2,3], function(){
-        specHelper.redis.zscore(specHelper.namespace + ":delayed_queue_schedule", "10", function(err, score){
-          String(score).should.equal("10");
-          specHelper.redis.lpop(specHelper.namespace + ":delayed:" + "10", function(err, obj){
+        specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10', function(err, score){
+          String(score).should.equal('10');
+          specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10', function(err, obj){
             should.exist(obj);
             obj = JSON.parse(obj);
             obj.class.should.equal('someJob');
@@ -89,12 +89,14 @@ describe('queue', function(){
       });
     });
 
+    it('will not enqueue a delayed job at the same time with matching params');
+
     it('can add delayed job (enqueueIn)', function(done){
       var now = Math.round( new Date().getTime() / 1000 ) + 5;
       queue.enqueueIn(5 * 1000, specHelper.queue, 'someJob', [1,2,3], function(){
-        specHelper.redis.zscore(specHelper.namespace + ":delayed_queue_schedule", now, function(err, score){
+        specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now, function(err, score){
           String(score).should.equal(String(now));
-          specHelper.redis.lpop(specHelper.namespace + ":delayed:" + now, function(err, obj){
+          specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now, function(err, obj){
             should.exist(obj);
             obj = JSON.parse(obj);
             obj.class.should.equal('someJob');
@@ -323,7 +325,7 @@ describe('queue', function(){
             worker: 'busted-worker-' + id,
             queue: 'busted-queue',
             payload: {
-              "class": 'busted_job',
+              'class': 'busted_job',
               queue: 'busted-queue',
               args: [1,2,3]
             },
@@ -475,7 +477,7 @@ describe('queue', function(){
       var timeout = 500;
 
       var jobs = {
-        "slowJob": {
+        'slowJob': {
           perform: function(callback){
             setTimeout(function(){
               callback(null);
@@ -552,7 +554,7 @@ describe('queue', function(){
           });
         });
 
-        queue.enqueue(specHelper.queue, "slowJob");
+        queue.enqueue(specHelper.queue, 'slowJob');
         workerA.start();
       });
 
@@ -573,7 +575,7 @@ describe('queue', function(){
               data.workerA.worker.should.equal('workerA');
               data.workerA.payload.class.should.equal('slowJob');
 
-              specHelper.redis.rpop(specHelper.namespace + ":" + "failed", function(err, data){
+              specHelper.redis.rpop(specHelper.namespace + ':' + 'failed', function(err, data){
                 data = JSON.parse(data);
                 data.queue.should.equal(specHelper.queue);
                 data.exception.should.equal('Worker Timeout (killed manually)');
@@ -590,7 +592,7 @@ describe('queue', function(){
           });
         });
 
-        queue.enqueue(specHelper.queue, "slowJob");
+        queue.enqueue(specHelper.queue, 'slowJob');
         workerA.start();
       });
 
@@ -612,7 +614,7 @@ describe('queue', function(){
           });
         });
 
-        queue.enqueue(specHelper.queue, "slowJob");
+        queue.enqueue(specHelper.queue, 'slowJob');
         workerA.start();
       });
 

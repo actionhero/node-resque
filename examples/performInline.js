@@ -2,8 +2,8 @@
 // REQUIRE THE PACKAGE //
 /////////////////////////
 
-var NR = require(__dirname + "/../index.js");
-// In your projects: var NR = require("node-resque");
+var NR = require(__dirname + '/../index.js');
+// In your projects: var NR = require('node-resque');
 
 ///////////////////////////
 // SET UP THE CONNECTION //
@@ -25,12 +25,12 @@ var connectionDetails = {
 //////////////////////////////
 
 var jobs = {
-  "add": {
-    plugins: [ 'jobLock' ],
+  'add': {
+    plugins: ['jobLock'],
     pluginOptions: {
       jobLock: {},
     },
-    perform: function(a,b,callback){
+    perform: function(a, b, callback){
       setTimeout(function(){
         var answer = a + b;
         callback(null, answer);
@@ -45,7 +45,7 @@ var jobs = {
 
 var worker = new NR.worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs);
 worker.connect(function(){
-  worker.performInline('add', [1,2], function(error, result){
+  worker.performInline('add', [1, 2], function(error, result){
     console.log('Error: ' + error);
     console.log('Result: ' + result);
 

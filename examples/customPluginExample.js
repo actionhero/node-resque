@@ -2,8 +2,8 @@
 // REQUIRE THE PACKAGE //
 /////////////////////////
 
-var NR = require(__dirname + "/../index.js");
-// In your projects: var NR = require("node-resque");
+var NR = require(__dirname + '/../index.js');
+// In your projects: var NR = require('node-resque');
 
 ///////////////////////////
 // SET UP THE CONNECTION //
@@ -41,7 +41,7 @@ var myPlugin = function(worker, func, queue, job, args, options){
 
 // Learn all the callbacks you can use from the Readme.
 myPlugin.prototype.before_perform = function(callback){
-  console.log(this.options.messagePrefix + " | " + JSON.stringify(this.args));
+  console.log(this.options.messagePrefix + ' | ' + JSON.stringify(this.args));
   callback(null, true);
 };
 
@@ -51,12 +51,12 @@ myPlugin.prototype.before_perform = function(callback){
 
 var jobsToComplete = 0;
 var jobs = {
-  "jobby": {
-    plugins: [ myPlugin ],
+  jobby: {
+    plugins: [myPlugin],
     pluginOptions: {
       myPlugin: {messagePrefix: '[ custom logger plugin ]'},
     },
-    perform: function(a,b,callback){
+    perform: function(a, b, callback){
       jobsToComplete--;
       shutdown();
       callback(null);
@@ -78,16 +78,16 @@ worker.connect(function(){
 // REGESTER FOR EVENTS //
 /////////////////////////
 
-worker.on('start',           function(){ console.log("worker started"); });
-worker.on('end',             function(){ console.log("worker ended"); });
-worker.on('cleaning_worker', function(worker, pid){ console.log("cleaning old worker " + worker); });
-worker.on('poll',            function(queue){ console.log("worker polling " + queue); });
-worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); });
-worker.on('reEnqueue',       function(queue, job, plugin){ console.log("reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); });
-worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); });
-worker.on('failure',         function(queue, job, failure){ console.log("job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); });
-worker.on('error',           function(queue, job, error){ console.log("error " + queue + " " + JSON.stringify(job) + " >> " + error); });
-worker.on('pause',           function(){ console.log("worker paused"); });
+worker.on('start',           function(){ console.log('worker started'); });
+worker.on('end',             function(){ console.log('worker ended'); });
+worker.on('cleaning_worker', function(worker, pid){ console.log('cleaning old worker ' + worker); });
+worker.on('poll',            function(queue){ console.log('worker polling ' + queue); });
+worker.on('job',             function(queue, job){ console.log('working job ' + queue + ' ' + JSON.stringify(job)); });
+worker.on('reEnqueue',       function(queue, job, plugin){ console.log('reEnqueue job (' + plugin + ') ' + queue + ' ' + JSON.stringify(job)); });
+worker.on('success',         function(queue, job, result){ console.log('job success ' + queue + ' ' + JSON.stringify(job) + ' >> ' + result); });
+worker.on('failure',         function(queue, job, failure){ console.log('job failure ' + queue + ' ' + JSON.stringify(job) + ' >> ' + failure); });
+worker.on('error',           function(queue, job, error){ console.log('error ' + queue + ' ' + JSON.stringify(job) + ' >> ' + error); });
+worker.on('pause',           function(){ console.log('worker paused'); });
 
 ////////////////////////
 // CONNECT TO A QUEUE //
@@ -96,7 +96,7 @@ worker.on('pause',           function(){ console.log("worker paused"); });
 var queue = new NR.queue({connection: connectionDetails}, jobs);
 queue.on('error', function(error){ console.log(error); });
 queue.connect(function(){
-  queue.enqueue('default', "jobby", [1,2]);
+  queue.enqueue('default', 'jobby', [1, 2]);
   jobsToComplete = 1;
 });
 
