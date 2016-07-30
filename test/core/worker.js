@@ -1,4 +1,4 @@
-var specHelper = require(__dirname + "/../_specHelper.js").specHelper;
+var specHelper = require(__dirname + '/../_specHelper.js').specHelper;
 var should = require('should');
 
 describe('worker', function(){
@@ -8,36 +8,36 @@ describe('worker', function(){
   var queue;
 
   var jobs = {
-    "add": {
-      perform: function(a,b,callback){
+    'add': {
+      perform: function(a, b, callback){
         var answer = a + b;
         callback(null, answer);
       }
     },
-    "badAdd": {
-      perform: function(a,b,callback){
-        callback(new Error("Blue Smoke"));
+    'badAdd': {
+      perform: function(a, b, callback){
+        callback(new Error('Blue Smoke'));
       }
     },
-    "messWithData": {
+    'messWithData': {
       perform: function(a, callback){
         a.data = 'new thing';
         callback(null, a);
       }
     },
-    "doubleCaller":{
+    'doubleCaller':{
       perform: function(callback){
         callback(null, 'a');
         setTimeout(function(){ callback(null, 'b'); }, 500);
         setTimeout(function(){ callback(null, 'c'); }, 1000);
       }
     },
-    "quickDefine": function(callback) {
-      setTimeout(callback.bind(null, null, "ok"));
+    'quickDefine': function(callback){
+      setTimeout(callback.bind(null, null, 'ok'));
     },
   };
 
-  it("can connect", function(done){
+  it('can connect', function(done){
     worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, queues: specHelper.queue});
     worker.connect(function(){
       should.exist(worker);
@@ -46,15 +46,15 @@ describe('worker', function(){
     });
   });
 
-  it("can provide an error if connection failed", function(done) {
+  it('can provide an error if connection failed', function(done){
     // Only run this test if this is using real redis
-    if(process.env.FAKEREDIS == 'true') {
+    if(process.env.FAKEREDIS === 'true' || process.env.FAKEREDIS === true){
       return done();
     }
 
     var connectionDetails = {
       pkg:       specHelper.connectionDetails.pkg,
-      host:      "wronghostname",
+      host:      'wronghostname',
       password:  specHelper.connectionDetails.password,
       port:      specHelper.connectionDetails.port,
       database:  specHelper.connectionDetails.database,
@@ -66,10 +66,9 @@ describe('worker', function(){
       throw new Error('should not get here');
     });
 
-    worker.on('error', function(error){
+    worker.on('error', function(q, job, error){
       error.message.should.match(/getaddrinfo ENOTFOUND/);
-      worker.end();
-      done();
+      worker.end(done);
     });
   });
 
@@ -80,7 +79,7 @@ describe('worker', function(){
     });
 
     it('can run a successful job', function(done){
-      worker.performInline('add', [1,2], function(error, result){
+      worker.performInline('add', [1, 2], function(error, result){
         should.not.exist(error);
         result.should.equal(3);
         done();
@@ -114,10 +113,10 @@ describe('worker', function(){
         }
         count++;
       });
-    })
+    });
   });
 
-  describe('[with connection]', function() {
+  describe('[with connection]', function(){
 
     before(function(done){
       specHelper.connect(function(){
@@ -134,7 +133,7 @@ describe('worker', function(){
       });
     });
 
-    it("can boot and stop", function(done){
+    it('can boot and stop', function(done){
       this.timeout(specHelper.timeout * 3);
       worker = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs);
       worker.connect(function(){
@@ -148,8 +147,8 @@ describe('worker', function(){
     describe('crashing workers', function(){
 
       it('can clear previously crashed workers from the same host', function(done){
-        var name1 = os.hostname() + ":" + "0"; // fake pid
-        var name2 = os.hostname() + ":" + process.pid; // real pid
+        var name1 = os.hostname() + ':' + '0'; // fake pid
+        var name2 = os.hostname() + ':' + process.pid; // real pid
         var worker1 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs);
         worker1.connect(function(){
           worker1.init(function(){
@@ -158,7 +157,7 @@ describe('worker', function(){
               var worker2 = new specHelper.NR.worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs);
               worker2.connect(function(){
                 worker2.on('cleaning_worker', function(worker, pid){
-                  worker.should.equal(name1 + ":*");
+                  worker.should.equal(name1 + ':*');
                   pid.should.equal(0);
                   done();
                 });
@@ -182,24 +181,24 @@ describe('worker', function(){
         worker.end(done);
       });
 
-      it("will mark a job as failed", function(done){
+      it('will mark a job as failed', function(done){
         var listener = worker.on('failure', function(q, job, failire){
           q.should.equal(specHelper.queue);
-          job.class.should.equal('badAdd');
+          job['class'].should.equal('badAdd');
           failire.message.should.equal('Blue Smoke');
 
           worker.removeAllListeners('failire');
           done();
         });
 
-        queue.enqueue(specHelper.queue, "badAdd", [1,2]);
+        queue.enqueue(specHelper.queue, 'badAdd', [1, 2]);
         worker.start();
       });
 
       it('can work a job and return succesful things', function(done){
         var listener = worker.on('success', function(q, job, result){
           q.should.equal(specHelper.queue);
-          job.class.should.equal('add');
+          job['class'].should.equal('add');
           result.should.equal(3);
           worker.result.should.equal(result);
 
@@ -207,7 +206,7 @@ describe('worker', function(){
           done();
         });
 
-        queue.enqueue(specHelper.queue, "add", [1,2]);
+        queue.enqueue(specHelper.queue, 'add', [1, 2]);
         worker.start();
       });
 
@@ -220,42 +219,41 @@ describe('worker', function(){
           done();
         });
 
-        queue.enqueue(specHelper.queue, "messWithData", {a: 'starting value'});
+        queue.enqueue(specHelper.queue, 'messWithData', {a: 'starting value'});
         worker.start();
       });
 
       it('can accept jobs that are simple functions', function(done){
         var listener = worker.on('success', function(q, job, result){
-          result.should.equal("ok");
+          result.should.equal('ok');
 
           worker.removeAllListeners('success');
           done();
         });
 
-        queue.enqueue(specHelper.queue, "quickDefine", []);
+        queue.enqueue(specHelper.queue, 'quickDefine', []);
         worker.start();
       });
 
       it('will not work jobs that are not defined', function(done){
         var listener = worker.on('failure', function(q, job, failure){
           q.should.equal(specHelper.queue);
-          String(failure).should.equal("Error: No job defined for class 'somethingFake'");
+          String(failure).should.equal('Error: No job defined for class "somethingFake"');
 
           worker.removeAllListeners('failure');
           done();
         });
 
-        queue.enqueue(specHelper.queue, "somethingFake", []);
+        queue.enqueue(specHelper.queue, 'somethingFake', []);
         worker.start();
       });
 
       it('will place failed jobs in the failed queue', function(done){
-        specHelper.redis.rpop(specHelper.namespace + ":" + "failed", function(err, data){
+        specHelper.redis.rpop(specHelper.namespace + ':' + 'failed', function(err, data){
           data = JSON.parse(data);
           data.queue.should.equal(specHelper.queue);
           data.exception.should.equal('Error');
-          data.error.should.equal('No job defined for class \'somethingFake\'');
-
+          data.error.should.equal('No job defined for class "somethingFake"');
           done();
         });
       });
@@ -288,7 +286,7 @@ describe('worker', function(){
           done();
         };
 
-        queue.enqueue(specHelper.queue, "doubleCaller", []);
+        queue.enqueue(specHelper.queue, 'doubleCaller', []);
         worker.start();
       });
 
