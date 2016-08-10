@@ -162,7 +162,7 @@ You can also pass redis client directly.
 var redisClient = new Redis();
 var connectionDetails = { redis: redisClient }
 
-var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs,
+var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs);
 
 worker.on('error', function(){
 	// handler errors
