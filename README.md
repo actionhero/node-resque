@@ -1,6 +1,6 @@
 # node-resque
 
-**Distributed delayed jobs in nodejs**.  Resque is a background job system based on redis.  It includes priority queues, plugins, locking, delayed jobs, and more!  This project is a very opinionated but API-compatible with [Resque](https://github.com/resque/resque) and [Sidekiq](http://sidekiq.org/).  We also implement some of the popular Resque plugins, including [resque-scheduler](https://github.com/resque/resque-scheduler) and [resque-retry](https://github.com/lantins/resque-retry)
+**Distributed delayed jobs in nodejs**.  Resque is a background job system based on [Redis](http://redis.io) (version 2.0.0 and up required).  It includes priority queues, plugins, locking, delayed jobs, and more!  This project is a very opinionated but API-compatible with [Resque](https://github.com/resque/resque) and [Sidekiq](http://sidekiq.org/).  We also implement some of the popular Resque plugins, including [resque-scheduler](https://github.com/resque/resque-scheduler) and [resque-retry](https://github.com/lantins/resque-retry)
 
 [![Nodei stats](https://nodei.co/npm/node-resque.png?downloads=true)](https://npmjs.org/package/node-resque)
 
@@ -162,7 +162,7 @@ You can also pass redis client directly.
 var redisClient = new Redis();
 var connectionDetails = { redis: redisClient }
 
-var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs,
+var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs);
 
 worker.on('error', function(){
 	// handler errors
@@ -461,4 +461,6 @@ The Options available for the multiWorker are:
 This package was featured heavily in [this presentation I gave](https://blog.evantahler.com/background-tasks-in-node-js-a-survey-with-redis-971d3575d9d2#.rzph5ofgy) about background jobs + node.js.  It contains more examples!
 
 ## Acknowledgments
-Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
+- Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
+- This Resque package aims to be fully compatible with [Ruby's Resque](https://github.com/resque/resque) and implamentations of [Resque Scheduler](https://github.com/resque/resque-scheduler).  Other packages from other langauges may conflict.
+- If you are looking for a UI to manage your Resque instances in nodejs, check out [ActionHero's Resque UI](https://github.com/evantahler/ah-resque-ui)
