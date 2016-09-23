@@ -174,7 +174,7 @@ worker.connect(function(){
 ```
 
 ## Notes
-- Be sure to call `worker.end()`, `queue.end()` and `scheduler.end()` before shutting down your application if you want to properly clear your worker status from resque
+- Be sure to call `worker.end(callback)`, `queue.end(callback)` and `scheduler.end(callback)` before shutting down your application if you want to properly clear your worker status from resque
 - When ending your application, be sure to allow your workers time to finish what they are working on
 - This project implements the "scheduler" part of rescue-scheduler (the daemon which can promote enqueued delayed jobs into the work queues when it is time), but not the CRON scheduler proxy.  To learn more about how to use a CRON-like scheduler, read the [Job Schedules](#job-schedules) section of this document.
 - If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor
@@ -216,6 +216,8 @@ Additional methods provided on the `queue` object:
   - callback(error, timestamps_the_job_was_removed_from)
 - **queue.scheduledAt** = function(q, func, args, callback)
   - callback(error, timestamps_the_job_is_scheduled_for)
+- **queue.end** = function(callback)
+  - callback(error)
 
 ## Delayed Status
 
