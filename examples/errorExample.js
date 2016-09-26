@@ -33,9 +33,15 @@ var jobs = {
       jobsToComplete--;
       shutdown();
 
-      MISSING_VAR + THING;
+      // A ReferenceError like this would cause the application to crash
+      // and your job would be lost.
+      // If you have an unsafe job like this, consider domains maybe?
+      //MISSING_VAR + THING;
 
-      callback(null);
+      // however jobs which return an error callback properly will be
+      // logged in redis accordingly
+      var error = new Error('broken message from job');
+      callback(error);
     },
   },
 };
@@ -71,7 +77,7 @@ worker.on('pause',           function(){ console.log('worker paused'); });
 
 var queue = new NR.queue({connection: connectionDetails}, jobs);
 queue.connect(function(){
-  queue.enqueue('default', 'brokenJob', {a: 1, b: 2});
+  queue.enqueue('default', 'brokenJob', [1, 2]);
   jobsToComplete = 1;
 });
 

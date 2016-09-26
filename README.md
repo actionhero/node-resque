@@ -257,6 +257,12 @@ You can work with these failed jobs with the following methods:
   - callback(error, failedJobs)
   - `failedJobs` is an array listing the data of the failed jobs.  Each element looks like:
 
+### Failing a Job
+
+It is *very* important that your jobs handle uncaughtRejections and other errors of this type properly.  As of `node-resque` version 4, we no longer use `domains` to catch what would otherwise be crash-inducing errors in your jobs.  This means that a job which causes your application to crash WILL BE LOST FOREVER.  Please use `catch()` on your promises, handle all of your callbacks, and otherwise write robust node.js applications.
+
+If you choose to use `domains`, `process.onExit`, or any other method of "catching" a process crash, you can still move the job `node-resque` was working on to the redis error queue with `worker.fail(error, callback)`.  
+
 ```javascript
 { worker: 'busted-worker-3',
   queue: 'busted-queue',
