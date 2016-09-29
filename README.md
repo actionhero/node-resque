@@ -463,7 +463,7 @@ The Options available for the multiWorker are:
 - `maxTaskProcessors`: The maximum number of workers to spawn under this multiWorker, even if the queues are long and there is available CPU (the event loop isn't entierly blocked) to this node process.
 - `checkTimeout`: How often to check if the event loop is blocked (in ms) (for adding or removing multiWorker children),
 - `maxEventLoopDelay`: How long the event loop has to be delayed before considering it blocked (in ms),  
-- `toDisconnectProcessors`: If false, all multiWorker children will share a single redis connection.  If false, each child will connect and disconnect seperatly.  This will lead to more redis connections, but faster retrival of events.
+- `toDisconnectProcessors`: If false, all multiWorker children will share a single redis connection.  If true, each child will connect and disconnect seperatly.  This will lead to more redis connections, but faster retrival of events.
 
 ## Presentation
 This package was featured heavily in [this presentation I gave](https://blog.evantahler.com/background-tasks-in-node-js-a-survey-with-redis-971d3575d9d2#.rzph5ofgy) about background jobs + node.js.  It contains more examples!
