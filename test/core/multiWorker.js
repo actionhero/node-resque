@@ -89,7 +89,7 @@ if(specHelper.pkg === 'fakeredis'){
         setTimeout(function(){
           multiWorker.workers.length.should.equal(1);
           multiWorker.end(done);
-        }, (checkTimeout * 2) + 500);
+        }, (checkTimeout * 3) + 500);
       });
     });
 
