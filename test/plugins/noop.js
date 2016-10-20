@@ -5,18 +5,27 @@ describe('plugins', function(){
   describe('noop', function(){
     var queue;
     var scheduler;
+    var loggedErrors = [];
 
     var jobs = {
       'brokenJob': {
         plugins: ['noop'],
-        pluginOptions: {'noop': {}},
+        pluginOptions: {'noop': {
+          logger: function(error){
+            loggedErrors.push(error);
+          }
+        }},
         perform: function(a, b, callback){
           callback(new Error('BUSTED'), null);
         }
       },
       'happyJob': {
         plugins: ['noop'],
-        pluginOptions: {'noop': {}},
+        pluginOptions: {'noop': {
+          logger: function(error){
+            loggedErrors.push(error);
+          }
+        }},
         perform: function(a, b, callback){
           callback(null, null);
         }
@@ -36,6 +45,11 @@ describe('plugins', function(){
           });
         });
       });
+    });
+
+    beforeEach(function(done){
+      loggedErrors = [];
+      done();
     });
 
     after(function(done){
@@ -67,6 +81,7 @@ describe('plugins', function(){
           worker.connect(function(){
 
             worker.on('success', function(){
+              loggedErrors.length.should.equal(0);
               complete();
             });
 
@@ -102,6 +117,7 @@ describe('plugins', function(){
           worker.connect(function(){
 
             worker.on('success', function(){
+              loggedErrors.length.should.equal(1);
               complete();
             });
 
