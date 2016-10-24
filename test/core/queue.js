@@ -89,6 +89,22 @@ describe('queue', function(){
       });
     });
 
+    it('can add delayed job whose timestamp is a string (enqueueAt)', function(done){
+      queue.enqueueAt('10000', specHelper.queue, 'someJob', [1, 2, 3], function(error){
+        should.not.exist(error);
+        specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10', function(err, score){
+          String(score).should.equal('10');
+          specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10', function(err, obj){
+            should.exist(obj);
+            obj = JSON.parse(obj);
+            obj['class'].should.equal('someJob');
+            obj.args.should.eql([1, 2, 3]);
+            done();
+          });
+        });
+      });
+    });
+
     it('will not enqueue a delayed job at the same time with matching params', function(done){
       queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3], function(error){
         should.not.exist(error);
@@ -102,6 +118,23 @@ describe('queue', function(){
     it('can add delayed job (enqueueIn)', function(done){
       var now = Math.round(new Date().getTime() / 1000) + 5;
       queue.enqueueIn(5 * 1000, specHelper.queue, 'someJob', [1, 2, 3], function(){
+        specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now, function(err, score){
+          String(score).should.equal(String(now));
+          specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now, function(err, obj){
+            should.exist(obj);
+            obj = JSON.parse(obj);
+            obj['class'].should.equal('someJob');
+            obj.args.should.eql([1, 2, 3]);
+            done();
+          });
+        });
+      });
+    });
+
+    it('can add a delayed job whose time is a string (enqueueIn)', function(done){
+      var now = Math.round(new Date().getTime() / 1000) + 5;
+      var time = 5 * 1000;
+      queue.enqueueIn(time.toString(), specHelper.queue, 'someJob', [1, 2, 3], function(){
         specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now, function(err, score){
           String(score).should.equal(String(now));
           specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now, function(err, obj){
