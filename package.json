@@ -31,9 +31,20 @@
     "mocha": "latest",
     "should": "latest",
     "fakeredis": "latest",
-    "node-schedule": "latest"
+    "node-schedule": "latest",
+    "standard": "latest"
+  },
+  "standard": {
+    "globals": [
+      "it",
+      "after",
+      "afterEach",
+      "before",
+      "beforeEach",
+      "describe"
+    ]
   },
   "scripts": {
-    "test": "mocha"
+    "test": "standard && mocha"
   }
 }
