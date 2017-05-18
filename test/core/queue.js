@@ -268,12 +268,12 @@ describe('queue', function () {
             should.not.exist(err)
             obj = JSON.parse(obj)
             obj['class'].should.equal('noParams')
-            obj.args.should.be.empty
+            obj.args.should.be.empty()
             specHelper.popFromQueue(function (err, obj) {
               should.not.exist(err)
               obj = JSON.parse(obj)
               obj['class'].should.equal('noParams')
-              obj.args.should.be.empty
+              obj.args.should.be.empty()
               done()
             })
           })
@@ -308,7 +308,7 @@ describe('queue', function () {
     it('allows omitting arguments when adding delayed job', function (done) {
       queue.allDelayed(function (error, hash) {
         should.not.exist(error)
-        hash.should.be.empty
+        hash.should.be.empty()
         queue.enqueueAt(10000, specHelper.queue, 'noParams', function (error) {
           should.not.exist(error)
           queue.enqueueIn(11000, specHelper.queue, 'noParams', function (error) {
@@ -324,7 +324,7 @@ describe('queue', function () {
                     should.not.exist(error)
                     Object.keys(hash).length.should.equal(4)
                     for (var key in hash) {
-                      hash[key][0].args.should.be.empty
+                      hash[key][0].args.should.be.empty()
                     }
                     done()
                   })
@@ -339,7 +339,7 @@ describe('queue', function () {
     it('allows omitting arguments when deleting a delayed job', function (done) {
       queue.allDelayed(function (err, hash) {
         should.not.exist(err)
-        hash.should.be.empty
+        hash.should.be.empty()
         queue.enqueueAt(10000, specHelper.queue, 'noParams')
         queue.enqueueAt(12000, specHelper.queue, 'noParams', function () {
           queue.allDelayed(function (err, hash) {
@@ -349,7 +349,7 @@ describe('queue', function () {
               queue.delDelayed(specHelper.queue, 'noParams', function () {
                 queue.allDelayed(function (err, hash) {
                   should.not.exist(err)
-                  hash.should.be.empty
+                  hash.should.be.empty()
                   done()
                 })
               })
