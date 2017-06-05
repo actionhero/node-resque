@@ -383,7 +383,8 @@ var jobs = {
 
 **notes**
 
-- All plugins which return `(error, toRun)`.  if `toRun = false` on  `beforeEnqueue`, the job begin enqueued will be thrown away, and if `toRun = false` on `beforePerfporm`, the job will be reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
+- All plugins run a callback with arguments `(error, toRun)`.  if `toRun = false` on  `before_enqueue`, the job being enqueued will be thrown away, and if `toRun = false` on `before_perform`, the job will be reEnqueued and not run at this time. `toRun = false` does not affect execution in the `after_enqueue` hook.
+- When running multiple plugins on a job (with the array syntax), the plugins will be run sequentially (from let to right). If `toRun = false` in the `after_perform` hook, the next plugin will not be executed. Otherwise, `toRun` has no effect in the execution flow.
 - If you are writing a plugin to deal with errors which may occur during your resque job, you can inspect and modify `worker.error` in your plugin.  If `worker.error` is null, no error will be logged in the resque error queue.
 - There are a few included plugins, all in the lib/plugins/* directory. You can rewrite you own and include it like this:
 
