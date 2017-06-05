@@ -1,0 +1,27 @@
+version: '2'
+
+services:
+  web:
+    image: corbinu/node-resque-web
+    ports:
+      - "9292:9292"
+    depends_on:
+      - redis
+    env_file:
+      - env
+
+  redis:
+    image: redis:3-alpine
+    ports:
+      - "6379:6379"
+    env_file:
+      - env
+    depends_on:
+      - redisdata
+    volumes_from:
+      - redisdata
+
+  redisdata:
+    image: tianon/true
+    volumes:
+      - /data

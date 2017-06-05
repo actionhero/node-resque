@@ -31,3 +31,68 @@ gem install bundler
 bundle install
 bundle exec rackup
 ```
+
+## Docker
+
+# Docker image for Resque Web
+
+## How to use
+
+### Use as standalone container
+
+You can use `docker run` to run this image directly.
+
+```bash
+docker run -p 9292:9292 -e REDIS_HOST=10.0.0.10 corbinu/resque-web
+```
+
+### Use Docker Compose
+
+[Docker Compose](https://docs.docker.com/compose/) is the recommended way to run this image with Redis database.
+
+A sample `docker-compose.yml` can be found in this repo.
+
+```yaml
+version: '2'
+
+services:
+  web:
+    image: corbinu/node-resque-web
+    ports:
+      - "9292:9292"
+    depends_on:
+      - db
+    env_file:
+      - env
+
+  db:
+    image: redis:3-alpine
+    ports:
+      - "6379:6379"
+    env_file:
+      - env
+    depends_on:
+      - dbdata
+    volumes_from:
+      - dbdata
+
+  dbdata:
+    image: tianon/true
+    volumes:
+      - /data
+```
+
+Then use `docker-compose up -d` to start Resque Web server.
+
+Configurations:
+
+Environment variable      | Description | Default value (used by Docker Compose - `env` file)
+--------------------      | ----------- | ---------------------------
+REDIS_HOST                | Redis host  | redis
+REDIS_PORT                | Redis port |  6379
+REDIS_DB                  | Redis DB | 1
+REDIS_NAMESPACE           | Redis namespace | none
+AUTH_USERNAME             | Username for basic auth | none
+AUTH_PASSWORD             | Password for basic auth | none
+
+If Docker Compose is used, you can just modify `env` file in the same directory of `docker-compose.yml` file to update those environment variables.
