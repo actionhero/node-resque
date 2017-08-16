@@ -60,4 +60,19 @@ describe('connection', function () {
       done()
     })
   })
+
+  it('removes empty namespace from generated key', function (done) {
+    var Connection = specHelper.NR.connection
+
+    var connectionDetails = specHelper.cleanConnectionDetails()
+    connectionDetails['namespace'] = ''
+
+    var connection = new Connection(connectionDetails)
+
+    connection.connect(function () {
+      connection.key('thing').should.equal('thing')
+      connection.end()
+      done()
+    })
+  })
 })
