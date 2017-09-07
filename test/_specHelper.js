@@ -1,13 +1,10 @@
 var path = require('path')
-var redis = require('ioredis')
-var fakeredis = require('fakeredis')
+var Redis = require('ioredis')
 var namespace = 'resque_test'
 var queue = 'test_queue'
-
 var pkg = 'ioredis'
-if (process.env.FAKEREDIS === 'true') { pkg = 'fakeredis' }
 
-console.log('Using ' + pkg)
+console.log(`Using redis client: ${pkg}`)
 
 exports.specHelper = {
   pkg: pkg,
@@ -25,94 +22,49 @@ exports.specHelper = {
     // looping: true
   },
 
-  connect: function (callback) {
-    var self = this
-    if (pkg !== 'fakeredis') {
-      self.redis = redis.createClient(self.connectionDetails.port, self.connectionDetails.host, self.connectionDetails.options)
-      self.redis.setMaxListeners(0)
-      if (self.connectionDetails.password !== null && self.connectionDetails.password !== '') {
-        self.redis.auth(self.connectionDetails.password, function (err) {
-          if (err) { return callback(err) }
-          self.redis.select(self.connectionDetails.database, function (err) {
-            // self.connectionDetails.redis = self.redis;
-            callback(err)
-          })
-        })
-      } else {
-        self.redis.select(self.connectionDetails.database, function (err) {
-          self.connectionDetails.redis = self.redis
-          callback(err)
-        })
-      }
-    } else {
-      self.redis = fakeredis.createClient('test', 123, {fast: true})
-      self.redis.setMaxListeners(0)
-      self.redis.select(self.connectionDetails.database, function (err) {
-        process.nextTick(function () {
-          self.connectionDetails.redis = self.redis
-          callback(err)
-        })
-      })
+  connect: async function () {
+    this.redis = Redis.createClient(this.connectionDetails.port, this.connectionDetails.host, this.connectionDetails.options)
+    this.redis.setMaxListeners(0)
+    if (this.connectionDetails.password !== null && this.connectionDetails.password !== '') {
+      await this.redis.auth(this.connectionDetails.password)
     }
+    await this.redis.select(this.connectionDetails.database)
+    this.connectionDetails.redis = this.redis
   },
 
-  cleanup: function (callback) {
-    var self = this
-    setTimeout(function () {
-      self.redis.keys(self.namespace + '*', function (err, keys) {
-        if (err) { return callback(err) }
-        if (keys.length === 0) {
-          callback()
-        } else {
-          self.redis.del(keys, function () {
-            callback()
-          })
-        }
-      })
-    }, 200)
+  cleanup: async function () {
+    let keys = await this.redis.keys(this.namespace + '*')
+    if (keys.length > 0) { await this.redis.del(keys) }
   },
 
-  startAll: function (jobs, callback) {
-    var self = this
-    var Worker = self.NR.worker
-    var Scheduler = self.NR.scheduler
-    var Queue = self.NR.queue
+  startAll: async function (jobs) {
+    let Worker = this.NR.worker
+    let Scheduler = this.NR.scheduler
+    let Queue = this.NR.queue
 
-    self.worker = new Worker({connection: {redis: self.redis}, queues: self.queue, timeout: self.timeout}, jobs, function () {
-      self.scheduler = new Scheduler({connection: {redis: self.redis}, timeout: self.timeout}, function () {
-        self.queue = new Queue({connection: {redis: self.redis}}, function () {
-          callback()
-        })
-      })
-    })
+    this.worker = new Worker({connection: {redis: this.redis}, queues: this.queue, timeout: this.timeout}, jobs)
+    await this.worker.connect()
+
+    this.scheduler = new Scheduler({connection: {redis: this.redis}, timeout: this.timeout})
+    await this.scheduler.connect()
+
+    this.queue = new Queue({connection: {redis: this.redis}})
+    await this.queue.connect()
   },
 
-  endAll: function (callback) {
-    var self = this
-    self.worker.end(function () {
-      self.scheduler.end(function () {
-        callback()
-      })
-    })
+  endAll: async function () {
+    await this.worker.end()
+    await this.scheduler.end()
   },
 
-  popFromQueue: function (callback) {
-    var self = this
-    self.redis.lpop(self.namespace + ':queue:' + self.queue, function (err, obj) {
-      callback(err, obj)
-    })
+  popFromQueue: async function () {
+    return this.redis.lpop(this.namespace + ':queue:' + this.queue)
   },
 
   cleanConnectionDetails: function () {
-    var self = this
-    var out = {}
-    if (self.pkg === 'fakeredis') {
-      return self.connectionDetails
-    }
-    for (var i in self.connectionDetails) {
-      if (i !== 'redis') {
-        out[i] = self.connectionDetails[i]
-      }
+    let out = {}
+    for (let i in this.connectionDetails) {
+      if (i !== 'redis') { out[i] = this.connectionDetails[i] }
     }
 
     return out

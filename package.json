@@ -3,7 +3,7 @@
   "name": "node-resque",
   "description": "an opinionated implementation of resque in node",
   "license": "Apache-2.0",
-  "version": "4.0.8",
+  "version": "5.0.0",
   "homepage": "http://github.com/taskrabbit/node-resque",
   "repository": {
     "type": "git",
@@ -18,21 +18,21 @@
     "work",
     "worker",
     "background",
-    "job"
+    "job",
+    "task"
   ],
   "engines": {
-    "node": ">= 4"
+    "node": ">= 8"
   },
   "dependencies": {
-    "async": "^2.0.1",
-    "ioredis": "^3.0.0"
+    "ioredis": "^3.1.4"
   },
   "devDependencies": {
-    "mocha": "latest",
-    "should": "latest",
     "fakeredis": "latest",
-    "node-schedule": "latest",
-    "standard": "latest"
+    "mocha": "^3.5.0",
+    "node-schedule": "^1.2.4",
+    "should": "^13.0.1",
+    "standard": "^10.0.3"
   },
   "standard": {
     "globals": [

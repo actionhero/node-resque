@@ -1,18 +1,7 @@
 sudo: false
-
-notifications:
-  email:
-    - evantahler@gmail.com
 language: node_js
 node_js:
-  - "4"
-  - "6"
-env:
-  - "FAKEREDIS=true"
-  - "FAKEREDIS=false"
-branches:
-  only:
-    - master
+  - "8"
 services:
   - redis-server
 # before_script:

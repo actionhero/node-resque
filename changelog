@@ -1,0 +1,3 @@
+- dropped support for fakeredis
+- async!!!
+- capitol names for all classes
