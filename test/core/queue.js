@@ -124,238 +124,159 @@ describe('queue', () => {
       length.should.equal(2)
     })
 
-    it('can get the jobs in the queue', function (done) {
-      queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3], function () {
-        queue.enqueue(specHelper.queue, 'someJob', [4, 5, 6], function () {
-          queue.queued(specHelper.queue, 0, -1, function (err, jobs) {
-            should.not.exist(err)
-            jobs.length.should.equal(2)
-            jobs[0].args.should.eql([1, 2, 3])
-            jobs[1].args.should.eql([4, 5, 6])
-            done()
-          })
-        })
+    it('can get the jobs in the queue', async () => {
+      await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
+      await queue.enqueue(specHelper.queue, 'someJob', [4, 5, 6])
+      let jobs = await queue.queued(specHelper.queue, 0, -1)
+      jobs.length.should.equal(2)
+      jobs[0].args.should.eql([1, 2, 3])
+      jobs[1].args.should.eql([4, 5, 6])
+    })
+
+    it('can find previously scheduled jobs', async () => {
+      await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
+      let timestamps = await queue.scheduledAt(specHelper.queue, 'someJob', [1, 2, 3])
+      timestamps.length.should.equal(1)
+      timestamps[0].should.equal('10')
+    })
+
+    it('will not match previously scheduled jobs with differnt args', async () => {
+      await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
+      let timestamps = await queue.scheduledAt(specHelper.queue, 'someJob', [3, 2, 1])
+      timestamps.length.should.equal(0)
+    })
+
+    it('can deleted an enqued job', async () => {
+      await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(1)
+
+      await queue.del(specHelper.queue, 'someJob', [1, 2, 3])
+      let lengthAgain = await queue.length(specHelper.queue)
+      lengthAgain.should.equal(0)
+    })
+
+    it('can deleted a delayed job', async () => {
+      await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
+      let timestamps = await queue.delDelayed(specHelper.queue, 'someJob', [1, 2, 3])
+      timestamps.length.should.equal(1)
+      timestamps[0].should.equal('10')
+    })
+
+    it('can delete a delayed job, and delayed queue should be empty', async () => {
+      await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
+      let timestamps = await queue.delDelayed(specHelper.queue, 'someJob', [1, 2, 3])
+      let hash = await queue.allDelayed()
+      hash.should.be.empty()
+      timestamps.length.should.equal(1)
+      timestamps[0].should.equal('10')
+    })
+
+    it('can handle single arguments without explicit array', async () => {
+      await queue.enqueue(specHelper.queue, 'someJob', 1)
+      let obj = await specHelper.popFromQueue()
+      JSON.parse(obj).args.should.eql([1])
+    })
+
+    it('allows omitting arguments when enqueuing', async () => {
+      await queue.enqueue(specHelper.queue, 'noParams')
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(1)
+      let obj = await specHelper.popFromQueue()
+      obj = JSON.parse(obj)
+      obj['class'].should.equal('noParams');
+      (Array.isArray(obj.args)).should.equal(true)
+      obj.args.should.be.empty()
+    })
+
+    it('allows omitting arguments when deleting', async () => {
+      await queue.enqueue(specHelper.queue, 'noParams', [])
+      await queue.enqueue(specHelper.queue, 'noParams', [])
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(2)
+
+      let deletedCount = await queue.del(specHelper.queue, 'noParams')
+      deletedCount.should.equal(2)
+
+      let deletedCountAgain = await queue.del(specHelper.queue, 'noParams')
+      deletedCountAgain.should.equal(0)
+      let lengthAgain = await queue.length(specHelper.queue)
+      lengthAgain.should.equal(0)
+    })
+
+    it('allows omitting arguments when adding delayed job', async () => {
+      let hash = await queue.allDelayed()
+      hash.should.be.empty()
+
+      await queue.enqueueAt(10000, specHelper.queue, 'noParams', [])
+      await queue.enqueueIn(11000, specHelper.queue, 'noParams', [])
+      await queue.enqueueAt(12000, specHelper.queue, 'noParams', [])
+      await queue.enqueueIn(13000, specHelper.queue, 'noParams', [])
+
+      let timestamps = await queue.scheduledAt(specHelper.queue, 'noParams', [])
+      timestamps.length.should.equal(4)
+      let hashAgain = await queue.allDelayed()
+      Object.keys(hashAgain).length.should.equal(4)
+      for (var key in hashAgain) {
+        hashAgain[key][0].args.should.be.empty();
+        (Array.isArray(hashAgain[key][0].args)).should.equal(true)
+      }
+    })
+
+    it('allows omitting arguments when deleting a delayed job', async () => {
+      let hash = await queue.allDelayed()
+      hash.should.be.empty()
+
+      await queue.enqueueAt(10000, specHelper.queue, 'noParams')
+      await queue.enqueueAt(12000, specHelper.queue, 'noParams')
+
+      let hashAgain = await queue.allDelayed()
+      Object.keys(hashAgain).length.should.equal(2)
+
+      await queue.delDelayed(specHelper.queue, 'noParams')
+      await queue.delDelayed(specHelper.queue, 'noParams')
+      let hashThree = queue.allDelayed()
+      hashThree.should.be.empty()
+    })
+
+    it('can load stats', async () => {
+      await queue.connection.redis.set(specHelper.namespace + ':stat:failed', 1)
+      await queue.connection.redis.set(specHelper.namespace + ':stat:processed', 2)
+
+      let stats = await queue.stats()
+      stats.processed.should.equal('2')
+      stats.failed.should.equal('1')
+    })
+
+    describe('locks', () => {
+      beforeEach(async () => {
+        await queue.connection.redis.set(queue.connection.key('lock:lists:queueName:jobName:[{}]'), 123)
+        await queue.connection.redis.set(queue.connection.key('workerslock:lists:queueName:jobName:[{}]'), 456)
+      })
+
+      afterEach(async () => {
+        await queue.connection.redis.del(queue.connection.key('lock:lists:queueName:jobName:[{}]'))
+        await queue.connection.redis.del(queue.connection.key('workerslock:lists:queueName:jobName:[{}]'))
+      })
+
+      it('can get locks', async () => {
+        let locks = await queue.locks()
+        Object.keys(locks).length.should.equal(2)
+        locks['lock:lists:queueName:jobName:[{}]'].should.equal('123')
+        locks['workerslock:lists:queueName:jobName:[{}]'].should.equal('456')
+      })
+
+      it('can remove locks', async () => {
+        let locks = await queue.locks()
+        Object.keys(locks).length.should.equal(2)
+        let count = await queue.delLock('workerslock:lists:queueName:jobName:[{}]')
+        count.should.equal(1)
       })
     })
 
-    it('can find previously scheduled jobs', function (done) {
-      queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3], function () {
-        queue.scheduledAt(specHelper.queue, 'someJob', [1, 2, 3], function (err, timestamps) {
-          should.not.exist(err)
-          timestamps.length.should.equal(1)
-          timestamps[0].should.equal('10')
-          done()
-        })
-      })
-    })
-
-    it('will not match previously scheduled jobs with differnt args', function (done) {
-      queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3], function () {
-        queue.scheduledAt(specHelper.queue, 'someJob', [3, 2, 1], function (err, timestamps) {
-          should.not.exist(err)
-          timestamps.length.should.equal(0)
-          done()
-        })
-      })
-    })
-
-    it('can deleted an enqued job', function (done) {
-      queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3], function () {
-        queue.length(specHelper.queue, function (err, len) {
-          should.not.exist(err)
-          len.should.equal(1)
-          queue.del(specHelper.queue, 'someJob', [1, 2, 3], function () {
-            queue.length(specHelper.queue, function (err, len) {
-              should.not.exist(err)
-              len.should.equal(0)
-              done()
-            })
-          })
-        })
-      })
-    })
-
-    it('can deleted a delayed job', function (done) {
-      queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3], function () {
-        queue.delDelayed(specHelper.queue, 'someJob', [1, 2, 3], function (err, timestamps) {
-          should.not.exist(err)
-          timestamps.length.should.equal(1)
-          timestamps[0].should.equal('10')
-          done()
-        })
-      })
-    })
-
-    it('can delete a delayed job, and delayed queue should be empty', function (done) {
-      queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3], function () {
-        queue.delDelayed(specHelper.queue, 'someJob', [1, 2, 3], function (err, timestamps) {
-          should.not.exist(err)
-          queue.allDelayed(function (err, hash) {
-            should.not.exist(err)
-            hash.should.be.empty()
-            timestamps.length.should.equal(1)
-            timestamps[0].should.equal('10')
-            done()
-          })
-        })
-      })
-    })
-
-    it('can handle single arguments without explicit array', function (done) {
-      queue.enqueue(specHelper.queue, 'someJob', 1, function () {
-        specHelper.popFromQueue(function (err, obj) {
-          should.not.exist(err)
-          JSON.parse(obj).args.should.eql([1])
-          done()
-        })
-      })
-    })
-
-    it('allows omitting arguments when enqueuing', function (done) {
-      queue.enqueue(specHelper.queue, 'noParams') // no callback here, but in practice will finish before next enqueue calls back
-      queue.enqueue(specHelper.queue, 'noParams', function () {
-        queue.length(specHelper.queue, function (err, len) {
-          should.not.exist(err)
-          len.should.equal(2)
-          specHelper.popFromQueue(function (err, obj) {
-            should.not.exist(err)
-            obj = JSON.parse(obj)
-            obj['class'].should.equal('noParams')
-            obj.args.should.be.empty()
-            specHelper.popFromQueue(function (err, obj) {
-              should.not.exist(err)
-              obj = JSON.parse(obj)
-              obj['class'].should.equal('noParams')
-              obj.args.should.be.empty()
-              done()
-            })
-          })
-        })
-      })
-    })
-
-    it('allows omitting arguments when deleting', function (done) {
-      queue.enqueue(specHelper.queue, 'noParams', [], function () {
-        queue.enqueue(specHelper.queue, 'noParams', [], function () {
-          queue.length(specHelper.queue, function (err, len) {
-            should.not.exist(err)
-            len.should.equal(2)
-            queue.del(specHelper.queue, 'noParams', function (err, len) {
-              should.not.exist(err)
-              len.should.equal(2)
-              queue.del(specHelper.queue, 'noParams', function (err, len) {
-                should.not.exist(err)
-                len.should.equal(0)
-                queue.length(specHelper.queue, function (err, len) {
-                  should.not.exist(err)
-                  len.should.equal(0)
-                  done()
-                })
-              })
-            })
-          })
-        })
-      })
-    })
-
-    it('allows omitting arguments when adding delayed job', function (done) {
-      queue.allDelayed(function (error, hash) {
-        should.not.exist(error)
-        hash.should.be.empty()
-        queue.enqueueAt(10000, specHelper.queue, 'noParams', function (error) {
-          should.not.exist(error)
-          queue.enqueueIn(11000, specHelper.queue, 'noParams', function (error) {
-            should.not.exist(error)
-            queue.enqueueAt(12000, specHelper.queue, 'noParams', function (error) {
-              should.not.exist(error)
-              queue.enqueueIn(13000, specHelper.queue, 'noParams', function (error) {
-                should.not.exist(error)
-                queue.scheduledAt(specHelper.queue, 'noParams', function (error, timestamps) {
-                  should.not.exist(error)
-                  timestamps.length.should.equal(4)
-                  queue.allDelayed(function (error, hash) {
-                    should.not.exist(error)
-                    Object.keys(hash).length.should.equal(4)
-                    for (var key in hash) {
-                      hash[key][0].args.should.be.empty()
-                    }
-                    done()
-                  })
-                })
-              })
-            })
-          })
-        })
-      })
-    })
-
-    it('allows omitting arguments when deleting a delayed job', function (done) {
-      queue.allDelayed(function (err, hash) {
-        should.not.exist(err)
-        hash.should.be.empty()
-        queue.enqueueAt(10000, specHelper.queue, 'noParams')
-        queue.enqueueAt(12000, specHelper.queue, 'noParams', function () {
-          queue.allDelayed(function (err, hash) {
-            should.not.exist(err)
-            Object.keys(hash).length.should.equal(2)
-            queue.delDelayed(specHelper.queue, 'noParams', function () {
-              queue.delDelayed(specHelper.queue, 'noParams', function () {
-                queue.allDelayed(function (err, hash) {
-                  should.not.exist(err)
-                  hash.should.be.empty()
-                  done()
-                })
-              })
-            })
-          })
-        })
-      })
-    })
-
-    it('can load stats', function (done) {
-      queue.connection.redis.set(specHelper.namespace + ':stat:failed', 1)
-      queue.connection.redis.set(specHelper.namespace + ':stat:processed', 2)
-      queue.stats(function (err, stats) {
-        should.not.exist(err)
-        stats.processed.should.equal('2')
-        stats.failed.should.equal('1')
-        done()
-      })
-    })
-
-    describe('locks', function () {
-      beforeEach(function (done) { queue.connection.redis.set(queue.connection.key('lock:lists:queueName:jobName:[{}]'), 123, done) })
-      beforeEach(function (done) { queue.connection.redis.set(queue.connection.key('workerslock:lists:queueName:jobName:[{}]'), 456, done) })
-
-      afterEach(function (done) { queue.connection.redis.del(queue.connection.key('lock:lists:queueName:jobName:[{}]'), done) })
-      afterEach(function (done) { queue.connection.redis.del(queue.connection.key('workerslock:lists:queueName:jobName:[{}]'), done) })
-
-      it('can get locks', function (done) {
-        queue.locks(function (err, locks) {
-          should.not.exist(err)
-          Object.keys(locks).length.should.equal(2)
-          locks['lock:lists:queueName:jobName:[{}]'].should.equal('123')
-          locks['workerslock:lists:queueName:jobName:[{}]'].should.equal('456')
-          done()
-        })
-      })
-
-      it('can remove locks', function (done) {
-        queue.locks(function (err, locks) {
-          should.not.exist(err)
-          Object.keys(locks).length.should.equal(2)
-          queue.delLock('workerslock:lists:queueName:jobName:[{}]', function (err, count) {
-            should.not.exist(err)
-            count.should.equal(1)
-            done()
-          })
-        })
-      })
-    })
-
-    describe('failed job managment', function () {
-      beforeEach(function (done) {
-        var errorPayload = function (id) {
+    describe('failed job managment', () => {
+      beforeEach(async () => {
+        let errorPayload = function (id) {
           return JSON.stringify({
             worker: 'busted-worker-' + id,
             queue: 'busted-queue',
@@ -370,58 +291,40 @@ describe('queue', () => {
           })
         }
 
-        queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(1), function () {
-          queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(2), function () {
-            queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(3), function () {
-              done()
-            })
-          })
-        })
+        await queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(1))
+        await queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(2))
+        await queue.connection.redis.rpush(queue.connection.key('failed'), errorPayload(3))
       })
 
-      it('can list how many failed jobs there are', function (done) {
-        queue.failedCount(function (err, failedCount) {
-          should.not.exist(err)
-          failedCount.should.equal(3)
-          done()
-        })
+      it('can list how many failed jobs there are', async () => {
+        let failedCount = await queue.failedCount()
+        failedCount.should.equal(3)
       })
 
-      it('can get the body content for a collection of failed jobs', function (done) {
-        queue.failed(1, 2, function (err, failedJobs) {
-          should.not.exist(err)
-          failedJobs.length.should.equal(2)
+      it('can get the body content for a collection of failed jobs', async () => {
+        let failedJobs = await queue.failed(1, 2)
+        failedJobs.length.should.equal(2)
 
-          failedJobs[0].worker.should.equal('busted-worker-2')
-          failedJobs[0].queue.should.equal('busted-queue')
-          failedJobs[0].exception.should.equal('ERROR_NAME')
-          failedJobs[0].error.should.equal('I broke')
-          failedJobs[0].payload.args.should.eql([1, 2, 3])
+        failedJobs[0].worker.should.equal('busted-worker-2')
+        failedJobs[0].queue.should.equal('busted-queue')
+        failedJobs[0].exception.should.equal('ERROR_NAME')
+        failedJobs[0].error.should.equal('I broke')
+        failedJobs[0].payload.args.should.eql([1, 2, 3])
 
-          failedJobs[1].worker.should.equal('busted-worker-3')
-          failedJobs[1].queue.should.equal('busted-queue')
-          failedJobs[1].exception.should.equal('ERROR_NAME')
-          failedJobs[1].error.should.equal('I broke')
-          failedJobs[1].payload.args.should.eql([1, 2, 3])
-
-          done()
-        })
+        failedJobs[1].worker.should.equal('busted-worker-3')
+        failedJobs[1].queue.should.equal('busted-queue')
+        failedJobs[1].exception.should.equal('ERROR_NAME')
+        failedJobs[1].error.should.equal('I broke')
+        failedJobs[1].payload.args.should.eql([1, 2, 3])
       })
 
-      it('can remove a failed job by payload', function (done) {
-        queue.failed(1, 1, function (err, failedJobs) {
-          should.not.exist(err)
-          failedJobs.length.should.equal(1)
-          queue.removeFailed(failedJobs[0], function (err, removedJobs) {
-            should.not.exist(err)
-            removedJobs.should.equal(1)
-            queue.failedCount(function (err, failedCount) {
-              should.not.exist(err)
-              failedCount.should.equal(2)
-              done()
-            })
-          })
-        })
+      it('can remove a failed job by payload', async () => {
+        let failedJobs = queue.failed(1, 1)
+        failedJobs.length.should.equal(1)
+        let removedJobs = await queue.removeFailed(failedJobs[0])
+        removedJobs.should.equal(1)
+        let failedCountAgain = queue.failedCount()
+        failedCountAgain.should.equal(2)
       })
 
       it('can re-enqueue a specific job, removing it from the failed queue', function (done) {
