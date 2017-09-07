@@ -2,7 +2,7 @@ var path = require('path')
 var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
 var should = require('should') // eslint-disable-line
 
-describe('connection', function () {
+describe('connection', () => {
   before(async () => {
     await specHelper.connect()
     await specHelper.cleanup()

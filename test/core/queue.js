@@ -1,27 +1,18 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should')
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should')
+let queue
 
-describe('queue', function () {
-  var queue
-
-  it('can connect', function (done) {
-    var Queue = specHelper.NR.queue
+describe('queue', () => {
+  it('can connect', async () => {
+    var Queue = specHelper.NR.Queue
     queue = new Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
-    queue.connect(function (error) {
-      should.not.exist(error)
-      should.exist(queue)
-      queue.end(done)
-    })
+    await queue.connect()
+    await queue.end()
   })
 
-  it('can provide an error if connection failed', function (done) {
-    // Only run this test if this is using real redis
-    if (process.env.FAKEREDIS === 'true' || process.env.FAKEREDIS === true) {
-      return done()
-    }
-
-    var connectionDetails = {
+  it('can provide an error if connection failed', async () => {
+    let connectionDetails = {
       pkg: specHelper.connectionDetails.pkg,
       host: 'wronghostname',
       password: specHelper.connectionDetails.password,
@@ -30,145 +21,107 @@ describe('queue', function () {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    var Queue = specHelper.NR.queue
+    var Queue = specHelper.NR.Queue
     queue = new Queue({connection: connectionDetails, queue: specHelper.queue})
-    queue.connect(function () {
-      throw new Error('should not get here')
-    })
 
-    queue.on('error', function (error) {
-      error.message.should.match(/getaddrinfo ENOTFOUND/)
-      queue.end(done)
+    await new Promise((resolve) => {
+      queue.connect()
+
+      queue.on('error', (error) => {
+        error.message.should.match(/getaddrinfo ENOTFOUND/)
+        queue.end()
+        resolve()
+      })
     })
   })
 
   describe('[with connection]', function () {
-    before(function (done) {
-      specHelper.connect(function () {
-        var Queue = specHelper.NR.queue
-        queue = new Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
-        queue.connect(done)
-      })
+    before(async () => {
+      await specHelper.connect()
+      var Queue = specHelper.NR.Queue
+      queue = new Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+      await queue.connect()
     })
 
-    beforeEach(function (done) {
-      specHelper.cleanup(function () {
-        done()
-      })
+    beforeEach(async () => { await specHelper.cleanup() })
+    after(async () => { await specHelper.cleanup() })
+
+    it('can add a normal job', async () => {
+      await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
+      let obj = await specHelper.popFromQueue()
+      should.exist(obj)
+      obj = JSON.parse(obj)
+      obj['class'].should.equal('someJob')
+      obj.args.should.eql([1, 2, 3])
     })
 
-    after(function (done) {
-      specHelper.cleanup(function () {
-        done()
-      })
+    it('can add delayed job (enqueueAt)', async () => {
+      await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
+      let score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10')
+      String(score).should.equal('10')
+
+      let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10')
+      should.exist(obj)
+      obj = JSON.parse(obj)
+      obj['class'].should.equal('someJob')
+      obj.args.should.eql([1, 2, 3])
     })
 
-    it('can add a normal job', function (done) {
-      queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3], function () {
-        specHelper.popFromQueue(function (err, obj) {
-          should.not.exist(err)
-          should.exist(obj)
-          obj = JSON.parse(obj)
-          obj['class'].should.equal('someJob')
-          obj.args.should.eql([1, 2, 3])
-          done()
-        })
-      })
+    it('can add delayed job whose timestamp is a string (enqueueAt)', async () => {
+      await queue.enqueueAt('10000', specHelper.queue, 'someJob', [1, 2, 3])
+      let score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10')
+      String(score).should.equal('10')
+
+      let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10')
+      should.exist(obj)
+      obj = JSON.parse(obj)
+      obj['class'].should.equal('someJob')
+      obj.args.should.eql([1, 2, 3])
     })
 
-    it('can add delayed job (enqueueAt)', function (done) {
-      queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3], function (error) {
-        should.not.exist(error)
-        specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10', function (err, score) {
-          should.not.exist(err)
-          String(score).should.equal('10')
-          specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10', function (err, obj) {
-            should.not.exist(err)
-            should.exist(obj)
-            obj = JSON.parse(obj)
-            obj['class'].should.equal('someJob')
-            obj.args.should.eql([1, 2, 3])
-            done()
-          })
-        })
-      })
+    it('will not enqueue a delayed job at the same time with matching params', async () => {
+      await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
+      try {
+        await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
+        throw new Error('should not get here')
+      } catch (error) {
+        String(error).should.equal('Error: Job already enqueued at this time with same arguments')
+      }
     })
 
-    it('can add delayed job whose timestamp is a string (enqueueAt)', function (done) {
-      queue.enqueueAt('10000', specHelper.queue, 'someJob', [1, 2, 3], function (error) {
-        should.not.exist(error)
-        specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10', function (err, score) {
-          should.not.exist(err)
-          String(score).should.equal('10')
-          specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10', function (err, obj) {
-            should.not.exist(err)
-            should.exist(obj)
-            obj = JSON.parse(obj)
-            obj['class'].should.equal('someJob')
-            obj.args.should.eql([1, 2, 3])
-            done()
-          })
-        })
-      })
+    it('can add delayed job (enqueueIn)', async () => {
+      let now = Math.round(new Date().getTime() / 1000) + 5
+      await queue.enqueueIn(5 * 1000, specHelper.queue, 'someJob', [1, 2, 3])
+      let score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now)
+      String(score).should.equal(String(now))
+
+      let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now)
+      should.exist(obj)
+      obj = JSON.parse(obj)
+      obj['class'].should.equal('someJob')
+      obj.args.should.eql([1, 2, 3])
     })
 
-    it('will not enqueue a delayed job at the same time with matching params', function (done) {
-      queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3], function (error) {
-        should.not.exist(error)
-        queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3], function (error) {
-          String(error).should.equal('Error: Job already enqueued at this time with same arguments')
-          done()
-        })
-      })
+    it('can add a delayed job whose time is a string (enqueueIn)', async () => {
+      let now = Math.round(new Date().getTime() / 1000) + 5
+      let time = 5 * 1000
+
+      await queue.enqueueIn(time.toString(), specHelper.queue, 'someJob', [1, 2, 3])
+      let score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now)
+      String(score).should.equal(String(now))
+
+      let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now)
+      should.exist(obj)
+      obj = JSON.parse(obj)
+      obj['class'].should.equal('someJob')
+      obj.args.should.eql([1, 2, 3])
     })
 
-    it('can add delayed job (enqueueIn)', function (done) {
-      var now = Math.round(new Date().getTime() / 1000) + 5
-      queue.enqueueIn(5 * 1000, specHelper.queue, 'someJob', [1, 2, 3], function () {
-        specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now, function (err, score) {
-          should.not.exist(err)
-          String(score).should.equal(String(now))
-          specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now, function (err, obj) {
-            should.not.exist(err)
-            should.exist(obj)
-            obj = JSON.parse(obj)
-            obj['class'].should.equal('someJob')
-            obj.args.should.eql([1, 2, 3])
-            done()
-          })
-        })
-      })
-    })
-
-    it('can add a delayed job whose time is a string (enqueueIn)', function (done) {
-      var now = Math.round(new Date().getTime() / 1000) + 5
-      var time = 5 * 1000
-      queue.enqueueIn(time.toString(), specHelper.queue, 'someJob', [1, 2, 3], function () {
-        specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now, function (err, score) {
-          should.not.exist(err)
-          String(score).should.equal(String(now))
-          specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now, function (err, obj) {
-            should.not.exist(err)
-            should.exist(obj)
-            obj = JSON.parse(obj)
-            obj['class'].should.equal('someJob')
-            obj.args.should.eql([1, 2, 3])
-            done()
-          })
-        })
-      })
-    })
-
-    it('can get the number of jobs currently enqueued', function (done) {
-      queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3], function () {
-        queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3], function () {
-          queue.length(specHelper.queue, function (err, len) {
-            should.not.exist(err)
-            len.should.equal(2)
-            done()
-          })
-        })
-      })
+    it('can get the number of jobs currently enqueued', async () => {
+      await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
+      await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(2)
     })
 
     it('can get the jobs in the queue', function (done) {
