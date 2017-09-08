@@ -5,7 +5,7 @@ let queue
 
 describe('queue', () => {
   it('can connect', async () => {
-    var Queue = specHelper.NR.Queue
+    let Queue = specHelper.NR.Queue
     queue = new Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
     await queue.connect()
     await queue.end()
@@ -21,7 +21,7 @@ describe('queue', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    var Queue = specHelper.NR.Queue
+    let Queue = specHelper.NR.Queue
     queue = new Queue({connection: connectionDetails, queue: specHelper.queue})
 
     await new Promise((resolve) => {
@@ -38,7 +38,7 @@ describe('queue', () => {
   describe('[with connection]', function () {
     before(async () => {
       await specHelper.connect()
-      var Queue = specHelper.NR.Queue
+      let Queue = specHelper.NR.Queue
       queue = new Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
       await queue.connect()
     })
@@ -217,7 +217,7 @@ describe('queue', () => {
       timestamps.length.should.equal(4)
       let hashAgain = await queue.allDelayed()
       Object.keys(hashAgain).length.should.equal(4)
-      for (var key in hashAgain) {
+      for (let key in hashAgain) {
         hashAgain[key][0].args.should.be.empty();
         (Array.isArray(hashAgain[key][0].args)).should.equal(true)
       }
@@ -319,248 +319,206 @@ describe('queue', () => {
       })
 
       it('can remove a failed job by payload', async () => {
-        let failedJobs = queue.failed(1, 1)
+        let failedJobs = await queue.failed(1, 1)
         failedJobs.length.should.equal(1)
         let removedJobs = await queue.removeFailed(failedJobs[0])
         removedJobs.should.equal(1)
-        let failedCountAgain = queue.failedCount()
+        let failedCountAgain = await queue.failedCount()
         failedCountAgain.should.equal(2)
       })
 
-      it('can re-enqueue a specific job, removing it from the failed queue', function (done) {
-        queue.failed(0, 999, function (err, failedJobs) {
-          should.not.exist(err)
-          failedJobs.length.should.equal(3)
-          failedJobs[2].worker.should.equal('busted-worker-3')
-          queue.retryAndRemoveFailed(failedJobs[2], function (err, retriedJob) {
-            should.not.exist(err)
-            queue.failed(0, 999, function (err, failedJobs) {
-              should.not.exist(err)
-              failedJobs.length.should.equal(2)
-              failedJobs[0].worker.should.equal('busted-worker-1')
-              failedJobs[1].worker.should.equal('busted-worker-2')
-              done()
-            })
-          })
-        })
+      it('can re-enqueue a specific job, removing it from the failed queue', async () => {
+        let failedJobs = await queue.failed(0, 999)
+        failedJobs.length.should.equal(3)
+        failedJobs[2].worker.should.equal('busted-worker-3')
+
+        await queue.retryAndRemoveFailed(failedJobs[2])
+        let failedJobsAgain = await queue.failed(0, 999)
+        failedJobsAgain.length.should.equal(2)
+        failedJobsAgain[0].worker.should.equal('busted-worker-1')
+        failedJobsAgain[1].worker.should.equal('busted-worker-2')
       })
 
-      it('will return an error when trying to retry a job not in the failed queue', function (done) {
-        queue.failed(0, 999, function (err, failedJobs) {
-          should.not.exist(err)
-          failedJobs.length.should.equal(3)
-          var failedJob = failedJobs[2]
-          failedJob.worker = 'a-fake-worker'
-          queue.retryAndRemoveFailed(failedJob, function (err, retriedJob) {
-            String(err).should.eql('Error: This job is not in failed queue')
-            queue.failed(0, 999, function (err, failedJobs) {
-              should.not.exist(err)
-              failedJobs.length.should.equal(3)
-              done()
-            })
-          })
-        })
+      it('will return an error when trying to retry a job not in the failed queue', async () => {
+        let failedJobs = await queue.failed(0, 999)
+        failedJobs.length.should.equal(3)
+
+        let failedJob = failedJobs[2]
+        failedJob.worker = 'a-fake-worker'
+        try {
+          await queue.retryAndRemoveFailed(failedJob)
+          throw new Error('should not get here')
+        } catch (error) {
+          String(error).should.equal('Error: This job is not in failed queue')
+          let failedJobsAgain = await queue.failed(0, 999)
+          failedJobsAgain.length.should.equal(3)
+        }
       })
     })
 
-    describe('delayed status', function () {
-      beforeEach(function (done) {
-        queue.enqueueAt(10000, specHelper.queue, 'job1', [1, 2, 3], function () {
-          queue.enqueueAt(10000, specHelper.queue, 'job2', [1, 2, 3], function () {
-            queue.enqueueAt(20000, specHelper.queue, 'job3', [1, 2, 3], function () {
-              done()
-            })
-          })
-        })
+    describe('delayed status', () => {
+      beforeEach(async () => {
+        await queue.enqueueAt(10000, specHelper.queue, 'job1', [1, 2, 3])
+        await queue.enqueueAt(10000, specHelper.queue, 'job2', [1, 2, 3])
+        await queue.enqueueAt(20000, specHelper.queue, 'job3', [1, 2, 3])
       })
 
-      it('can list the timestamps that exist', function (done) {
-        queue.timestamps(function (err, timestamps) {
-          should.not.exist(err)
-          timestamps.length.should.equal(2)
-          timestamps[0].should.equal(10000)
-          timestamps[1].should.equal(20000)
-          done()
-        })
+      it('can list the timestamps that exist', async () => {
+        let timestamps = await queue.timestamps()
+        timestamps.length.should.equal(2)
+        timestamps[0].should.equal(10000)
+        timestamps[1].should.equal(20000)
       })
 
-      it('can list the jobs delayed at a timestamp', function (done) {
-        queue.delayedAt(10000, function (err, tasksA) {
-          should.not.exist(err)
-          tasksA.length.should.equal(2)
-          tasksA[0]['class'].should.equal('job1')
-          tasksA[1]['class'].should.equal('job2')
-          queue.delayedAt(20000, function (err, tasksB) {
-            should.not.exist(err)
-            tasksB.length.should.equal(1)
-            tasksB[0]['class'].should.equal('job3')
-            done()
-          })
-        })
+      it('can list the jobs delayed at a timestamp', async () => {
+        let tasksA = await queue.delayedAt(10000)
+        tasksA.rTimestamp.should.equal(10)
+        tasksA.tasks.length.should.equal(2)
+        tasksA.tasks[0]['class'].should.equal('job1')
+        tasksA.tasks[1]['class'].should.equal('job2')
+
+        let tasksB = await queue.delayedAt(20000)
+        tasksB.rTimestamp.should.equal(20)
+        tasksB.tasks.length.should.equal(1)
+        tasksB.tasks[0]['class'].should.equal('job3')
       })
 
-      it('can also return a hash with all delayed tasks', function (done) {
-        queue.allDelayed(function (err, hash) {
-          should.not.exist(err)
-          Object.keys(hash).length.should.equal(2)
-          Object.keys(hash)[0].should.equal('10000')
-          Object.keys(hash)[1].should.equal('20000')
-          hash['10000'].length.should.equal(2)
-          hash['20000'].length.should.equal(1)
-          done()
-        })
+      it('can also return a hash with all delayed tasks', async () => {
+        let hash = await queue.allDelayed()
+        Object.keys(hash).length.should.equal(2)
+        Object.keys(hash)[0].should.equal('10000')
+        Object.keys(hash)[1].should.equal('20000')
+        hash['10000'].length.should.equal(2)
+        hash['20000'].length.should.equal(1)
       })
     })
 
     describe('worker status', function () {
-      var workerA
-      var workerB
-      var timeout = 500
+      let workerA
+      let workerB
+      let timeout = 500
 
-      var jobs = {
+      let jobs = {
         'slowJob': {
-          perform: function (callback) {
-            setTimeout(function () {
-              callback(null)
-            }, timeout)
+          perform: async () => {
+            await new Promise((resolve) => { setTimeout(resolve, timeout) })
           }
         }
       }
 
-      beforeEach(function (done) {
-        var Worker = specHelper.NR.worker
-
-        workerA = new Worker({
+      beforeEach(async () => {
+        workerA = new specHelper.NR.Worker({
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
           queues: specHelper.queue,
           name: 'workerA'
         }, jobs)
 
-        workerB = new Worker({
+        workerB = new specHelper.NR.Worker({
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
           queues: specHelper.queue,
           name: 'workerB'
         }, jobs)
 
-        workerA.connect(function () {
-          workerB.connect(function () {
-            workerA.init(function () {
-              workerB.init(function () {
-                done()
-              })
-            })
-          })
-        })
+        await workerA.connect()
+        await workerA.init()
+        await workerB.connect()
+        await workerB.init()
       })
 
-      afterEach(function (done) {
-        workerA.end(function () {
-          workerB.end(function () {
-            done()
-          })
-        })
+      afterEach(async () => {
+        await workerA.end()
+        await workerB.end()
       })
 
-      it('can list running workers', function (done) {
-        queue.workers(function (err, workers) {
-          should.not.exist(err)
-          workers.workerA.should.equal('test_queue')
-          workers.workerB.should.equal('test_queue')
-          done()
-        })
+      it('can list running workers', async () => {
+        let workers = await queue.workers()
+        workers.workerA.should.equal('test_queue')
+        workers.workerB.should.equal('test_queue')
       })
 
-      it('we can see what workers are working on (idle)', function (done) {
-        queue.allWorkingOn(function (err, data) {
-          should.not.exist(err)
-          data.should.containEql({'workerA': 'started'})
-          data.should.containEql({'workerB': 'started'})
-          done()
-        })
+      it('we can see what workers are working on (idle)', async () => {
+        let data = await queue.allWorkingOn()
+        data.should.containEql({'workerA': 'started'})
+        data.should.containEql({'workerB': 'started'})
       })
 
-      it('we can see what workers are working on (active)', function (done) {
-        workerA.on('job', function (q, job, failure) {
-          workerA.removeAllListeners('job')
+      it('we can see what workers are working on (active)', async () => {
+        queue.enqueue(specHelper.queue, 'slowJob')
+        workerA.start()
 
-          queue.allWorkingOn(function (err, data) {
-            should.not.exist(err)
+        await new Promise((resolve) => {
+          workerA.on('job', async () => {
+            workerA.removeAllListeners('job')
+
+            let data = await queue.allWorkingOn()
             data.should.containEql({'workerB': 'started'})
-            var paylaod = data.workerA.payload
+            let paylaod = data.workerA.payload
             paylaod.queue.should.equal('test_queue')
             paylaod['class'].should.equal('slowJob')
 
-            done()
+            return resolve()
           })
         })
-
-        queue.enqueue(specHelper.queue, 'slowJob')
-        workerA.start()
       })
 
-      it('can remove stuck workers', function (done) {
-        var age = 1
-        workerA.on('job', function (q, job, failure) {
-          workerA.removeAllListeners('job')
+      it('can remove stuck workers', async () => {
+        let age = 1
+        queue.enqueue(specHelper.queue, 'slowJob')
+        workerA.start()
 
-          queue.allWorkingOn(function (err, data) {
-            should.not.exist(err)
-            var paylaod = data.workerA.payload
+        await new Promise((resolve) => {
+          workerA.on('job', async () => {
+            workerA.removeAllListeners('job')
+
+            let workingOnData = await queue.allWorkingOn()
+            let paylaod = workingOnData.workerA.payload
             paylaod.queue.should.equal('test_queue')
             paylaod['class'].should.equal('slowJob')
 
-            queue.cleanOldWorkers(age, function (err, data) {
-              should.not.exist(err)
-              Object.keys(data).length.should.equal(1)
-              data.workerA.queue.should.equal('test_queue')
-              data.workerA.worker.should.equal('workerA')
-              data.workerA.payload['class'].should.equal('slowJob')
-              specHelper.redis.rpop(specHelper.namespace + ':' + 'failed', function (err, data) {
-                should.not.exist(err)
-                data = JSON.parse(data)
-                data.queue.should.equal(specHelper.queue)
-                data.exception.should.equal('Worker Timeout (killed manually)')
-                data.error.should.equal('Worker Timeout (killed manually)')
-                data.payload['class'].should.equal('slowJob')
+            let cleanData = await queue.cleanOldWorkers(age)
+            Object.keys(cleanData).length.should.equal(1)
+            cleanData.workerA.queue.should.equal('test_queue')
+            cleanData.workerA.worker.should.equal('workerA')
+            cleanData.workerA.payload['class'].should.equal('slowJob')
 
-                queue.allWorkingOn(function (err, data) {
-                  should.not.exist(err)
-                  Object.keys(data).length.should.equal(1)
-                  data.workerB.should.equal('started')
-                  done()
-                })
-              })
-            })
+            let failedData = await specHelper.redis.rpop(specHelper.namespace + ':' + 'failed')
+            failedData = JSON.parse(failedData)
+            failedData.queue.should.equal(specHelper.queue)
+            failedData.exception.should.equal('Worker Timeout (killed manually)')
+            failedData.error.should.equal('Worker Timeout (killed manually)')
+            failedData.payload['class'].should.equal('slowJob')
+
+            let workingOnDataAgain = await queue.allWorkingOn()
+            Object.keys(workingOnDataAgain).length.should.equal(1)
+            workingOnDataAgain.workerB.should.equal('started')
+
+            return resolve()
           })
         })
-
-        queue.enqueue(specHelper.queue, 'slowJob')
-        workerA.start()
       })
 
-      it('will not remove stuck jobs within the timelimit', function (done) {
+      it('will not remove stuck jobs within the time limit', async () => {
         var age = 999
-        workerA.on('job', function (q, job, failure) {
-          workerA.removeAllListeners('job')
-
-          queue.cleanOldWorkers(age, function (err, data) {
-            should.not.exist(err)
-            Object.keys(data).length.should.equal(0)
-            queue.allWorkingOn(function (err, data) {
-              should.not.exist(err)
-              var paylaod = data.workerA.payload
-              paylaod.queue.should.equal('test_queue')
-              paylaod['class'].should.equal('slowJob')
-
-              done()
-            })
-          })
-        })
-
         queue.enqueue(specHelper.queue, 'slowJob')
         workerA.start()
+
+        await new Promise((resolve) => {
+          workerA.on('job', async () => {
+            workerA.removeAllListeners('job')
+
+            let data = await queue.cleanOldWorkers(age)
+            Object.keys(data).length.should.equal(0)
+
+            let workingOn = await queue.allWorkingOn()
+            var paylaod = workingOn.workerA.payload
+            paylaod.queue.should.equal('test_queue')
+            paylaod['class'].should.equal('slowJob')
+
+            return resolve()
+          })
+        })
       })
     })
   })
