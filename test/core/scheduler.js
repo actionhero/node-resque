@@ -1,8 +1,8 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should')
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should')
 
-describe('scheduler', function () {
+describe('scheduler', () => {
   var scheduler
   var queue
 
