@@ -52,20 +52,13 @@ describe('plugins', () => {
       queueLen.should.equal(0)
     })
 
-    it('will enque a job with the different args', function (done) {
-      queue.enqueueIn((10 * 1000), specHelper.queue, 'uniqueJob', [1, 2], function () {
-        queue.enqueue(specHelper.queue, 'uniqueJob', [3, 4], function () {
-          specHelper.redis.zcount(specHelper.namespace + ':delayed_queue_schedule', '-inf', '+inf', function (err, delayedLen) {
-            should.not.exist(err)
-            queue.length(specHelper.queue, function (err, queueLen) {
-              should.not.exist(err)
-              delayedLen.should.equal(1)
-              queueLen.should.equal(1)
-              done()
-            })
-          })
-        })
-      })
+    it('will enque a job with the different args', async () => {
+      await queue.enqueueIn((10 * 1000), specHelper.queue, 'uniqueJob', [1, 2])
+      await queue.enqueue(specHelper.queue, 'uniqueJob', [3, 4])
+      let delayedLen = await specHelper.redis.zcount(specHelper.namespace + ':delayed_queue_schedule', '-inf', '+inf')
+      let queueLen = await queue.length(specHelper.queue)
+      delayedLen.should.equal(1)
+      queueLen.should.equal(1)
     })
   })
 })
