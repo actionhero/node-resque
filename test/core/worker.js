@@ -1,6 +1,6 @@
 const path = require('path')
 const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-const should = require('should')
+const should = require('should') // eslint-disable-line
 const os = require('os')
 
 let jobs = {

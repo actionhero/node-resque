@@ -41,7 +41,7 @@ var myPlugin = function (worker, func, queue, job, args, options) {
 // //////////////////
 
 // Learn all the callbacks you can use from the Readme.
-myPlugin.prototype.before_perform = function (callback) {
+myPlugin.prototype.beforePerform = function (callback) {
   console.log(this.options.messagePrefix + ' | ' + JSON.stringify(this.args))
   callback(null, true)
 }

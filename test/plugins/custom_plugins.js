@@ -1,30 +1,27 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should') // eslint-disable-line
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should') // eslint-disable-line
 
-describe('plugins', function () {
-  describe('custom plugins', function () {
-    it('runs a custom plugin outside of the plugins directory', function (done) {
-      var jobs = {
+describe('plugins', () => {
+  describe('custom plugins', () => {
+    it('runs a custom plugin outside of the plugins directory', async () => {
+      const jobs = {
         'myJob': {
-          plugins: [require(path.join(__dirname, '..', 'custom-plugin.js'))],
+          plugins: [ require(path.join(__dirname, '..', 'custom-plugin.js')) ],
           perform: function (a, b, callback) {
-            done(new Error('should not run'))
+            throw new Error('should not get here')
           }
         }
       }
 
-      var Queue = specHelper.NR.queue
-      var queue = new Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
-      queue.connect(function () {
-        queue.enqueue(specHelper.queue, 'myJob', [1, 2], function () {
-          queue.length(specHelper.queue, function (err, len) {
-            should.not.exist(err)
-            len.should.equal(0)
-            queue.end(done)
-          })
-        })
-      })
+      const queue = new specHelper.NR.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+
+      await queue.connect()
+      let enqueueResponse = await queue.enqueue(specHelper.queue, 'myJob', [1, 2])
+      enqueueResponse.should.equal(false)
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(0)
+      await queue.end()
     })
   })
 })

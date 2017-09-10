@@ -317,7 +317,7 @@ var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
 
 ## Plugins
 
-Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `before_enqueue`, `after_enqueue`, `before_perform`, and `after_perform`
+Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `beforeEnqueue`, `afterEnqueue`, `beforePerform`, and `afterPerform`
 
 ```javascript
 
@@ -342,23 +342,23 @@ var myPlugin = function(worker, func, queue, job, args, options){
 // PLUGIN METHODS //
 ////////////////////
 
-myPlugin.prototype.before_enqueue = function(callback){
-  // console.log("** before_enqueue")
+myPlugin.prototype.beforeEnqueue = function(callback){
+  // console.log("** beforeEnqueue")
   callback(null, true);
 }
 
-myPlugin.prototype.after_enqueue = function(callback){
-  // console.log("** after_enqueue")
+myPlugin.prototype.afterEnqueue = function(callback){
+  // console.log("** afterEnqueue")
   callback(null, true);
 }
 
-myPlugin.prototype.before_perform = function(callback){
-  // console.log("** before_perform")
+myPlugin.prototype.beforePerform = function(callback){
+  // console.log("** beforePerform")
   callback(null, true);
 }
 
-myPlugin.prototype.after_perform = function(callback){
-  // console.log("** after_perform")
+myPlugin.prototype.afterPerform = function(callback){
+  // console.log("** afterPerform")
   callback(null, true);
 }
 

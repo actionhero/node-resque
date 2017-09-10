@@ -1,3 +1,6 @@
 - dropped support for fakeredis; you must use a redis connection which supports promises
 - async!!!
 - capitol names for all classes
+- plugin lifecycles are now cammel case: beforeEnqueue, afterEnqueue, beforePerform, afterPerform
+- plugin lifecycle methods are now async methods, with no callback
+- plugins now inherit from NodeResque.Plugin
