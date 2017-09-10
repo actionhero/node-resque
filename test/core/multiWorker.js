@@ -1,143 +1,127 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should')
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should') // eslint-disable-line
 
-if (specHelper.pkg === 'fakeredis') {
-  console.log('multiWorker does not work with fakeredis for now...')
-} else {
-  describe('multiWorker', function () {
-    var queue
-    var multiWorker
-    var checkTimeout = specHelper.timeout / 10
-    var minTaskProcessors = 1
-    var maxTaskProcessors = 5
+let queue
+let multiWorker
+let checkTimeout = specHelper.timeout / 10
+let minTaskProcessors = 1
+let maxTaskProcessors = 5
 
-    var toDisconnectProcessors = false
+let toDisconnectProcessors = false
 
-    var blockingSleep = function (naptime) {
-      var sleeping = true
-      var now = new Date()
-      var alarm
-      var startingMSeconds = now.getTime()
-      while (sleeping) {
-        alarm = new Date()
-        var alarmMSeconds = alarm.getTime()
-        if (alarmMSeconds - startingMSeconds > naptime) { sleeping = false }
-      }
+const blockingSleep = function (naptime) {
+  let sleeping = true
+  let now = new Date()
+  let alarm
+  let startingMSeconds = now.getTime()
+  while (sleeping) {
+    alarm = new Date()
+    let alarmMSeconds = alarm.getTime()
+    if (alarmMSeconds - startingMSeconds > naptime) { sleeping = false }
+  }
+}
+
+const jobs = {
+  'slowSleepJob': {
+    plugins: [],
+    pluginOptions: {},
+    perform: async () => {
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(new Date().getTime())
+        }, 1000)
+      })
+    }
+  },
+  'slowCPUJob': {
+    plugins: [],
+    pluginOptions: {},
+    perform: async () => {
+      blockingSleep(1000)
+      return new Date().getTime()
+    }
+  }
+}
+
+describe('multiWorker', function () {
+  before(async () => {
+    await specHelper.connect()
+    queue = new specHelper.NR.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue})
+    await queue.connect()
+  })
+
+  before(async () => {
+    multiWorker = new specHelper.NR.MultiWorker({
+      connection: specHelper.cleanConnectionDetails(),
+      timeout: specHelper.timeout,
+      checkTimeout: checkTimeout,
+      minTaskProcessors: minTaskProcessors,
+      maxTaskProcessors: maxTaskProcessors,
+      queues: [specHelper.queue],
+      toDisconnectProcessors: toDisconnectProcessors
+    }, jobs)
+
+    await multiWorker.end()
+
+    multiWorker.on('error', (error) => { throw error })
+  })
+
+  afterEach(async () => {
+    await queue.delQueue(specHelper.queue)
+  })
+
+  it('should never have less than one worker', async () => {
+    multiWorker.workers.length.should.equal(0)
+    await multiWorker.start()
+    await new Promise((resolve) => { setTimeout(resolve, (checkTimeout * 3) + 500) })
+
+    multiWorker.workers.length.should.equal(1)
+    await multiWorker.end()
+  })
+
+  it('should stop adding workers when the max is hit & CPU utilization is low', async function () {
+    this.timeout(10 * 1000)
+
+    var i = 0
+    while (i < 100) {
+      await queue.enqueue(specHelper.queue, 'slowSleepJob', [])
+      i++
     }
 
-    var jobs = {
-      'slowSleepJob': {
-        plugins: [],
-        pluginOptions: {},
-        perform: function (callback) {
-          setTimeout(function () {
-            callback(null, new Date().getTime())
-          }, 1000)
-        }
-      },
-      'slowCPUJob': {
-        plugins: [],
-        pluginOptions: {},
-        perform: function (callback) {
-          blockingSleep(1000)
-          callback(null, new Date().getTime())
-        }
-      }
+    await multiWorker.start()
+    await new Promise((resolve) => { setTimeout(resolve, (checkTimeout * 30)) })
+    multiWorker.workers.length.should.equal(maxTaskProcessors)
+    await multiWorker.end()
+  })
+
+  it('should not add workers when CPU utilization is high', async function () {
+    this.timeout(30 * 1000)
+
+    var i = 0
+    while (i < 100) {
+      await queue.enqueue(specHelper.queue, 'slowCPUJob', [])
+      i++
     }
 
-    before(function (done) {
-      specHelper.connect(function () {
-        var Queue = specHelper.NR.queue
-        queue = new Queue({
-          connection: specHelper.cleanConnectionDetails(),
-          queue: specHelper.queue
-        })
+    await multiWorker.start()
+    await new Promise((resolve) => { setTimeout(resolve, (checkTimeout * 30)) })
+    multiWorker.workers.length.should.equal(minTaskProcessors)
+    await multiWorker.end()
+  })
 
-        queue.connect(done)
-      })
-    })
+  it('should pass on all worker emits to the instance of multiWorker', async () => {
+    await queue.enqueue(specHelper.queue, 'missingJob', [])
 
-    before(function (done) {
-      var MultiWorker = specHelper.NR.multiWorker
-      multiWorker = new MultiWorker({
-        connection: specHelper.cleanConnectionDetails(),
-        timeout: specHelper.timeout,
-        checkTimeout: checkTimeout,
-        minTaskProcessors: minTaskProcessors,
-        maxTaskProcessors: maxTaskProcessors,
-        queue: specHelper.queue,
-        toDisconnectProcessors: toDisconnectProcessors
-      }, jobs)
+    await new Promise((resolve, reject) => {
+      multiWorker.start()
 
-      multiWorker.end(done)
-
-      // multiWorker.on('error', function(error){
-      //   console.log(error);
-      // });
-    })
-
-    afterEach(function (done) {
-      queue.delQueue(specHelper.queue, function (err) {
-        should.not.exist(err)
-        done()
-      })
-    })
-
-    it('should never have less than one worker', function (done) {
-      multiWorker.workers.length.should.equal(0)
-      multiWorker.start(function () {
-        setTimeout(function () {
-          multiWorker.workers.length.should.equal(1)
-          multiWorker.end(done)
-        }, (checkTimeout * 3) + 500)
-      })
-    })
-
-    it('should stop adding workers when the max is hit & CPU utilization is low', function (done) {
-      this.timeout(10 * 1000)
-
-      var i = 0
-      while (i < 100) {
-        queue.enqueue(specHelper.queue, 'slowSleepJob', [])
-        i++
-      }
-
-      multiWorker.start(function () {
-        setTimeout(function () {
-          multiWorker.workers.length.should.equal(maxTaskProcessors)
-          multiWorker.end(done)
-        }, checkTimeout * 30)
-      })
-    })
-
-    it('should not add workers when CPU utilization is high', function (done) {
-      this.timeout(30 * 1000)
-
-      var i = 0
-      while (i < 100) {
-        queue.enqueue(specHelper.queue, 'slowCPUJob', [])
-        i++
-      }
-
-      multiWorker.start(function () {
-        setTimeout(function () {
-          multiWorker.workers.length.should.equal(1)
-          multiWorker.end(done)
-        }, checkTimeout * 30)
-      })
-    })
-
-    it('should pass on all worker emits to the instance of multiWorker', function (done) {
-      queue.enqueue(specHelper.queue, 'missingJob', [])
-
-      multiWorker.on('failure', function (workerId, queue, job, error) {
+      multiWorker.on('failure', async (workerId, queue, job, error) => {
         String(error).should.equal('Error: No job defined for class "missingJob"')
         multiWorker.removeAllListeners('error')
-        multiWorker.end(done)
+        await multiWorker.end()
+        resolve()
       })
-
-      multiWorker.start()
     })
   })
-}
+})
