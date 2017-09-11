@@ -1,6 +1,7 @@
 const path = require('path')
 const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
 const should = require('should') // eslint-disable-line
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let queue
 let jobDelay = 100
@@ -29,7 +30,7 @@ describe('plugins', () => {
   before(async () => {
     await specHelper.connect()
     await specHelper.cleanup()
-    queue = new specHelper.NR.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
     queue.connect()
   })
 

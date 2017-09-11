@@ -1,190 +1,187 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should') // eslint-disable-line
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should') // eslint-disable-line
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
-describe('plugins', function () {
-  var queue
-  var jobDelay = 1000
+let queue
+const jobDelay = 1000
+let worker1
+let worker2
 
-  var jobs = {
-    'slowAdd': {
-      plugins: ['jobLock'],
-      pluginOptions: { jobLock: {} },
-      perform: function (a, b, callback) {
-        var answer = a + b
-        setTimeout(function () {
-          callback(null, answer)
-        }, jobDelay)
-      }
-    },
-    'uniqueJob': {
-      plugins: ['queueLock', 'delayQueueLock'],
-      pluginOptions: { queueLock: {}, delayQueueLock: {} },
-      perform: function (a, b, callback) {
-        var answer = a + b
-        callback(null, answer)
-      }
+const jobs = {
+  'slowAdd': {
+    plugins: ['JobLock'],
+    pluginOptions: { jobLock: {} },
+    perform: async (a, b) => {
+      let answer = a + b
+      await new Promise((resolve) => { setTimeout(resolve, jobDelay) })
+      return answer
+    }
+  },
+  'uniqueJob': {
+    plugins: ['QueueLock', 'DelayQueueLock'],
+    pluginOptions: { queueLock: {}, delayQueueLock: {} },
+    perform: (a, b) => {
+      let answer = a + b
+      return answer
     }
   }
+}
 
-  before(function (done) {
-    specHelper.connect(function () {
-      specHelper.cleanup(function () {
-        var Queue = specHelper.NR.queue
-        queue = new Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
-        queue.connect(done)
-      })
-    })
+describe('plugins', () => {
+  before(async () => {
+    await specHelper.connect()
+    await specHelper.cleanup()
+    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+    await queue.connect()
   })
 
-  afterEach(function (done) {
-    specHelper.cleanup(done)
+  afterEach(async () => {
+    await specHelper.cleanup()
   })
 
-  describe('jobLock', function () {
-    var worker1
-    var worker2
+  describe('jobLock', () => {
+    it('will not lock jobs since arg objects are different', async () => {
+      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
 
-    it('will not lock jobs since arg objects are different', function (done) {
-      var Worker = specHelper.NR.worker
-      worker1 = new Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      worker2 = new Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker1.on('error', (error) => { throw error })
+      worker2.on('error', (error) => { throw error })
 
-      worker1.connect(function () {
-        worker2.connect(function () {
-          var startTime = new Date().getTime()
-          var completed = 0
+      await worker1.connect()
+      await worker2.connect()
 
-          var onComplete = function (q, job, result) {
-            completed++
-            if (completed === 2) {
-              worker1.end()
-              worker2.end();
-              (new Date().getTime() - startTime).should.be.below(jobDelay * 2)
-              done()
-            }
-          }
+      await new Promise((resolve) => {
+        let startTime = new Date().getTime()
+        let completed = 0
 
-          worker1.on('success', onComplete)
-          worker2.on('success', onComplete)
-          queue.enqueue(specHelper.queue, 'slowAdd', [{name: 'Walter White'}, 2], function () {
-            queue.enqueue(specHelper.queue, 'slowAdd', [{name: 'Jesse Pinkman'}, 2], function () {
-              worker1.start()
-              worker2.start()
-            })
-          })
-
-          worker1.on('error', function (queue, job, error) { console.log(error.stack) })
-          worker2.on('error', function (queue, job, error) { console.log(error.stack) })
-        })
-      })
-    })
-
-    it('allows the key to be specified as a function', function (done) {
-      var Worker = specHelper.NR.worker
-
-      var calls = 0
-      var jobs = {
-        jobLockAdd: {
-          plugins: ['jobLock'],
-          pluginOptions: {
-            jobLock: {
-              key: function () {
-                // Once to create, once to delete
-                if (++calls === 2) {
-                  done()
-                  worker1.end()
-                }
-                return this.worker.connection.key('customKey', Math.max.apply(Math.max, this.args))
-              }
-            }
-          },
-          perform: function (a, b, callback) {
-            callback(null, a + b)
+        const onComplete = function (q, job, result) {
+          completed++
+          if (completed === 2) {
+            worker1.end()
+            worker2.end();
+            (new Date().getTime() - startTime).should.be.below(jobDelay * 2)
+            resolve()
           }
         }
-      }
 
-      worker1 = new Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      worker1.connect(function () {
-        queue.enqueue(specHelper.queue, 'jobLockAdd', [1, 2], function () {
-          worker1.start()
-        })
-      })
+        worker1.on('success', onComplete)
+        worker2.on('success', onComplete)
 
-      worker1.on('error', function (queue, job, error) { console.log(error.stack) })
-    })
+        queue.enqueue(specHelper.queue, 'slowAdd', [{name: 'Walter White'}, 2])
+        queue.enqueue(specHelper.queue, 'slowAdd', [{name: 'Jesse Pinkman'}, 2])
 
-    it('will not run 2 jobs with the same args at the same time', function (done) {
-      var Worker = specHelper.NR.worker
-
-      worker1 = new Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      worker2 = new Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-
-      worker1.connect(function () {
-        worker2.connect(function () {
-          var startTime = new Date().getTime()
-          var completed = 0
-
-          var onComplete = function (q, job, result) {
-            completed++
-            if (completed === 2) {
-              worker1.end()
-              worker2.end();
-              (new Date().getTime() - startTime).should.be.above(jobDelay * 2)
-              done()
-            }
-          }
-
-          worker1.on('success', onComplete)
-          worker2.on('success', onComplete)
-          queue.enqueue(specHelper.queue, 'slowAdd', [1, 2], function () {
-            queue.enqueue(specHelper.queue, 'slowAdd', [1, 2], function () {
-              worker1.start()
-              worker2.start()
-            })
-          })
-
-          worker1.on('error', function (queue, job, error) { console.log(error.stack) })
-          worker2.on('error', function (queue, job, error) { console.log(error.stack) })
-        })
+        worker1.start()
+        worker2.start()
       })
     })
 
-    it('will run 2 jobs with the different args at the same time', function (done) {
-      var Worker = specHelper.NR.worker
+    it('allows the key to be specified as a function', async () => {
+      let calls = 0
 
-      worker1 = new Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      worker2 = new Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-
-      worker1.connect(function () {
-        worker2.connect(function () {
-          var startTime = new Date().getTime()
-          var completed = 0
-
-          var onComplete = function (q, job, result) {
-            completed++
-            if (completed === 2) {
-              worker1.end()
-              worker2.end()
-              var delta = (new Date().getTime() - startTime)
-              delta.should.be.below(jobDelay * 2)
-              done()
+      await new Promise(async (resolve) => {
+        let functionJobs = {
+          jobLockAdd: {
+            plugins: ['JobLock'],
+            pluginOptions: {
+              JobLock: {
+                key: function () {
+                  // Once to create, once to delete
+                  if (++calls === 2) {
+                    worker1.end()
+                    resolve()
+                  }
+                  let key = this.worker.connection.key('customKey', Math.max.apply(Math.max, this.args))
+                  return key
+                }
+              }
+            },
+            perform: (a, b) => {
+              return a + b
             }
           }
+        }
 
-          worker1.on('success', onComplete)
-          worker2.on('success', onComplete)
-          queue.enqueue(specHelper.queue, 'slowAdd', [1, 2], function () {
-            queue.enqueue(specHelper.queue, 'slowAdd', [3, 4], function () {
-              worker1.start()
-              worker2.start()
-            })
-          })
+        worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, functionJobs)
+        worker1.on('error', (error) => { throw error })
+        await worker1.connect()
+        await queue.enqueue(specHelper.queue, 'jobLockAdd', [1, 2])
+        worker1.start()
+      })
+    })
 
-          worker1.on('error', function (queue, job, error) { console.log(error.stack) })
-          worker2.on('error', function (queue, job, error) { console.log(error.stack) })
-        })
+    it('will not run 2 jobs with the same args at the same time', async () => {
+      let count = 0
+      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+
+      worker1.on('error', (error) => { throw error })
+      worker2.on('error', (error) => { throw error })
+
+      await new Promise(async (resolve) => {
+        await worker1.connect()
+        await worker2.connect()
+
+        const onComplete = async () => {
+          count++
+          count.should.equal(1)
+          worker1.end()
+          worker2.end()
+
+          let timestamps = await queue.timestamps()
+          let dealyedJob = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + Math.round(timestamps[0] / 1000))
+          should.exist(dealyedJob)
+          dealyedJob = JSON.parse(dealyedJob)
+          dealyedJob['class'].should.equal('slowAdd')
+          dealyedJob.args.should.eql([1, 2])
+
+          resolve()
+        }
+
+        worker1.on('success', onComplete)
+        worker2.on('success', onComplete)
+
+        await queue.enqueue(specHelper.queue, 'slowAdd', [1, 2])
+        await queue.enqueue(specHelper.queue, 'slowAdd', [1, 2])
+
+        worker1.start()
+        worker2.start()
+      })
+    })
+
+    it('will run 2 jobs with the different args at the same time', async () => {
+      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+
+      worker1.on('error', (error) => { throw error })
+      worker2.on('error', (error) => { throw error })
+
+      await worker1.connect()
+      await worker2.connect()
+
+      let startTime = new Date().getTime()
+      let completed = 0
+
+      await new Promise(async (resolve) => {
+        const onComplete = function (q, job, result) {
+          completed++
+          if (completed === 2) {
+            worker1.end()
+            worker2.end()
+            var delta = (new Date().getTime() - startTime)
+            delta.should.be.below(jobDelay * 2)
+            resolve()
+          }
+        }
+
+        worker1.on('success', onComplete)
+        worker2.on('success', onComplete)
+
+        await queue.enqueue(specHelper.queue, 'slowAdd', [1, 2])
+        await queue.enqueue(specHelper.queue, 'slowAdd', [3, 4])
+
+        worker1.start()
+        worker2.start()
       })
     })
   })

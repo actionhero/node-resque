@@ -1,14 +1,14 @@
-var path = require('path')
-var Redis = require('ioredis')
-var namespace = 'resque_test'
-var queue = 'test_queue'
-var pkg = 'ioredis'
+const path = require('path')
+const Redis = require('ioredis')
+const namespace = 'resque_test'
+const queue = 'test_queue'
+const pkg = 'ioredis'
+const NodeResque = require(path.join(__dirname, '..', 'index.js'))
 
 console.log(`Using redis client: ${pkg}`)
 
 exports.specHelper = {
   pkg: pkg,
-  NR: require(path.join(__dirname, '..', 'index.js')),
   namespace: namespace,
   queue: queue,
   timeout: 500,
@@ -38,9 +38,9 @@ exports.specHelper = {
   },
 
   startAll: async function (jobs) {
-    let Worker = this.NR.worker
-    let Scheduler = this.NR.scheduler
-    let Queue = this.NR.queue
+    let Worker = NodeResque.Worker
+    let Scheduler = NodeResque.Scheduler
+    let Queue = NodeResque.Queue
 
     this.worker = new Worker({connection: {redis: this.redis}, queues: this.queue, timeout: this.timeout}, jobs)
     await this.worker.connect()

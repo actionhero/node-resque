@@ -2,6 +2,7 @@ const path = require('path')
 const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
 const should = require('should') // eslint-disable-line
 const os = require('os')
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let jobs = {
   'add': {
@@ -35,7 +36,7 @@ let queue
 
 describe('worker', () => {
   it('can connect', async () => {
-    let worker = new specHelper.NR.Worker({connection: specHelper.connectionDetails, queues: specHelper.queue})
+    let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, queues: specHelper.queue})
     await worker.connect()
     await worker.end()
   })
@@ -50,7 +51,7 @@ describe('worker', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    let worker = new specHelper.NR.Worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue})
+    let worker = new NodeResque.Worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue})
 
     await new Promise((resolve) => {
       worker.connect()
@@ -65,7 +66,7 @@ describe('worker', () => {
 
   describe('performInline', () => {
     before(() => {
-      worker = new specHelper.NR.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
     })
 
     it('can run a successful job', async () => {
@@ -91,14 +92,14 @@ describe('worker', () => {
   describe('[with connection]', () => {
     before(async () => {
       await specHelper.connect()
-      queue = new specHelper.NR.Queue({connection: specHelper.connectionDetails})
+      queue = new NodeResque.Queue({connection: specHelper.connectionDetails})
       await queue.connect()
     })
 
     after(async () => { await specHelper.cleanup() })
 
     it('can boot and stop', async () => {
-      worker = new specHelper.NR.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
       await worker.connect()
       await worker.start()
       await worker.end()
@@ -108,7 +109,7 @@ describe('worker', () => {
       it('can clear previously crashed workers from the same host', async () => {
         let name1 = os.hostname() + ':' + '0' // fake pid
         let name2 = os.hostname() + ':' + process.pid // real pid
-        let worker1 = new specHelper.NR.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs)
+        let worker1 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs)
 
         await worker1.connect()
         await worker1.init()
@@ -116,7 +117,7 @@ describe('worker', () => {
 
         await new Promise((resolve) => { setTimeout(resolve, 500) })
 
-        let worker2 = new specHelper.NR.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs)
+        let worker2 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs)
         await worker2.connect()
 
         await new Promise((resolve) => {
@@ -133,7 +134,7 @@ describe('worker', () => {
 
     describe('integration', function () {
       beforeEach(async () => {
-        worker = new specHelper.NR.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+        worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
         await worker.connect()
       })
 

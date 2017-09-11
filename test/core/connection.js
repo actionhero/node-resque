@@ -1,6 +1,7 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should') // eslint-disable-line
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should') // eslint-disable-line
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 describe('connection', () => {
   before(async () => {
@@ -20,7 +21,7 @@ describe('connection', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    let connection = new specHelper.NR.Connection(connectionDetails)
+    let connection = new NodeResque.Connection(connectionDetails)
 
     await new Promise((resolve) => {
       connection.connect()
@@ -39,8 +40,7 @@ describe('connection', () => {
   })
 
   it('will properly build namespace strings', async () => {
-    var Connection = specHelper.NR.Connection
-    var connection = new Connection(specHelper.cleanConnectionDetails())
+    let connection = new NodeResque.Connection(specHelper.cleanConnectionDetails())
     await connection.connect()
     connection.key('thing').should.equal(specHelper.namespace + ':thing')
     connection.end()

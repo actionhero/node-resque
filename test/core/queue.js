@@ -1,12 +1,12 @@
 const path = require('path')
 const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
 const should = require('should')
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 let queue
 
 describe('queue', () => {
   it('can connect', async () => {
-    let Queue = specHelper.NR.Queue
-    queue = new Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+    queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
     await queue.connect()
     await queue.end()
   })
@@ -21,8 +21,7 @@ describe('queue', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    let Queue = specHelper.NR.Queue
-    queue = new Queue({connection: connectionDetails, queue: specHelper.queue})
+    queue = new NodeResque.Queue({connection: connectionDetails, queue: specHelper.queue})
 
     await new Promise((resolve) => {
       queue.connect()
@@ -38,8 +37,7 @@ describe('queue', () => {
   describe('[with connection]', function () {
     before(async () => {
       await specHelper.connect()
-      let Queue = specHelper.NR.Queue
-      queue = new Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+      queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
       await queue.connect()
     })
 
@@ -407,14 +405,14 @@ describe('queue', () => {
       }
 
       beforeEach(async () => {
-        workerA = new specHelper.NR.Worker({
+        workerA = new NodeResque.Worker({
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
           queues: specHelper.queue,
           name: 'workerA'
         }, jobs)
 
-        workerB = new specHelper.NR.Worker({
+        workerB = new NodeResque.Worker({
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
           queues: specHelper.queue,

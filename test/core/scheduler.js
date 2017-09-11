@@ -1,13 +1,14 @@
 const path = require('path')
 const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
 const should = require('should')
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let scheduler
 let queue
 
 describe('scheduler', () => {
   it('can connect', async () => {
-    scheduler = new specHelper.NR.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
+    scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
     await scheduler.connect()
     await scheduler.end()
   })
@@ -22,7 +23,7 @@ describe('scheduler', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    scheduler = new specHelper.NR.Scheduler({connection: connectionDetails, timeout: specHelper.timeout})
+    scheduler = new NodeResque.Scheduler({connection: connectionDetails, timeout: specHelper.timeout})
 
     scheduler.on('poll', () => { throw new Error('Should not emit poll') })
     scheduler.on('master', () => { throw new Error('Should not emit master') })
@@ -44,8 +45,8 @@ describe('scheduler', () => {
     after(async () => { await specHelper.cleanup() })
 
     it('should only have one master, and can failover', async () => {
-      const shedulerOne = new specHelper.NR.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout})
-      const shedulerTwo = new specHelper.NR.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout})
+      const shedulerOne = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout})
+      const shedulerTwo = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout})
 
       await shedulerOne.connect()
       await shedulerTwo.connect()
@@ -70,8 +71,8 @@ describe('scheduler', () => {
 
     beforeEach(async () => {
       await specHelper.cleanup()
-      scheduler = new specHelper.NR.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
-      queue = new specHelper.NR.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+      scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
+      queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
       await scheduler.connect()
       await queue.connect()
     })
