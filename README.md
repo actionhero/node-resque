@@ -305,7 +305,7 @@ await scheduler.connect()
 scheduler.start()
 
 
-schedule.scheduleJob('10,20,30,40,50 * * * * *', () => { // do this job every 10 seconds, CRON style
+schedule.scheduleJob('10,20,30,40,50 * * * * *', async () => { // do this job every 10 seconds, CRON style
   // we want to ensure that only one instance of this job is scheduled in our environment at once,
   // no matter how many schedulers we have running
   if(scheduler.master){

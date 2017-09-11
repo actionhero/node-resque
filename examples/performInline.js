@@ -1,16 +1,12 @@
-// ///////////////////////
-// REQUIRE THE PACKAGE //
-// ///////////////////////
+const path = require('path')
+const NodeResque = require(path.join(__dirname, '..', 'index.js'))
+// In your projects: var NodeResque = require('node-resque');
 
-var path = require('path')
-var NR = require(path.join(__dirname, '..', 'index.js'))
-// In your projects: var NR = require('node-resque');
-
-// /////////////////////////
+// ////////////////////////
 // SET UP THE CONNECTION //
-// /////////////////////////
+// ////////////////////////
 
-var connectionDetails = {
+const connectionDetails = {
   pkg: 'ioredis',
   host: '127.0.0.1',
   password: null,
@@ -21,36 +17,35 @@ var connectionDetails = {
   // options: {password: 'abc'},
 }
 
-// ////////////////////////////
-// DEFINE YOUR WORKER TASKS //
-// ////////////////////////////
+async function boot () {
+  // ///////////////////////////
+  // DEFINE YOUR WORKER TASKS //
+  // ///////////////////////////
 
-var jobs = {
-  'add': {
-    plugins: ['jobLock'],
-    pluginOptions: {
-      jobLock: {}
-    },
-    perform: function (a, b, callback) {
-      setTimeout(function () {
-        var answer = a + b
-        callback(null, answer)
-      }, 1000)
+  const jobs = {
+    'add': {
+      plugins: ['JobLock'],
+      pluginOptions: {
+        JobLock: {}
+      },
+      perform: async (a, b) => {
+        await new Promise((resolve) => { setTimeout(resolve, 1000) })
+        let answer = a + b
+        return answer
+      }
     }
   }
+
+  // //////////////////////////////
+  // BUILD A WORKER & WORK A JOB //
+  // //////////////////////////////
+
+  var worker = new NodeResque.Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
+  await worker.connect()
+  let result = await worker.performInline('add', [1, 2])
+  console.log('Result: ' + result)
+
+  process.exit()
 }
 
-// ///////////////////////////////
-// BUILD A WORKER & WORK A JOB //
-// ///////////////////////////////
-
-var Worker = NodeResque.worker
-var worker = new Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
-worker.connect(function () {
-  worker.performInline('add', [1, 2], function (error, result) {
-    console.log('Error: ' + error)
-    console.log('Result: ' + result)
-
-    process.exit()
-  })
-})
+boot()

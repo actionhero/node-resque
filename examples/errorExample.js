@@ -1,16 +1,12 @@
-// ///////////////////////
-// REQUIRE THE PACKAGE //
-// ///////////////////////
+const path = require('path')
+const NodeResque = require(path.join(__dirname, '..', 'index.js'))
+// In your projects: var NodeResque = require('node-resque');
 
-var path = require('path')
-var NR = require(path.join(__dirname, '..', 'index.js'))
-// In your projects: var NR = require('node-resque');
-
-// /////////////////////////
+// ////////////////////////
 // SET UP THE CONNECTION //
-// /////////////////////////
+// ////////////////////////
 
-var connectionDetails = {
+const connectionDetails = {
   pkg: 'ioredis',
   host: '127.0.0.1',
   password: null,
@@ -21,75 +17,67 @@ var connectionDetails = {
   // // options: {password: 'abc'},
 }
 
-// ////////////////////////////
-// DEFINE YOUR WORKER TASKS //
-// ////////////////////////////
+async function boot () {
+  // ///////////////////////////
+  // DEFINE YOUR WORKER TASKS //
+  // ///////////////////////////
 
-var jobsToComplete = 0
-var jobs = {
-  'brokenJob': {
-    plugins: [],
-    pluginOptions: {},
-    perform: function (a, b, callback) {
-      jobsToComplete--
-      shutdown()
+  let jobsToComplete = 0
 
-      // A ReferenceError like this would cause the application to crash
-      // and your job would be lost.
-      // If you have an unsafe job like this, consider domains maybe?
-      // MISSING_VAR + THING;
+  const jobs = {
+    'brokenJob': {
+      plugins: [],
+      pluginOptions: {},
+      perform: function (a, b) {
+        jobsToComplete--
+        tryShutdown()
 
-      // however jobs which return an error callback properly will be
-      // logged in redis accordingly
-      var error = new Error('broken message from job')
-      callback(error)
+        throw new Error('broken message from job')
+      }
     }
   }
-}
 
-// //////////////////
-// START A WORKER //
-// //////////////////
-
-var Worker = NodeResque.worker
-var worker = new Worker({connection: connectionDetails, queues: ['default']}, jobs)
-worker.connect(function () {
-  worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
-  worker.start()
-})
-
-// ///////////////////////
-// REGESTER FOR EVENTS //
-// ///////////////////////
-
-worker.on('start', function () { console.log('worker started') })
-worker.on('end', function () { console.log('worker ended') })
-worker.on('cleaning_worker', function (worker, pid) { console.log('cleaning old worker ' + worker) })
-worker.on('poll', function (queue) { console.log('worker polling ' + queue) })
-worker.on('job', function (queue, job) { console.log('working job ' + queue + ' ' + JSON.stringify(job)) })
-worker.on('reEnqueue', function (queue, job, plugin) { console.log('reEnqueue job (' + plugin + ') ' + queue + ' ' + JSON.stringify(job)) })
-worker.on('success', function (queue, job, result) { console.log('job success ' + queue + ' ' + JSON.stringify(job) + ' >> ' + result) })
-worker.on('failure', function (queue, job, failure) { console.log('job failure ' + queue + ' ' + JSON.stringify(job) + ' >> ' + failure) })
-worker.on('error', function (queue, job, error) { console.log('error ' + queue + ' ' + JSON.stringify(job) + ' >> ' + error) })
-worker.on('pause', function () { console.log('worker paused') })
-
-// //////////////////////
-// CONNECT TO A QUEUE //
-// //////////////////////
-
-var Queue = NodeResque.queue
-var queue = new Queue({connection: connectionDetails}, jobs)
-queue.connect(function () {
-  queue.enqueue('default', 'brokenJob', [1, 2])
-  jobsToComplete = 1
-})
-
-var shutdown = function () {
-  if (jobsToComplete === 0) {
-    setTimeout(function () {
-      worker.end(function () {
-        process.exit()
-      })
-    }, 500)
+  // just a helper for this demo
+  async function tryShutdown () {
+    if (jobsToComplete === 0) {
+      await new Promise((resolve) => { setTimeout(resolve, 500) })
+      await worker.end()
+      process.exit()
+    }
   }
+
+  // /////////////////
+  // START A WORKER //
+  // /////////////////
+
+  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['default']}, jobs)
+  await worker.connect()
+  await worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
+  worker.start()
+
+  // //////////////////////
+  // REGESTER FOR EVENTS //
+  // //////////////////////
+
+  worker.on('start', () => { console.log('worker started') })
+  worker.on('end', () => { console.log('worker ended') })
+  worker.on('cleaning_worker', (worker, pid) => { console.log(`cleaning old worker ${worker}`) })
+  worker.on('poll', (queue) => { console.log(`worker polling ${queue}`) })
+  worker.on('job', (queue, job) => { console.log(`working job ${queue} ${JSON.stringify(job)}`) })
+  worker.on('reEnqueue', (queue, job, plugin) => { console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`) })
+  worker.on('success', (queue, job, result) => { console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`) })
+  worker.on('failure', (queue, job, failure) => { console.log(`job failure ${queue} ${JSON.stringify(job)} >> ${failure}`) })
+  worker.on('error', (error, queue, job) => { console.log(`error ${queue} ${JSON.stringify(job)}  >> ${error}`) })
+  worker.on('pause', () => { console.log('worker paused') })
+
+  // /////////////////////
+  // CONNECT TO A QUEUE //
+  // /////////////////////
+
+  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  await queue.connect()
+  await queue.enqueue('default', 'brokenJob', [1, 2])
+  jobsToComplete = 1
 }
+
+boot()
