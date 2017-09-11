@@ -77,7 +77,7 @@ describe('multiWorker', function () {
     await multiWorker.start()
     await new Promise((resolve) => { setTimeout(resolve, (checkTimeout * 3) + 500) })
 
-    multiWorker.workers.length.should.equal(1)
+    multiWorker.workers.length.should.be.above(0)
     await multiWorker.end()
   })
 
