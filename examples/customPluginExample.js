@@ -68,7 +68,7 @@ var jobs = {
 // //////////////////
 // START A WORKER //
 // //////////////////
-var Worker = NR.worker
+var Worker = NodeResque.worker
 var worker = new Worker({connection: connectionDetails, queues: ['default']}, jobs)
 worker.connect(function () {
   worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
@@ -94,7 +94,7 @@ worker.on('pause', function () { console.log('worker paused') })
 // CONNECT TO A QUEUE //
 // //////////////////////
 
-var Queue = NR.queue
+var Queue = NodeResque.queue
 var queue = new Queue({connection: connectionDetails}, jobs)
 queue.on('error', function (error) { console.log(error) })
 queue.connect(function () {

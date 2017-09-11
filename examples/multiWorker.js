@@ -61,7 +61,7 @@ var jobs = {
 // ENQUEUE TASKS //
 // /////////////////
 
-var Queue = NR.queue
+var Queue = NodeResque.queue
 var queue = new Queue({connection: connectionDetails}, jobs)
 queue.connect(function () {
   var i
@@ -82,7 +82,7 @@ queue.connect(function () {
 // WORK //
 // ////////
 
-var MultiWorker = NR.multiWorker
+var MultiWorker = NodeResque.multiWorker
 var multiWorker = new MultiWorker({
   connection: connectionDetails,
   queues: ['slowQueue']

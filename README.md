@@ -4,115 +4,133 @@
 
 [![Nodei stats](https://nodei.co/npm/node-resque.png?downloads=true)](https://npmjs.org/package/node-resque)
 
-[![Join the chat at https://gitter.im/taskrabbit/node-resque](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/taskrabbit/node-resque?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://secure.travis-ci.org/taskrabbit/node-resque.png?branch=master)](http://travis-ci.org/taskrabbit/node-resque)
+[![Build Status](https://secure.travis-ci.org/taskrabbit/node-resque.png?branch=master)](http://travis-ci.org/taskrabbit/node-resque)
+
+## Version Notes
+Version 6+ of Node Resque use async/await.  There is no upgrade path from previous versions.  Node v8.0.0+ is required.
 
 ## Usage
 
 I learn best by examples:
 
 ```javascript
-/////////////////////////
-// REQUIRE THE PACKAGE //
-/////////////////////////
+const path = require('path')
+const NodeResque = require(path.join(__dirname, '..', 'index.js'))
+// In your projects: const NR = require('node-resque');
 
-var NR = require("node-resque");
+async function boot () {
+  // ////////////////////////
+  // SET UP THE CONNECTION //
+  // ////////////////////////
 
-///////////////////////////
-// SET UP THE CONNECTION //
-///////////////////////////
+  const connectionDetails = {
+    pkg: 'ioredis',
+    host: '127.0.0.1',
+    password: null,
+    port: 6379,
+    database: 0
+    // namespace: 'resque',
+    // looping: true,
+    // options: {password: 'abc'},
+  }
 
-var connectionDetails = {
-  pkg:       'ioredis',
-  host:      '127.0.0.1',
-  password:  null,
-  port:      6379,
-  database:  0,
-  // namespace: 'resque',
-  // looping: true,
-  // options: {password: 'abc'},
-};
+  // ///////////////////////////
+  // DEFINE YOUR WORKER TASKS //
+  // ///////////////////////////
 
-//////////////////////////////
-// DEFINE YOUR WORKER TASKS //
-//////////////////////////////
+  let jobsToComplete = 0
 
-var jobs = {
-  "add": {
-    plugins: [ 'jobLock', 'retry' ],
-    pluginOptions: {
-      jobLock: {},
-      retry: {
-        retryLimit: 3,
-        retryDelay: (1000 * 5),
+  const jobs = {
+    'add': {
+      plugins: ['JobLock'],
+      pluginOptions: {
+        JobLock: {}
+      },
+      perform: async (a, b) => {
+        await new Promise((resolve) => { setTimeout(resolve, 1000) })
+        jobsToComplete--
+        tryShutdown()
+
+        let answer = a + b
+        return answer
       }
     },
-    perform: function(a,b,callback){
-      var answer = a + b;
-      callback(null, answer);
-    },
-  },
-  "subtract": {
-    perform: function(a,b,callback){
-      var answer = a - b;
-      callback(null, answer);
-    },
-  },
-};
+    'subtract': {
+      perform: (a, b) => {
+        jobsToComplete--
+        tryShutdown()
 
-////////////////////
-// START A WORKER //
-////////////////////
+        let answer = a - b
+        return answer
+      }
+    }
+  }
 
-var worker = new NR.worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs);
-worker.connect(function(){
-  worker.workerCleanup(); // optional: cleanup any previous improperly shutdown workers on this host
-  worker.start();
-});
+  // just a helper for this demo
+  async function tryShutdown () {
+    if (jobsToComplete === 0) {
+      await new Promise((resolve) => { setTimeout(resolve, 500) })
+      await scheduler.end()
+      await worker.end()
+      process.exit()
+    }
+  }
 
-///////////////////////
-// START A SCHEDULER //
-///////////////////////
+  // /////////////////
+  // START A WORKER //
+  // /////////////////
 
-var scheduler = new NR.scheduler({connection: connectionDetails});
-scheduler.connect(function(){
-  scheduler.start();
-});
+  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
+  await worker.connect()
+  await worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
+  worker.start()
 
-/////////////////////////
-// REGESTER FOR EVENTS //
-/////////////////////////
+  // ////////////////////
+  // START A SCHEDULER //
+  // ////////////////////
 
-worker.on('start',           function(){ console.log("worker started"); });
-worker.on('end',             function(){ console.log("worker ended"); });
-worker.on('cleaning_worker', function(worker, pid){ console.log("cleaning old worker " + worker); });
-worker.on('poll',            function(queue){ console.log("worker polling " + queue); });
-worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); });
-worker.on('reEnqueue',       function(queue, job, plugin){ console.log("reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); });
-worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); });
-worker.on('failure',         function(queue, job, failure){ console.log("job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); });
-worker.on('error',           function(queue, job, error){ console.log("error " + queue + " " + JSON.stringify(job) + " >> " + error); });
-worker.on('pause',           function(){ console.log("worker paused"); });
+  const scheduler = new NodeResque.Scheduler({connection: connectionDetails})
+  await scheduler.connect()
+  scheduler.start()
 
-scheduler.on('start',             function(){ console.log("scheduler started"); });
-scheduler.on('end',               function(){ console.log("scheduler ended"); });
-scheduler.on('poll',              function(){ console.log("scheduler polling"); });
-scheduler.on('master',            function(state){ console.log("scheduler became master"); });
-scheduler.on('error',             function(error){ console.log("scheduler error >> " + error); });
-scheduler.on('working_timestamp', function(timestamp){ console.log("scheduler working timestamp " + timestamp); });
-scheduler.on('transferred_job',   function(timestamp, job){ console.log("scheduler enquing job " + timestamp + " >> " + JSON.stringify(job)); });
+  // //////////////////////
+  // REGESTER FOR EVENTS //
+  // //////////////////////
 
-////////////////////////
-// CONNECT TO A QUEUE //
-////////////////////////
+  worker.on('start', () => { console.log('worker started') })
+  worker.on('end', () => { console.log('worker ended') })
+  worker.on('cleaning_worker', (worker, pid) => { console.log(`cleaning old worker ${worker}`) })
+  worker.on('poll', (queue) => { console.log(`worker polling ${queue}`) })
+  worker.on('job', (queue, job) => { console.log(`working job ${queue} ${JSON.stringify(job)}`) })
+  worker.on('reEnqueue', (queue, job, plugin) => { console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`) })
+  worker.on('success', (queue, job, result) => { console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`) })
+  worker.on('failure', (queue, job, failure) => { console.log(`job failure ${queue} ${JSON.stringify(job)} >> ${failure}`) })
+  worker.on('error', (error, queue, job) => { console.log(`error ${queue} ${JSON.stringify(job)}  >> ${error}`) })
+  worker.on('pause', () => { console.log('worker paused') })
 
-var queue = new NR.queue({connection: connectionDetails}, jobs);
-queue.on('error', function(error){ console.log(error); });
-queue.connect(function(){
-  queue.enqueue('math', "add", [1,2]);
-  queue.enqueue('math', "add", [1,2]);
-  queue.enqueue('math', "add", [2,3]);
-  queue.enqueueIn(3000, 'math', "subtract", [2,1]);
-});
+  scheduler.on('start', () => { console.log('scheduler started') })
+  scheduler.on('end', () => { console.log('scheduler ended') })
+  scheduler.on('poll', () => { console.log('scheduler polling') })
+  scheduler.on('master', (state) => { console.log('scheduler became master') })
+  scheduler.on('error', (error) => { console.log(`scheduler error >> ${error}`) })
+  scheduler.on('workingTimestamp', (timestamp) => { console.log(`scheduler working timestamp ${timestamp}`) })
+  scheduler.on('transferredJob', (timestamp, job) => { console.log(`scheduler enquing job ${timestamp} >> ${JSON.stringify(job)}`) })
+
+  // //////////////////////
+  // CONNECT TO A QUEUE //
+  // //////////////////////
+
+  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  queue.on('error', function (error) { console.log(error) })
+  await queue.connect()
+  await queue.enqueue('math', 'add', [1, 2])
+  await queue.enqueue('math', 'add', [1, 2])
+  await queue.enqueue('math', 'add', [2, 3])
+  await queue.enqueueIn(3000, 'math', 'subtract', [2, 1])
+  jobsToComplete = 4
+}
+
+boot()
 
 ```
 
@@ -120,7 +138,7 @@ queue.connect(function(){
 
 `new queue` requires only the "queue" variable to be set.  You can also pass the `jobs` hash to it.
 
-`new worker` has some additonal options:
+`new worker` has some additional options:
 
 ```javascript
 options = {
@@ -131,7 +149,7 @@ options = {
 }
 ```
 
-The configuration hash passed to `new worker`, `new scheduler` or `new queue` can also take a `connection` option.
+The configuration hash passed to `new NodeResque.Worker`, `new NodeResque.Scheduler` or `new NodeResque.Queue` can also take a `connection` option.
 
 ```javascript
 var connectionDetails = {
@@ -143,15 +161,14 @@ var connectionDetails = {
   namespace: "resque",
 }
 
-var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs);
+var worker = new NodeResque.Worker({connection: connectionDetails, queues: 'math'}, jobs);
 
-worker.on('error', function(){
+worker.on('error', (error) => {
 	// handler errors
 });
 
-worker.connect(function(){
-  worker.start();
-});
+await worker.connect()
+worker.start()
 ```
 
 You can also pass redis client directly.
@@ -159,25 +176,24 @@ You can also pass redis client directly.
 ```javascript
 // assume you already initialize redis client before
 
-var redisClient = new Redis();
+var redisClient = new Redis()
 var connectionDetails = { redis: redisClient }
 
-var worker = new NR.worker({connection: connectionDetails, queues: 'math'}, jobs);
+var worker = new NodeResque.Worker({connection: connectionDetails, queues: 'math'}, jobs);
 
-worker.on('error', function(){
+worker.on('error', (error) => {
 	// handler errors
 });
 
-worker.connect(function(){
-  worker.start();
-});
+await worker.connect()
+worker.start()
 ```
 
 ## Notes
-- Be sure to call `worker.end(callback)`, `queue.end(callback)` and `scheduler.end(callback)` before shutting down your application if you want to properly clear your worker status from resque
+- Be sure to call `await worker.end()`, `await queue.end()` and `await scheduler.end()` before shutting down your application if you want to properly clear your worker status from resque.
 - When ending your application, be sure to allow your workers time to finish what they are working on
 - This project implements the "scheduler" part of rescue-scheduler (the daemon which can promote enqueued delayed jobs into the work queues when it is time), but not the CRON scheduler proxy.  To learn more about how to use a CRON-like scheduler, read the [Job Schedules](#job-schedules) section of this document.
-- If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new Queue` constructor
+- If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new NodeResque.Queue()` constructor
 - If a job fails, it will be added to a special `failed` queue.  You can then inspect these jobs, write a plugin to manage them, move them back to the normal queues, etc.  Failure behavior by default is just to enter the `failed` queue, but there are many options.  Check out these examples from the ruby ecosystem for inspiration:
   - https://github.com/lantins/resque-retry
   - https://github.com/resque/resque/wiki/Failure-Backends
@@ -185,48 +201,39 @@ worker.connect(function(){
 
 ```javascript
 var name = os.hostname() + ":" + process.pid + "+" + counter;
-var worker = new NR.worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
+var worker = new NodeResque.Worker({connection: connectionDetails, queues: 'math', 'name' : name}, jobs);
 ```
 
-###  worker#performInline
+###  Worker#performInline
 
 **DO NOT USE THIS IN PRODUCTION**. In tests or special cases, you may want to process/work a job in-line. To do so, you can use `worker.performInline(jobName, arguments, callback)`.  If you are planning on running a job via #performInline, this worker should also not be started, nor should be using event emitters to monitor this worker.  This method will also not write to redis at all, including logging errors, modify resque's stats, etc.
 
 ## Queue Management
 
+```js
+const queue = new NodeResque.Queue({connection: connectionDetails, jobs})
+await queue.connect()
+```
+
 Additional methods provided on the `queue` object:
 
-- **queue.stats** = function(callback)
-  - callback(error, stats_from_your_cluster)
-- **queue.queues** = function(callback)
-  - callback(error, array_of_queues)
-- **queue.delQueue** = function(q, callback)
-  - callback(error)
-- **queue.queued** = function(q, start, stop, callback)
-  - callback(error, jobs_in_queue)
-- **queue.length** = function(q, callback)
-  - callback(error, number_of_elements_in_queue)
-- **queue.locks** = function(callback)
-  - callback(error, list_of_locks)
-- **queue.delLock** = function(lockName, callback)
-  - callback(error, number_of_items_deleted)
-- **queue.del** = function(q, func, args, count, callback)
-  - callback(error, number_of_items_deleted)
-- **queue.delDelayed** = function(q, func, args, callback)
-  - callback(error, timestamps_the_job_was_removed_from)
-- **queue.scheduledAt** = function(q, func, args, callback)
-  - callback(error, timestamps_the_job_is_scheduled_for)
-- **queue.end** = function(callback)
-  - callback(error)
+- **let stats = await queue.stats()**
+- **let arrayOfQueues = await queue.queues()**
+- **let didDelete = await queue.delQueue()**
+- **let jobsInQueue = await queue.queued(q, start, stop)**
+- **let nuumberOfJobeInQueue = await queue.length(q)**
+- **let listOfLocks = await queue.locks()**
+- **let numberOfLocksDeleted = await queue.delLock(lockName)**
+- **let numberOfJobsDeleted = await queue.del(q, func, args, count)**
+- **let timestampsOfTheDeletedJobs = await queue.delDelayed(q, func, args)**
+- **let timestampsForJob = await queue.scheduledAt(q, func, args)**
+- **await queue.end()**
 
 ## Delayed Status
 
-- **queue.timestamps** = function(callback)
-  - callback(error, timestamps)
-- **queue.delayedAt** = function(timestamp, callback)
-  - callback(error, jobs_enqueued_at_this_timestamp)
-- **queue.allDelayed** = function(timestamp)
-  - callback(error, jobsHash)
+- **let timestamps = await queue.timestamps()**
+- **let jobsEnqueuedForThisTimestamp = await queue.delayedAt(timestamp)**
+- **let jobs = queue.allDelayed(timestamp)**
   - jobsHash is an object with its keys being timestamps, and the vales are arrays of jobs at each time.
   - note that this operation can be very slow and very ram-heavy
 
@@ -234,11 +241,11 @@ Additional methods provided on the `queue` object:
 
 You can use the queue object to check on your workers:
 
-- **queue.workers** = function(callback)`
+- **let workers = await queue.workers()**
   - returns: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
-- **queue.workingOn** = function(workerName, queues, callback)`
+- **let workerStatus = await queue.workingOn(workerName, queues)**
   - returns: `{"run_at":"Fri Dec 12 2014 14:01:16 GMT-0800 (PST)","queue":"test_queue","payload":{"class":"slowJob","queue":"test_queue","args":[null]},"worker":"workerA"}`
-- **queue.allWorkingOn** = function(callback)`
+- **let details = await queue.allWorkingOn()**
   - returns a hash of the results of `queue.workingOn` with the worker names as keys.
 
 ## Failed Job Management
@@ -249,19 +256,15 @@ From time to time, your jobs/workers may fail.  Resque workers will move failed 
 
 You can work with these failed jobs with the following methods:
 
-- **queue.failedCount** = function(callback)
-  - callback(error, failedCount)
+- **let failedCount = await queue.failedCount()**
   - `failedCount` is the number of jobs in the failed queue
 
-- **queue.failed** = function(start, stop, callback)
-  - callback(error, failedJobs)
+- **let failedJobs = await queue.failed(start, stop)**
   - `failedJobs` is an array listing the data of the failed jobs.  Each element looks like:
 
 ### Failing a Job
 
-It is *very* important that your jobs handle uncaughtRejections and other errors of this type properly.  As of `node-resque` version 4, we no longer use `domains` to catch what would otherwise be crash-inducing errors in your jobs.  This means that a job which causes your application to crash WILL BE LOST FOREVER.  Please use `catch()` on your promises, handle all of your callbacks, and otherwise write robust node.js applications.
-
-If you choose to use `domains`, `process.onExit`, or any other method of "catching" a process crash, you can still move the job `node-resque` was working on to the redis error queue with `worker.fail(error, callback)`.  
+We use a try/catch pattern to catch errors in your jobs. If any job throws an uncaught exception, it will be caught, and the job's payload moved to the error queue for inspection. Do not use `domains`, `process.onExit`, or any other method of "catching" a process crash.  The error paylaod looks like:
 
 ```javascript
 { worker: 'busted-worker-3',
@@ -272,22 +275,20 @@ If you choose to use `domains`, `process.onExit`, or any other method of "catchi
   failed_at: 'Sun Apr 26 2015 14:00:44 GMT+0100 (BST)' }
 ```
 
-- **queue.removeFailed** = function(failedJob, callback)
-  - callback(error)
+- **await queue.removeFailed(failedJob)**
   - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
 
-- **queue.retryAndRemoveFailed** = function(failedJob, callback)
-  - callback(error)
+- **await queue.retryAndRemoveFailed(failedJob)**
   - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
   - this method will instantly re-enqueue a failed job back to its original queue, and delete the failed entry for that job
 
 ## Failed Worker Management
 
-Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance to notify redis that it is leaving the pool (this happens all the time on PAAS providers like Heroku).  When this happens, you will not only need to extract the job from the now-zombie worker's "working on" status, but also remove the stuck worker.  To aid you in these edge cases, ``queue.cleanOldWorkers(age, callback)` is available.  
+Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance to notify redis that it is leaving the pool (this happens all the time on PAAS providers like Heroku).  When this happens, you will not only need to extract the job from the now-zombie worker's "working on" status, but also remove the stuck worker.  To aid you in these edge cases, `await queue.cleanOldWorkers(age)` is available.  
 
 Because there are no 'heartbeats' in resque, it is imposable for the application to know if a worker has been working on a long job or it is dead.  You are required to provide an "age" for how long a worker has been "working", and all those older than that age will be removed, and the job they are working on moved to the error queue (where you can then use `queue.retryAndRemoveFailed`) to re-enqueue the job.
 
-If you know the name of a worker that should be removed, you can also call `queue.forceCleanWorker(workerName, callback)` directly, and that will also remove the worker and move any job it was working on into the error queue.
+If you know the name of a worker that should be removed, you can also call `await queue.forceCleanWorker(workerName)` directly, and that will also remove the worker and move any job it was working on into the error queue.
 
 ## Job Schedules
 
@@ -296,70 +297,49 @@ You may want to use node-resque to schedule jobs every minute/hour/day, like a d
 Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduling the jobs.  To help you with this, you can inspect which of the scheduler processes is currently acting as master, and flag only the master scheduler process to run the schedule.  A full example can be found at [/examples/scheduledJobs.js](https://github.com/taskrabbit/node-resque/blob/master/examples/scheduledJobs.js), but the relevant section is:
 
 ``` javascript
-var schedule = require('node-schedule');
+const NodeResque = require('node-resque')
+const schedule = require('node-schedule')
+const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+const scheduler = new NodeResque.Scheduler({connection: connectionDetails});
+await scheduler.connect()
+scheduler.start()
 
-var scheduler = new NR.scheduler({connection: connectionDetails});
-scheduler.connect(function(){
-  scheduler.start();
-});
 
-var queue = new NR.queue({connection: connectionDetails}, jobs, function(){
-  schedule.scheduleJob('10,20,30,40,50 * * * * *', function(){ // do this job every 10 seconds, CRON style
-    // we want to ensure that only one instance of this job is scheduled in our environment at once,
-    // no matter how many schedulers we have running
-    if(scheduler.master){
-      console.log(">>> enquing a job");
-      queue.enqueue('time', "ticktock", new Date().toString() );
-    }
-  });
+schedule.scheduleJob('10,20,30,40,50 * * * * *', () => { // do this job every 10 seconds, CRON style
+  // we want to ensure that only one instance of this job is scheduled in our environment at once,
+  // no matter how many schedulers we have running
+  if(scheduler.master){
+    console.log(">>> enquing a job");
+    await queue.enqueue('time', "ticktock", new Date().toString() );
+  }
 });
 ```
 
 ## Plugins
 
-Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `beforeEnqueue`, `afterEnqueue`, `beforePerform`, and `afterPerform`
+Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `beforeEnqueue`, `afterEnqueue`, `beforePerform`, and `afterPerform`.  Plugins are `classes` which extend `NodeResque.Plugin`
 
 ```javascript
+const NodeResque = require('node-resque')
 
-var myPlugin = function(worker, func, queue, job, args, options){
-  var self = this;
-  self.name = 'myPlugin';
-  self.worker = worker;
-  self.queue = queue;
-  self.func = func;
-  self.job = job;
-  self.args = args;
-  self.options = options;
-
-  if(self.worker.queueObject){
-    self.queueObject = self.worker.queueObject;
-  }else{
-    self.queueObject = self.worker;
+class MyPlugin extends NodeResque.Plugin {
+  beforeEnqueue () {
+    // console.log("** beforeEnqueue")
+    return true // should the job be enqueued?
   }
-}
 
-////////////////////
-// PLUGIN METHODS //
-////////////////////
+  afterEnqueue () {
+    // console.log("** afterEnqueue")
+  }
 
-myPlugin.prototype.beforeEnqueue = function(callback){
-  // console.log("** beforeEnqueue")
-  callback(null, true);
-}
+  beforePerform () {
+    // console.log("** beforePerform")
+    return true // should the job be run?
+  }
 
-myPlugin.prototype.afterEnqueue = function(callback){
-  // console.log("** afterEnqueue")
-  callback(null, true);
-}
-
-myPlugin.prototype.beforePerform = function(callback){
-  // console.log("** beforePerform")
-  callback(null, true);
-}
-
-myPlugin.prototype.afterPerform = function(callback){
-  // console.log("** afterPerform")
-  callback(null, true);
+  afterPerform () {
+    // console.log("** afterPerform")
+  }
 }
 
 ```
@@ -367,15 +347,15 @@ myPlugin.prototype.afterPerform = function(callback){
 And then your plugin can be invoked within a job like this:
 
 ```javascript
-var jobs = {
+const jobs = {
   "add": {
-    plugins: [ 'myPlugin' ],
+    plugins: [ 'MyPlugin' ],
     pluginOptions: {
-      myPlugin: { thing: 'stuff' },
+      MyPlugin: { thing: 'stuff' },
     },
-    perform: function(a,b,callback){
-      var answer = a + b;
-      callback(null, answer);
+    perform: (a,b) => {
+      let answer = a + b
+      return answer
     },
   },
 }
@@ -383,41 +363,41 @@ var jobs = {
 
 **notes**
 
-- All plugins which return `(error, toRun)`.  if `toRun = false` on  `beforeEnqueue`, the job begin enqueued will be thrown away, and if `toRun = false` on `beforePerfporm`, the job will be reEnqued and not run at this time.  However, it doesn't really matter what `toRun` returns on the `after` hooks.
-- If you are writing a plugin to deal with errors which may occur during your resque job, you can inspect and modify `worker.error` in your plugin.  If `worker.error` is null, no error will be logged in the resque error queue.
+- You need to return `true` or `false` on the before hooks.  `true` indicates that the action should continue, and `false` prevents it.  This is called `toRun`.
+- If you are writing a plugin to deal with errors which may occur during your resque job, you can inspect and modify `this.worker.error` in your plugin.  If `this.worker.error` is null, no error will be logged in the resque error queue.
 - There are a few included plugins, all in the lib/plugins/* directory. You can rewrite you own and include it like this:
 
 ```javascript
 var jobs = {
   "add": {
-    plugins: [ require('myplugin') ],
+    plugins: [ require('Myplugin') ],
     pluginOptions: {
-      myPlugin: { thing: 'stuff' },
+      MyPlugin: { thing: 'stuff' },
     },
-    perform: function(a,b,callback){
-      var answer = a + b;
-      callback(null, answer);
+    perform: (a,b) => {
+      let answer = a + b;
+      return answer
     },
   },
 }
 ```
 
 The plugins which are included with this package are:
-- `delayQueueLock`
+- `DelayQueueLock`
   - If a job with the same name, queue, and args is already in the delayed queue(s), do not enqueue it again
-- `jobLock`
+- `JobLock`
   - If a job with the same name, queue, and args is already running, put this job back in the queue and try later
-- `queueLock`
+- `QueueLock`
   - If a job with the same name, queue, and args is already in the queue, do not enqueue it again
-- `retry`
+- `Retry`
   - If a job fails, retry it N times before finally placing it into the failed queue
 
 ## Multi Worker
 
-node-resque provides a wrapper around the `worker` object which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low rendering overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1.  The `multiWorker` handles this by spawning more and more node-resque workers and managing the pool.  
+`node-resque` provides a wrapper around the `Worker` class which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low  overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1.  The `MultiWorker` handles this by spawning more and more node-resque workers and managing the pool.  
 
 ```javascript
-var NR = require(__dirname + "/../index.js");
+var NodeResque = require(__dirname + "/../index.js");
 
 var connectionDetails = {
   pkg:       "ioredis",
@@ -425,7 +405,7 @@ var connectionDetails = {
   password:  ""
 }
 
-var multiWorker = new NR.multiWorker({
+var multiWorker = new NodeResque.MultiWorker({
   connection: connectionDetails,
   queues: ['slowQueue'],
   minTaskProcessors:   1,
@@ -436,20 +416,20 @@ var multiWorker = new NR.multiWorker({
 }, jobs);
 
 // normal worker emitters
-multiWorker.on('start',             function(workerId){                      console.log("worker["+workerId+"] started"); })
-multiWorker.on('end',               function(workerId){                      console.log("worker["+workerId+"] ended"); })
-multiWorker.on('cleaning_worker',   function(workerId, worker, pid){         console.log("cleaning old worker " + worker); })
-multiWorker.on('poll',              function(workerId, queue){               console.log("worker["+workerId+"] polling " + queue); })
-multiWorker.on('job',               function(workerId, queue, job){          console.log("worker["+workerId+"] working job " + queue + " " + JSON.stringify(job)); })
-multiWorker.on('reEnqueue',         function(workerId, queue, job, plugin){  console.log("worker["+workerId+"] reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
-multiWorker.on('success',           function(workerId, queue, job, result){  console.log("worker["+workerId+"] job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
-multiWorker.on('failure',           function(workerId, queue, job, failure){ console.log("worker["+workerId+"] job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); })
-multiWorker.on('error',             function(workerId, queue, job, error){   console.log("worker["+workerId+"] error " + queue + " " + JSON.stringify(job) + " >> " + error); })
-multiWorker.on('pause',             function(workerId){                      console.log("worker["+workerId+"] paused"); })
+multiWorker.on('start',             (workerId) => {                      console.log("worker["+workerId+"] started"); })
+multiWorker.on('end',               (workerId) => {                      console.log("worker["+workerId+"] ended"); })
+multiWorker.on('cleaning_worker',   (workerId, worker, pid) => {         console.log("cleaning old worker " + worker); })
+multiWorker.on('poll',              (workerId, queue) => {               console.log("worker["+workerId+"] polling " + queue); })
+multiWorker.on('job',               (workerId, queue, job) => {          console.log("worker["+workerId+"] working job " + queue + " " + JSON.stringify(job)); })
+multiWorker.on('reEnqueue',         (workerId, queue, job, plugin) => {  console.log("worker["+workerId+"] reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
+multiWorker.on('success',           (workerId, queue, job, result) => {  console.log("worker["+workerId+"] job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
+multiWorker.on('failure',           (workerId, queue, job, failure) => { console.log("worker["+workerId+"] job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); })
+multiWorker.on('error',             (workerId, queue, job, error) => {   console.log("worker["+workerId+"] error " + queue + " " + JSON.stringify(job) + " >> " + error); })
+multiWorker.on('pause',             (workerId) => {                      console.log("worker["+workerId+"] paused"); })
 
 // multiWorker emitters
-multiWorker.on('internalError',     function(error){                         console.log(error); })
-multiWorker.on('multiWorkerAction', function(verb, delay){                   console.log("*** checked for worker status: " + verb + " (event loop delay: " + delay + "ms)"); });
+multiWorker.on('internalError',     (error) => {                         console.log(error); })
+multiWorker.on('multiWorkerAction', (verb, delay) => {                   console.log("*** checked for worker status: " + verb + " (event loop delay: " + delay + "ms)"); });
 
 multiWorker.start();
 ```
@@ -458,12 +438,12 @@ multiWorker.start();
 
 The Options available for the multiWorker are:
 - `connection`: The redis configuration options (same as worker)
-- `queues`: Array of ordred queue names (or `*`) (same as worker)
+- `queues`: Array of ordered queue names (or `*`) (same as worker)
 - `minTaskProcessors`: The minimum number of workers to spawn under this multiWorker, even if there is no work to do.  You need at least one, or no work will ever be processed or checked
-- `maxTaskProcessors`: The maximum number of workers to spawn under this multiWorker, even if the queues are long and there is available CPU (the event loop isn't entierly blocked) to this node process.
+- `maxTaskProcessors`: The maximum number of workers to spawn under this multiWorker, even if the queues are long and there is available CPU (the event loop isn't entirely blocked) to this node process.
 - `checkTimeout`: How often to check if the event loop is blocked (in ms) (for adding or removing multiWorker children),
 - `maxEventLoopDelay`: How long the event loop has to be delayed before considering it blocked (in ms),  
-- `toDisconnectProcessors`: If false, all multiWorker children will share a single redis connection.  If true, each child will connect and disconnect seperatly.  This will lead to more redis connections, but faster retrival of events.
+- `toDisconnectProcessors`: If false, all multiWorker children will share a single redis connection.  If true, each child will connect and disconnect separately.  This will lead to more redis connections, but faster retrieval of events.
 
 ## Presentation
 This package was featured heavily in [this presentation I gave](https://blog.evantahler.com/background-tasks-in-node-js-a-survey-with-redis-971d3575d9d2#.rzph5ofgy) about background jobs + node.js.  It contains more examples!

@@ -44,7 +44,7 @@ var jobs = {
 // BUILD A WORKER & WORK A JOB //
 // ///////////////////////////////
 
-var Worker = NR.worker
+var Worker = NodeResque.worker
 var worker = new Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
 worker.connect(function () {
   worker.performInline('add', [1, 2], function (error, result) {

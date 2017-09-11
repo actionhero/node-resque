@@ -1,125 +1,117 @@
-// ///////////////////////
-// REQUIRE THE PACKAGE //
-// ///////////////////////
+const path = require('path')
+const NodeResque = require(path.join(__dirname, '..', 'index.js'))
+// In your projects: const NR = require('node-resque');
 
-var path = require('path')
-var NR = require(path.join(__dirname, '..', 'index.js'))
-// In your projects: var NR = require('node-resque');
+async function boot () {
+  // ////////////////////////
+  // SET UP THE CONNECTION //
+  // ////////////////////////
 
-// /////////////////////////
-// SET UP THE CONNECTION //
-// /////////////////////////
+  const connectionDetails = {
+    pkg: 'ioredis',
+    host: '127.0.0.1',
+    password: null,
+    port: 6379,
+    database: 0
+    // namespace: 'resque',
+    // looping: true,
+    // options: {password: 'abc'},
+  }
 
-var connectionDetails = {
-  pkg: 'ioredis',
-  host: '127.0.0.1',
-  password: null,
-  port: 6379,
-  database: 0
-  // namespace: 'resque',
-  // looping: true,
-  // options: {password: 'abc'},
-}
+  // ///////////////////////////
+  // DEFINE YOUR WORKER TASKS //
+  // ///////////////////////////
 
-// ////////////////////////////
-// DEFINE YOUR WORKER TASKS //
-// ////////////////////////////
+  let jobsToComplete = 0
 
-var jobsToComplete = 0
-var jobs = {
-  'add': {
-    plugins: ['jobLock'],
-    pluginOptions: {
-      jobLock: {}
-    },
-    perform: function (a, b, callback) {
-      setTimeout(function () {
+  const jobs = {
+    'add': {
+      plugins: ['JobLock'],
+      pluginOptions: {
+        JobLock: {}
+      },
+      perform: async (a, b) => {
+        await new Promise((resolve) => { setTimeout(resolve, 1000) })
         jobsToComplete--
-        shutdown()
+        tryShutdown()
 
-        var answer = a + b
-        callback(null, answer)
-      }, 1000)
-    }
-  },
-  'subtract': {
-    perform: function (a, b, callback) {
-      jobsToComplete--
-      shutdown()
+        let answer = a + b
+        return answer
+      }
+    },
+    'subtract': {
+      perform: (a, b) => {
+        jobsToComplete--
+        tryShutdown()
 
-      var answer = a - b
-      callback(null, answer)
+        let answer = a - b
+        return answer
+      }
     }
   }
-}
 
-// //////////////////
-// START A WORKER //
-// //////////////////
+  // just a helper for this demo
+  async function tryShutdown () {
+    if (jobsToComplete === 0) {
+      await new Promise((resolve) => { setTimeout(resolve, 500) })
+      await scheduler.end()
+      await worker.end()
+      process.exit()
+    }
+  }
 
-var Worker = NR.worker
-var worker = new Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
-worker.connect(function () {
-  worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
+  // /////////////////
+  // START A WORKER //
+  // /////////////////
+
+  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
+  await worker.connect()
+  await worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
   worker.start()
-})
 
-// /////////////////////
-// START A SCHEDULER //
-// /////////////////////
+  // ////////////////////
+  // START A SCHEDULER //
+  // ////////////////////
 
-var Scheduler = NR.scheduler
-var scheduler = new Scheduler({connection: connectionDetails})
-scheduler.connect(function () {
+  const scheduler = new NodeResque.Scheduler({connection: connectionDetails})
+  await scheduler.connect()
   scheduler.start()
-})
 
-// ///////////////////////
-// REGESTER FOR EVENTS //
-// ///////////////////////
+  // //////////////////////
+  // REGESTER FOR EVENTS //
+  // //////////////////////
 
-worker.on('start', function () { console.log('worker started') })
-worker.on('end', function () { console.log('worker ended') })
-worker.on('cleaning_worker', function (worker, pid) { console.log('cleaning old worker ' + worker) })
-worker.on('poll', function (queue) { console.log('worker polling ' + queue) })
-worker.on('job', function (queue, job) { console.log('working job ' + queue + ' ' + JSON.stringify(job)) })
-worker.on('reEnqueue', function (queue, job, plugin) { console.log('reEnqueue job (' + plugin + ') ' + queue + ' ' + JSON.stringify(job)) })
-worker.on('success', function (queue, job, result) { console.log('job success ' + queue + ' ' + JSON.stringify(job) + ' >> ' + result) })
-worker.on('failure', function (queue, job, failure) { console.log('job failure ' + queue + ' ' + JSON.stringify(job) + ' >> ' + failure) })
-worker.on('error', function (queue, job, error) { console.log('error ' + queue + ' ' + JSON.stringify(job) + ' >> ' + error) })
-worker.on('pause', function () { console.log('worker paused') })
+  worker.on('start', () => { console.log('worker started') })
+  worker.on('end', () => { console.log('worker ended') })
+  worker.on('cleaning_worker', (worker, pid) => { console.log(`cleaning old worker ${worker}`) })
+  worker.on('poll', (queue) => { console.log(`worker polling ${queue}`) })
+  worker.on('job', (queue, job) => { console.log(`working job ${queue} ${JSON.stringify(job)}`) })
+  worker.on('reEnqueue', (queue, job, plugin) => { console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`) })
+  worker.on('success', (queue, job, result) => { console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`) })
+  worker.on('failure', (queue, job, failure) => { console.log(`job failure ${queue} ${JSON.stringify(job)} >> ${failure}`) })
+  worker.on('error', (error, queue, job) => { console.log(`error ${queue} ${JSON.stringify(job)}  >> ${error}`) })
+  worker.on('pause', () => { console.log('worker paused') })
 
-scheduler.on('start', function () { console.log('scheduler started') })
-scheduler.on('end', function () { console.log('scheduler ended') })
-scheduler.on('poll', function () { console.log('scheduler polling') })
-scheduler.on('master', function (state) { console.log('scheduler became master') })
-scheduler.on('error', function (error) { console.log('scheduler error >> ' + error) })
-scheduler.on('working_timestamp', function (timestamp) { console.log('scheduler working timestamp ' + timestamp) })
-scheduler.on('transferred_job', function (timestamp, job) { console.log('scheduler enquing job ' + timestamp + ' >> ' + JSON.stringify(job)) })
+  scheduler.on('start', () => { console.log('scheduler started') })
+  scheduler.on('end', () => { console.log('scheduler ended') })
+  scheduler.on('poll', () => { console.log('scheduler polling') })
+  scheduler.on('master', (state) => { console.log('scheduler became master') })
+  scheduler.on('error', (error) => { console.log(`scheduler error >> ${error}`) })
+  scheduler.on('workingTimestamp', (timestamp) => { console.log(`scheduler working timestamp ${timestamp}`) })
+  scheduler.on('transferredJob', (timestamp, job) => { console.log(`scheduler enquing job ${timestamp} >> ${JSON.stringify(job)}`) })
 
-// //////////////////////
-// CONNECT TO A QUEUE //
-// //////////////////////
+  // //////////////////////
+  // CONNECT TO A QUEUE //
+  // //////////////////////
 
-var Queue = NR.queue
-var queue = new Queue({connection: connectionDetails}, jobs)
-queue.on('error', function (error) { console.log(error) })
-queue.connect(function () {
-  queue.enqueue('math', 'add', [1, 2])
-  queue.enqueue('math', 'add', [1, 2])
-  queue.enqueue('math', 'add', [2, 3])
-  queue.enqueueIn(3000, 'math', 'subtract', [2, 1])
+  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  queue.on('error', function (error) { console.log(error) })
+  await queue.connect()
+  await queue.enqueue('math', 'add', [1, 2])
+  await queue.enqueue('math', 'add', [1, 2])
+  await queue.enqueue('math', 'add', [2, 3])
+  await queue.enqueueIn(3000, 'math', 'subtract', [2, 1])
   jobsToComplete = 4
-})
-
-var shutdown = function () {
-  if (jobsToComplete === 0) {
-    setTimeout(function () {
-      scheduler.end(function () {
-        worker.end(function () {
-          process.exit()
-        })
-      })
-    }, 500)
-  }
 }
+
+boot()

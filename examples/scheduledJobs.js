@@ -40,7 +40,7 @@ var jobs = {
 // START A WORKER //
 // //////////////////
 
-var Worker = NR.worker
+var Worker = NodeResque.worker
 var worker = new Worker({connection: connectionDetails, queues: ['time']}, jobs)
 worker.connect(function () {
   worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
@@ -51,7 +51,7 @@ worker.connect(function () {
 // START A SCHEDULER //
 // /////////////////////
 
-var Scheduler = NR.scheduler
+var Scheduler = NodeResque.scheduler
 var scheduler = new Scheduler({connection: connectionDetails})
 scheduler.connect(function () {
   scheduler.start()
@@ -77,14 +77,14 @@ scheduler.on('end', function () { console.log('scheduler ended') })
 scheduler.on('poll', function () { console.log('scheduler polling') })
 scheduler.on('master', function (state) { console.log('scheduler became master') })
 scheduler.on('error', function (error) { console.log('scheduler error >> ' + error) })
-scheduler.on('working_timestamp', function (timestamp) { console.log('scheduler working timestamp ' + timestamp) })
-scheduler.on('transferred_job', function (timestamp, job) { console.log('scheduler enquing job ' + timestamp + ' >> ' + JSON.stringify(job)) })
+scheduler.on('workingTimestamp', function (timestamp) { console.log('scheduler working timestamp ' + timestamp) })
+scheduler.on('transferredJob', function (timestamp, job) { console.log('scheduler enquing job ' + timestamp + ' >> ' + JSON.stringify(job)) })
 
 // ///////////////
 // DEFINE JOBS //
 // ///////////////
 
-var Queue = NR.queue
+var Queue = NodeResque.queue
 var queue = new Queue({connection: connectionDetails}, jobs)
 queue.on('error', function (error) { console.log(error) })
 queue.connect(function () {
