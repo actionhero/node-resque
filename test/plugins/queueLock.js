@@ -1,73 +1,48 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should') // eslint-disable-line
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should') // eslint-disable-line
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
-describe('plugins', function () {
-  var queue
-  var jobDelay = 100
+let queue
 
-  var jobs = {
-    'slowAdd': {
-      plugins: ['jobLock'],
-      pluginOptions: { jobLock: {} },
-      perform: function (a, b, callback) {
-        var answer = a + b
-        setTimeout(function () {
-          callback(null, answer)
-        }, jobDelay)
-      }
-    },
-    'uniqueJob': {
-      plugins: ['queueLock', 'delayQueueLock'],
-      pluginOptions: { queueLock: {}, delayQueueLock: {} },
-      perform: function (a, b, callback) {
-        var answer = a + b
-        callback(null, answer)
-      }
+const jobs = {
+  'uniqueJob': {
+    plugins: ['QueueLock', 'DelayQueueLock'],
+    pluginOptions: { queueLock: {}, delayQueueLock: {} },
+    perform: (a, b) => {
+      return (a + b)
     }
   }
+}
 
-  before(function (done) {
-    specHelper.connect(function () {
-      specHelper.cleanup(function () {
-        var Queue = specHelper.NR.queue
-        queue = new Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
-        queue.connect(done)
-      })
-    })
-  })
-
-  afterEach(function (done) {
-    specHelper.cleanup(done)
-  })
-
-  beforeEach(function (done) {
-    specHelper.cleanup(done)
-  })
-
-  describe('queueLock', function () {
-    it('will not enque a job with the same args if it is already in the queue', function (done) {
-      queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2], function () {
-        queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2], function () {
-          queue.length(specHelper.queue, function (err, len) {
-            should.not.exist(err)
-            len.should.equal(1)
-            done()
-          })
-        })
-      })
+describe('plugins', () => {
+  describe('queueLock', () => {
+    before(async () => {
+      await specHelper.connect()
+      await specHelper.cleanup()
+      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+      await queue.connect()
     })
 
-    it('will enque a job with the different args', function (done) {
-      queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2], function () {
-        queue.enqueue(specHelper.queue, 'uniqueJob', [3, 4], function () {
-          queue.length(specHelper.queue, function (err, len) {
-            should.not.exist(err)
-            len.should.equal(2)
-            done()
-          })
-        })
-      })
+    afterEach(async () => { await specHelper.cleanup() })
+    beforeEach(async () => { await specHelper.cleanup() })
+
+    it('will not enque a job with the same args if it is already in the queue', async () => {
+      let tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+      let tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(1)
+      tryOne.should.equal(true)
+      tryTwo.should.equal(false)
+    })
+
+    it('will enque a job with the different args', async () => {
+      let tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+      let tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [3, 4])
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(2)
+      tryOne.should.equal(true)
+      tryTwo.should.equal(true)
     })
   })
 })
