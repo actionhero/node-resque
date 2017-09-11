@@ -1,59 +1,48 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should')
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should') // eslint-disable-line
+const os = require('os')
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
-describe('worker', function () {
-  var os = require('os')
-  var worker
-  var queue
-
-  var jobs = {
-    'add': {
-      perform: function (a, b, callback) {
-        var answer = a + b
-        callback(null, answer)
-      }
-    },
-    'badAdd': {
-      perform: function (a, b, callback) {
-        callback(new Error('Blue Smoke'))
-      }
-    },
-    'messWithData': {
-      perform: function (a, callback) {
-        a.data = 'new thing'
-        callback(null, a)
-      }
-    },
-    'doubleCaller': {
-      perform: function (callback) {
-        callback(null, 'a')
-        setTimeout(function () { callback(null, 'b') }, 500)
-        setTimeout(function () { callback(null, 'c') }, 1000)
-      }
-    },
-    'quickDefine': function (callback) {
-      setTimeout(callback.bind(null, null, 'ok'))
+let jobs = {
+  'add': {
+    perform: (a, b) => {
+      var answer = a + b
+      return answer
     }
-  }
+  },
+  'badAdd': {
+    perform: () => {
+      throw new Error('Blue Smoke')
+    }
+  },
+  'messWithData': {
+    perform: (a) => {
+      a.data = 'new thing'
+      return a
+    }
+  },
+  'async': {
+    perform: async () => {
+      await new Promise((resolve) => { setTimeout(resolve, 100) })
+      return 'yay'
+    }
+  },
+  'quickDefine': async () => { return 'ok' }
+}
 
-  it('can connect', function (done) {
-    var Worker = specHelper.NR.worker
-    worker = new Worker({connection: specHelper.connectionDetails, queues: specHelper.queue})
-    worker.connect(function () {
-      should.exist(worker)
-      worker.end()
-      done()
-    })
+let worker
+let queue
+
+describe('worker', () => {
+  it('can connect', async () => {
+    let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, queues: specHelper.queue})
+    await worker.connect()
+    await worker.end()
   })
 
-  it('can provide an error if connection failed', function (done) {
-    // Only run this test if this is using real redis
-    if (process.env.FAKEREDIS === 'true' || process.env.FAKEREDIS === true) {
-      return done()
-    }
-
-    var connectionDetails = {
+  it('can provide an error if connection failed', async () => {
+    let connectionDetails = {
       pkg: specHelper.connectionDetails.pkg,
       host: 'wronghostname',
       password: specHelper.connectionDetails.password,
@@ -62,236 +51,182 @@ describe('worker', function () {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    var Worker = specHelper.NR.worker
-    worker = new Worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue})
-    worker.connect(function () {
-      throw new Error('should not get here')
-    })
+    let worker = new NodeResque.Worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue})
 
-    worker.on('error', function (q, job, error) {
-      error.message.should.match(/getaddrinfo ENOTFOUND/)
-      worker.end(done)
+    await new Promise((resolve) => {
+      worker.connect()
+
+      worker.on('error', (error) => {
+        error.message.should.match(/getaddrinfo ENOTFOUND/)
+        worker.end()
+        resolve()
+      })
     })
   })
 
-  describe('performInline', function () {
-    before(function (done) {
-      var Worker = specHelper.NR.worker
-      worker = new Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      done()
+  describe('performInline', () => {
+    before(() => {
+      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
     })
 
-    it('can run a successful job', function (done) {
-      worker.performInline('add', [1, 2], function (error, result) {
-        should.not.exist(error)
-        result.should.equal(3)
-        done()
-      })
+    it('can run a successful job', async () => {
+      let result = await worker.performInline('add', [1, 2])
+      result.should.equal(3)
     })
 
-    it('can run a failing job', function (done) {
-      worker.performInline('badAdd', [1, 2], function (error, result) {
+    it('can run a successful async job', async () => {
+      let result = await worker.performInline('async')
+      result.should.equal('yay')
+    })
+
+    it('can run a failing job', async () => {
+      try {
+        await worker.performInline('badAdd', [1, 2])
+        throw new Error('should not get here')
+      } catch (error) {
         String(error).should.equal('Error: Blue Smoke')
-        should.not.exist(result)
-        done()
-      })
-    })
-
-    it('handles double callbacks properly', function (done) {
-      var count = 0
-      worker.performInline('doubleCaller', [], function (error, result) {
-        if (count === 0) {
-          should.not.exist(error)
-        }
-
-        if (count === 1) {
-          String(error).should.equal('Error: refusing to continue with job, multiple callbacks detected')
-          should.not.exist(result)
-        }
-
-        if (count === 2) {
-          String(error).should.equal('Error: refusing to continue with job, multiple callbacks detected')
-          should.not.exist(result)
-          done()
-        }
-        count++
-      })
+      }
     })
   })
 
-  describe('[with connection]', function () {
-    before(function (done) {
-      specHelper.connect(function () {
-        var Queue = specHelper.NR.queue
-        queue = new Queue({connection: specHelper.connectionDetails})
-        queue.connect(function () {
-          done()
-        })
-      })
+  describe('[with connection]', () => {
+    before(async () => {
+      await specHelper.connect()
+      queue = new NodeResque.Queue({connection: specHelper.connectionDetails})
+      await queue.connect()
     })
 
-    after(function (done) {
-      specHelper.cleanup(function () {
-        done()
-      })
+    after(async () => { await specHelper.cleanup() })
+
+    it('can boot and stop', async () => {
+      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      await worker.connect()
+      await worker.start()
+      await worker.end()
     })
 
-    it('can boot and stop', function (done) {
-      this.timeout(specHelper.timeout * 3)
-      var Worker = specHelper.NR.worker
-      worker = new Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      worker.connect(function () {
-        worker.start()
-        worker.end(function () {
-          done()
-        })
-      })
-    })
+    describe('crashing workers', () => {
+      it('can clear previously crashed workers from the same host', async () => {
+        let name1 = os.hostname() + ':' + '0' // fake pid
+        let name2 = os.hostname() + ':' + process.pid // real pid
+        let worker1 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs)
 
-    describe('crashing workers', function () {
-      it('can clear previously crashed workers from the same host', function (done) {
-        var name1 = os.hostname() + ':' + '0' // fake pid
-        var name2 = os.hostname() + ':' + process.pid // real pid
-        var Worker = specHelper.NR.worker
-        var worker1 = new Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs)
-        worker1.connect(function () {
-          worker1.init(function () {
-            worker1.running = false
-            setTimeout(function () {
-              var worker2 = new Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs)
-              worker2.connect(function () {
-                worker2.on('cleaning_worker', function (worker, pid) {
-                  worker.should.equal(name1 + ':*')
-                  pid.should.equal(0)
-                  done()
-                })
-                worker2.workerCleanup()
-              })
-            }, 500)
+        await worker1.connect()
+        await worker1.init()
+        worker1.running = false
+
+        await new Promise((resolve) => { setTimeout(resolve, 500) })
+
+        let worker2 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs)
+        await worker2.connect()
+
+        await new Promise((resolve) => {
+          worker2.workerCleanup()
+
+          worker2.on('cleaning_worker', (worker, pid) => {
+            worker.should.equal(name1 + ':*')
+            pid.should.equal(0)
+            return resolve()
           })
         })
       })
     })
 
     describe('integration', function () {
-      beforeEach(function (done) {
-        var Worker = specHelper.NR.worker
-        worker = new Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-        worker.connect(done)
+      beforeEach(async () => {
+        worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+        await worker.connect()
       })
 
-      afterEach(function (done) {
-        worker.end(done)
-      })
+      afterEach(async () => { await worker.end() })
 
-      it('will mark a job as failed', function (done) {
-        worker.on('failure', function (q, job, failire) {
-          q.should.equal(specHelper.queue)
-          job['class'].should.equal('badAdd')
-          failire.message.should.equal('Blue Smoke')
+      it('will mark a job as failed', async () => {
+        await queue.enqueue(specHelper.queue, 'badAdd', [1, 2])
 
-          worker.removeAllListeners('failire')
-          done()
-        })
+        await new Promise(async (resolve) => {
+          worker.start()
 
-        queue.enqueue(specHelper.queue, 'badAdd', [1, 2])
-        worker.start()
-      })
+          worker.on('failure', (q, job, failire) => {
+            q.should.equal(specHelper.queue)
+            job['class'].should.equal('badAdd')
+            failire.message.should.equal('Blue Smoke')
 
-      it('can work a job and return succesful things', function (done) {
-        worker.on('success', function (q, job, result) {
-          q.should.equal(specHelper.queue)
-          job['class'].should.equal('add')
-          result.should.equal(3)
-          worker.result.should.equal(result)
-
-          worker.removeAllListeners('success')
-          done()
-        })
-
-        queue.enqueue(specHelper.queue, 'add', [1, 2])
-        worker.start()
-      })
-
-      it('job arguments are immutable', function (done) {
-        worker.on('success', function (q, job, result) {
-          result.a.should.equal('starting value')
-          worker.result.should.equal(result)
-
-          worker.removeAllListeners('success')
-          done()
-        })
-
-        queue.enqueue(specHelper.queue, 'messWithData', {a: 'starting value'})
-        worker.start()
-      })
-
-      it('can accept jobs that are simple functions', function (done) {
-        worker.on('success', function (q, job, result) {
-          result.should.equal('ok')
-
-          worker.removeAllListeners('success')
-          done()
-        })
-
-        queue.enqueue(specHelper.queue, 'quickDefine', [])
-        worker.start()
-      })
-
-      it('will not work jobs that are not defined', function (done) {
-        worker.on('failure', function (q, job, failure) {
-          q.should.equal(specHelper.queue)
-          String(failure).should.equal('Error: No job defined for class "somethingFake"')
-
-          worker.removeAllListeners('failure')
-          done()
-        })
-
-        queue.enqueue(specHelper.queue, 'somethingFake', [])
-        worker.start()
-      })
-
-      it('will place failed jobs in the failed queue', function (done) {
-        specHelper.redis.rpop(specHelper.namespace + ':' + 'failed', function (err, data) {
-          should.not.exist(err)
-          data = JSON.parse(data)
-          data.queue.should.equal(specHelper.queue)
-          data.exception.should.equal('Error')
-          data.error.should.equal('No job defined for class "somethingFake"')
-          done()
+            worker.removeAllListeners('failire')
+            return resolve()
+          })
         })
       })
 
-      it('will not double-work with a baddly defined job', function (done) {
-        var callbackCounts = 0
-        var expected = 3
-        var errorCounter = 0
-        var successCounter = 0
+      it('can work a job and return succesful things', async () => {
+        await queue.enqueue(specHelper.queue, 'add', [1, 2])
 
-        worker.on('failure', function (q, job, err) {
-          String(err).should.equal('Error: refusing to continue with job, multiple callbacks detected')
-          callbackCounts++
-          errorCounter++
-          if (callbackCounts === expected) { complete() }
+        await new Promise(async (resolve) => {
+          worker.start()
+
+          worker.on('success', function (q, job, result) {
+            q.should.equal(specHelper.queue)
+            job['class'].should.equal('add')
+            result.should.equal(3)
+            worker.result.should.equal(result)
+
+            worker.removeAllListeners('success')
+            return resolve()
+          })
         })
+      })
 
-        worker.on('success', function (q, job, result) {
-          result.should.equal('a')
-          successCounter++
-          callbackCounts++
-          if (callbackCounts === expected) { complete() }
+      it('job arguments are immutable', async () => {
+        await queue.enqueue(specHelper.queue, 'messWithData', {a: 'starting value'})
+
+        await new Promise(async (resolve) => {
+          worker.start()
+
+          worker.on('success', function (q, job, result) {
+            result.a.should.equal('starting value')
+            worker.result.should.equal(result)
+
+            worker.removeAllListeners('success')
+            return resolve()
+          })
         })
+      })
 
-        var complete = function () {
-          errorCounter.should.equal(2)
-          successCounter.should.equal(1)
-          worker.removeAllListeners('success')
-          worker.removeAllListeners('failure')
-          done()
-        }
+      it('can accept jobs that are simple functions', async () => {
+        await queue.enqueue(specHelper.queue, 'quickDefine')
 
-        queue.enqueue(specHelper.queue, 'doubleCaller', [])
-        worker.start()
+        await new Promise(async (resolve) => {
+          worker.start()
+
+          worker.on('success', function (q, job, result) {
+            result.should.equal('ok')
+            worker.removeAllListeners('success')
+            return resolve()
+          })
+        })
+      })
+
+      it('will not work jobs that are not defined', async () => {
+        await queue.enqueue(specHelper.queue, 'somethingFake')
+
+        await new Promise(async (resolve) => {
+          worker.start()
+
+          worker.on('failure', function (q, job, failure) {
+            q.should.equal(specHelper.queue)
+            String(failure).should.equal('Error: No job defined for class "somethingFake"')
+
+            worker.removeAllListeners('failure')
+            return resolve()
+          })
+        })
+      })
+
+      it('will place failed jobs in the failed queue', async () => {
+        let data = await specHelper.redis.rpop(specHelper.namespace + ':' + 'failed')
+        data = JSON.parse(data)
+        data.queue.should.equal(specHelper.queue)
+        data.exception.should.equal('Error')
+        data.error.should.equal('No job defined for class "somethingFake"')
       })
     })
   })

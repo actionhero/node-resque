@@ -1,29 +1,18 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should') // eslint-disable-line
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should') // eslint-disable-line
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
-describe('connection', function () {
-  before(function (done) {
-    specHelper.connect(function () {
-      specHelper.cleanup(function () {
-        done()
-      })
-    })
+describe('connection', () => {
+  before(async () => {
+    await specHelper.connect()
+    await specHelper.cleanup()
   })
 
-  after(function (done) {
-    specHelper.cleanup(function () {
-      done()
-    })
-  })
+  after(async () => { await specHelper.cleanup() })
 
-  it('can provide an error if connection failed', function (done) {
-    // Only run this test if this is using real redis
-    if (process.env.FAKEREDIS === 'true' || process.env.FAKEREDIS === true) {
-      return done()
-    }
-
-    var connectionDetails = {
+  it('can provide an error if connection failed', async () => {
+    const connectionDetails = {
       pkg: specHelper.connectionDetails.pkg,
       host: 'wronghostname',
       password: specHelper.connectionDetails.password,
@@ -32,32 +21,28 @@ describe('connection', function () {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    var Connection = specHelper.NR.connection
-    var connection = new Connection(connectionDetails)
-    connection.connect(function () { throw new Error('should not get here') })
+    let connection = new NodeResque.Connection(connectionDetails)
 
-    connection.on('error', function (error) {
-      error.message.should.match(/getaddrinfo ENOTFOUND/)
-      connection.end()
-      done()
+    await new Promise((resolve) => {
+      connection.connect()
+
+      connection.on('error', (error) => {
+        error.message.should.match(/getaddrinfo ENOTFOUND/)
+        connection.end()
+        resolve()
+      })
     })
   })
 
-  it('should stat with no redis keys in the namespace', function (done) {
-    specHelper.redis.keys(specHelper.namespace + '*', function (err, keys) {
-      should.not.exist(err)
-      keys.length.should.equal(0)
-      done()
-    })
+  it('should stat with no redis keys in the namespace', async () => {
+    let keys = await specHelper.redis.keys(specHelper.namespace + '*')
+    keys.length.should.equal(0)
   })
 
-  it('will properly build namespace strings', function (done) {
-    var Connection = specHelper.NR.connection
-    var connection = new Connection(specHelper.cleanConnectionDetails())
-    connection.connect(function () {
-      connection.key('thing').should.equal(specHelper.namespace + ':thing')
-      connection.end()
-      done()
-    })
+  it('will properly build namespace strings', async () => {
+    let connection = new NodeResque.Connection(specHelper.cleanConnectionDetails())
+    await connection.connect()
+    connection.key('thing').should.equal(specHelper.namespace + ':thing')
+    connection.end()
   })
 })

@@ -1,29 +1,22 @@
 // Simple plugin to prevent all jobs
-var CustomPlugin = function (worker, func, queue, job, args, options) {
-  var self = this
-  self.name = 'CustomPlugin'
-  self.worker = worker
-  self.queue = queue
-  self.func = func
-  self.job = job
-  self.args = args
-  self.options = options
-}
+const NodeResque = require('../index.js')
 
-CustomPlugin.prototype.before_enqueue = function (callback) {
-  callback(null, false)
-}
+class CustomPlugin extends NodeResque.Plugin {
+  beforeEnqueue () {
+    return false
+  }
 
-CustomPlugin.prototype.after_enqueue = function (callback) {
-  callback(null, false)
-}
+  afterEnqueue () {
+    return false
+  }
 
-CustomPlugin.prototype.before_perform = function (callback) {
-  callback(null, false)
-}
+  beforePerform () {
+    return false
+  }
 
-CustomPlugin.prototype.after_perform = function (callback) {
-  callback(null, false)
+  afterPerform () {
+    return false
+  }
 }
 
 module.exports = CustomPlugin

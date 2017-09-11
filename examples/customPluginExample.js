@@ -1,16 +1,12 @@
-// ///////////////////////
-// REQUIRE THE PACKAGE //
-// ///////////////////////
+const path = require('path')
+const NodeResque = require(path.join(__dirname, '..', 'index.js'))
+// In your projects: var NodeResque = require('node-resque');
 
-var path = require('path')
-var NR = require(path.join(__dirname, '..', 'index.js'))
-// In your projects: var NR = require('node-resque');
-
-// /////////////////////////
+// ////////////////////////
 // SET UP THE CONNECTION //
-// /////////////////////////
+// ////////////////////////
 
-var connectionDetails = {
+const connectionDetails = {
   pkg: 'ioredis',
   host: '127.0.0.1',
   password: null,
@@ -25,89 +21,75 @@ var connectionDetails = {
 // BUILD THE PLUGIN //
 // ////////////////////
 
-var myPlugin = function (worker, func, queue, job, args, options) {
-  var self = this
-  self.name = 'myPlugin'
-  self.worker = worker
-  self.queue = queue
-  self.func = func
-  self.job = job
-  self.args = args
-  self.options = options
+class MyPlugin extends NodeResque.Plugin {
+  beforePerform () {
+    console.log(this.options.messagePrefix + ' | ' + JSON.stringify(this.args))
+    return true
+  }
 }
 
-// //////////////////
-// PLUGIN METHODS //
-// //////////////////
+async function boot () {
+  // ///////////////////////////
+  // DEFINE YOUR WORKER TASKS //
+  // ///////////////////////////
 
-// Learn all the callbacks you can use from the Readme.
-myPlugin.prototype.before_perform = function (callback) {
-  console.log(this.options.messagePrefix + ' | ' + JSON.stringify(this.args))
-  callback(null, true)
-}
+  let jobsToComplete = 0
 
-// ////////////////////////////
-// DEFINE YOUR WORKER TASKS //
-// ////////////////////////////
-
-var jobsToComplete = 0
-var jobs = {
-  jobby: {
-    plugins: [myPlugin],
-    pluginOptions: {
-      myPlugin: {messagePrefix: '[ custom logger plugin ]'}
-    },
-    perform: function (a, b, callback) {
-      jobsToComplete--
-      shutdown()
-      callback(null)
+  const jobs = {
+    jobby: {
+      plugins: [MyPlugin],
+      pluginOptions: {
+        MyPlugin: { messagePrefix: '[🤡🤡🤡]' }
+      },
+      perform: (a, b) => {
+        jobsToComplete--
+        tryShutdown()
+      }
     }
   }
-}
 
-// //////////////////
-// START A WORKER //
-// //////////////////
-var Worker = NR.worker
-var worker = new Worker({connection: connectionDetails, queues: ['default']}, jobs)
-worker.connect(function () {
-  worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
-  worker.start()
-})
-
-// ///////////////////////
-// REGESTER FOR EVENTS //
-// ///////////////////////
-
-worker.on('start', function () { console.log('worker started') })
-worker.on('end', function () { console.log('worker ended') })
-worker.on('cleaning_worker', function (worker, pid) { console.log('cleaning old worker ' + worker) })
-worker.on('poll', function (queue) { console.log('worker polling ' + queue) })
-worker.on('job', function (queue, job) { console.log('working job ' + queue + ' ' + JSON.stringify(job)) })
-worker.on('reEnqueue', function (queue, job, plugin) { console.log('reEnqueue job (' + plugin + ') ' + queue + ' ' + JSON.stringify(job)) })
-worker.on('success', function (queue, job, result) { console.log('job success ' + queue + ' ' + JSON.stringify(job) + ' >> ' + result) })
-worker.on('failure', function (queue, job, failure) { console.log('job failure ' + queue + ' ' + JSON.stringify(job) + ' >> ' + failure) })
-worker.on('error', function (queue, job, error) { console.log('error ' + queue + ' ' + JSON.stringify(job) + ' >> ' + error) })
-worker.on('pause', function () { console.log('worker paused') })
-
-// //////////////////////
-// CONNECT TO A QUEUE //
-// //////////////////////
-
-var Queue = NR.queue
-var queue = new Queue({connection: connectionDetails}, jobs)
-queue.on('error', function (error) { console.log(error) })
-queue.connect(function () {
-  queue.enqueue('default', 'jobby', [1, 2])
-  jobsToComplete = 1
-})
-
-var shutdown = function () {
-  if (jobsToComplete === 0) {
-    setTimeout(function () {
-      worker.end(function () {
-        process.exit()
-      })
-    }, 500)
+  // just a helper for this demo
+  async function tryShutdown () {
+    if (jobsToComplete === 0) {
+      await new Promise((resolve) => { setTimeout(resolve, 500) })
+      await worker.end()
+      process.exit()
+    }
   }
+
+  // /////////////////
+  // START A WORKER //
+  // /////////////////
+
+  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['default']}, jobs)
+  await worker.connect()
+  await worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
+  worker.start()
+
+  // //////////////////////
+  // REGESTER FOR EVENTS //
+  // //////////////////////
+
+  worker.on('start', () => { console.log('worker started') })
+  worker.on('end', () => { console.log('worker ended') })
+  worker.on('cleaning_worker', (worker, pid) => { console.log(`cleaning old worker ${worker}`) })
+  worker.on('poll', (queue) => { console.log(`worker polling ${queue}`) })
+  worker.on('job', (queue, job) => { console.log(`working job ${queue} ${JSON.stringify(job)}`) })
+  worker.on('reEnqueue', (queue, job, plugin) => { console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`) })
+  worker.on('success', (queue, job, result) => { console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`) })
+  worker.on('failure', (queue, job, failure) => { console.log(`job failure ${queue} ${JSON.stringify(job)} >> ${failure}`) })
+  worker.on('error', (error, queue, job) => { console.log(`error ${queue} ${JSON.stringify(job)}  >> ${error}`) })
+  worker.on('pause', () => { console.log('worker paused') })
+
+  // /////////////////////
+  // CONNECT TO A QUEUE //
+  // /////////////////////
+
+  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  queue.on('error', function (error) { console.log(error) })
+  await queue.connect()
+  await queue.enqueue('default', 'jobby', [1, 2])
+  jobsToComplete = 1
 }
+
+boot()

@@ -1,138 +1,100 @@
-var path = require('path')
-var specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-var should = require('should') // eslint-disable-line
+const path = require('path')
+const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
+const should = require('should') // eslint-disable-line
+const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
-describe('plugins', function () {
-  describe('noop', function () {
-    var queue
-    var scheduler
-    var loggedErrors = []
+let queue
+let scheduler
+let loggedErrors = []
 
-    var jobs = {
-      'brokenJob': {
-        plugins: ['noop'],
-        pluginOptions: {'noop': {
-          logger: function (error) {
-            loggedErrors.push(error)
-          }
-        }},
-        perform: function (a, b, callback) {
-          callback(new Error('BUSTED'), null)
-        }
-      },
-      'happyJob': {
-        plugins: ['noop'],
-        pluginOptions: {'noop': {
-          logger: function (error) {
-            loggedErrors.push(error)
-          }
-        }},
-        perform: function (a, b, callback) {
-          callback(null, null)
-        }
-      }
+const jobs = {
+  'brokenJob': {
+    plugins: ['Noop'],
+    pluginOptions: {'Noop': {
+      logger: (error) => { loggedErrors.push(error) }
+    }},
+    perform: () => {
+      throw new Error('BUSTED')
     }
+  },
+  'happyJob': {
+    plugins: ['Noop'],
+    pluginOptions: {'Noop': {
+      logger: (error) => { loggedErrors.push(error) }
+    }},
+    perform: function () {
+      // nothing
+    }
+  }
+}
 
-    before(function (done) {
-      specHelper.connect(function () {
-        specHelper.cleanup(function () {
-          var Queue = specHelper.NR.queue
-          var Scheduler = specHelper.NR.scheduler
+describe('plugins', () => {
+  describe('noop', () => {
+    before(async () => {
+      await specHelper.connect()
+      await specHelper.cleanup()
+      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+      scheduler = new NodeResque.Scheduler({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout})
+      await scheduler.connect()
+      scheduler.start()
+      await queue.connect()
+    })
 
-          queue = new Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
-          scheduler = new Scheduler({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout})
-          scheduler.connect(function () {
-            scheduler.start()
-            queue.connect(done)
-          })
+    beforeEach(() => { loggedErrors = [] })
+    after(async () => { await scheduler.end() })
+    afterEach(async () => { await specHelper.cleanup() })
+
+    it('will work fine with non-crashing jobs', async () => {
+      await queue.enqueue(specHelper.queue, 'happyJob', [1, 2])
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(1)
+
+      let worker = new NodeResque.Worker({
+        connection: specHelper.cleanConnectionDetails(),
+        timeout: specHelper.timeout,
+        queues: specHelper.queue
+      }, jobs)
+
+      await new Promise(async (resolve) => {
+        await worker.connect()
+
+        worker.on('success', async () => {
+          loggedErrors.length.should.equal(0)
+          let length = await specHelper.redis.llen('resque_test:failed')
+          length.should.equal(0)
+          await worker.end()
+          resolve()
         })
+
+        await worker.connect()
+        worker.on('failure', () => { throw new Error('should never get here') })
+        worker.start()
       })
     })
 
-    beforeEach(function (done) {
-      loggedErrors = []
-      done()
-    })
+    it('will prevent any failed jobs from ending in the failed queue', async () => {
+      await queue.enqueue(specHelper.queue, 'brokenJob', [1, 2])
+      let length = await queue.length(specHelper.queue)
+      length.should.equal(1)
 
-    after(function (done) {
-      scheduler.end(done)
-    })
+      let worker = new NodeResque.Worker({
+        connection: specHelper.cleanConnectionDetails(),
+        timeout: specHelper.timeout,
+        queues: specHelper.queue
+      }, jobs)
 
-    afterEach(function (done) {
-      specHelper.cleanup(done)
-    })
-
-    it('will work fine with non-crashing jobs', function (done) {
-      queue.enqueue(specHelper.queue, 'happyJob', [1, 2], function () {
-        queue.length(specHelper.queue, function (err, length) {
-          should.not.exist(err)
-          length.should.equal(1)
-
-          var Worker = specHelper.NR.worker
-          var worker = new Worker({
-            connection: specHelper.cleanConnectionDetails(),
-            timeout: specHelper.timeout,
-            queues: specHelper.queue
-          }, jobs)
-
-          var complete = function () {
-            specHelper.redis.llen('resque_test:failed', function (err, length) {
-              should.not.exist(err)
-              length.should.equal(0)
-              worker.end(done)
-            })
-          }
-
-          worker.connect(function () {
-            worker.on('success', function () {
-              loggedErrors.length.should.equal(0)
-              complete()
-            })
-
-            worker.on('failure', function () {
-              throw new Error('should never get here')
-            })
-
-            worker.start()
-          })
+      await new Promise(async (resolve) => {
+        worker.on('success', async () => {
+          loggedErrors.length.should.equal(1)
+          let length = await specHelper.redis.llen('resque_test:failed')
+          length.should.equal(0)
+          await worker.end()
+          resolve()
         })
-      })
-    })
 
-    it('will prevent any failed jobs from ending in the failed queue', function (done) {
-      queue.enqueue(specHelper.queue, 'brokenJob', [1, 2], function () {
-        queue.length(specHelper.queue, function (err, length) {
-          should.not.exist(err)
-          length.should.equal(1)
-
-          var Worker = specHelper.NR.worker
-          var worker = new Worker({
-            connection: specHelper.cleanConnectionDetails(),
-            timeout: specHelper.timeout,
-            queues: specHelper.queue
-          }, jobs)
-
-          var complete = function () {
-            specHelper.redis.llen('resque_test:failed', function (err, length) {
-              should.not.exist(err)
-              length.should.equal(0)
-              worker.end(done)
-            })
-          }
-
-          worker.connect(function () {
-            worker.on('success', function () {
-              loggedErrors.length.should.equal(1)
-              complete()
-            })
-
-            worker.on('failure', function () {
-              throw new Error('should never get here')
-            })
-
-            worker.start()
-          })
-        })
+        await worker.connect()
+        worker.on('failure', () => { throw new Error('should never get here') })
+        worker.start()
       })
     })
   })
