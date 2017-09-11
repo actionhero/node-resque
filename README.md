@@ -7,7 +7,7 @@
 [![Build Status](https://secure.travis-ci.org/taskrabbit/node-resque.png?branch=master)](http://travis-ci.org/taskrabbit/node-resque)
 
 ## Version Notes
-Version 6+ of Node Resque use async/await.  There is no upgrade path from previous versions.  Node v8.0.0+ is required.
+* ‼️ Version 6+ of Node Resque uses async/await.  There is no upgrade path from previous versions.  Node v8.0.0+ is required.
 
 ## Usage
 
@@ -218,15 +218,25 @@ await queue.connect()
 Additional methods provided on the `queue` object:
 
 - **let stats = await queue.stats()**
+  - stats will contain details about all the queues in your redis, and how many jobs are in each
 - **let arrayOfQueues = await queue.queues()**
+  - a list of the queues
 - **let didDelete = await queue.delQueue()**
+  - delete a queue, and all jobs in that queue.  There is no undo.
 - **let jobsInQueue = await queue.queued(q, start, stop)**
-- **let nuumberOfJobeInQueue = await queue.length(q)**
+  - list all the jobs (with their payloads) in a queue between start index and stop index.
+- **let numberOfJobsInQueue = await queue.length(q)**
+  - an integer.
 - **let listOfLocks = await queue.locks()**
+  - types of locks include queue and worker locks, as created by the plugins below
 - **let numberOfLocksDeleted = await queue.delLock(lockName)**
+  - an integer.
 - **let numberOfJobsDeleted = await queue.del(q, func, args, count)**
+  - jobs are deleted by those matching a `func` and agument collection within a given queue.  You might match none, or you might match many.
 - **let timestampsOfTheDeletedJobs = await queue.delDelayed(q, func, args)**
+  - same as the above, but for delayed jobs at any timestamp(s)
 - **let timestampsForJob = await queue.scheduledAt(q, func, args)**
+  - learn the timestamps at which a job is scheduled to be run.
 - **await queue.end()**
 
 ## Delayed Status
