@@ -124,12 +124,24 @@ describe('worker', () => {
           worker2.workerCleanup()
 
           worker2.on('cleaning_worker', (worker, pid) => {
-            worker.should.equal(name1 + ':*')
+            worker.should.match(new RegExp(name1))
             pid.should.equal(0)
             return resolve()
           })
         })
       })
+    })
+
+    it('will determine the proper queue names', async () => {
+      let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs)
+      await worker.connect()
+      worker.queues.should.deepEqual([])
+      await queue.enqueue(specHelper.queue, 'badAdd', [1, 2])
+      await worker.checkQueues()
+      worker.queues.should.deepEqual([specHelper.queue])
+
+      await queue.del(specHelper.queue)
+      await worker.end()
     })
 
     describe('integration', function () {
