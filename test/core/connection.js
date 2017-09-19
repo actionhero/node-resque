@@ -45,4 +45,13 @@ describe('connection', () => {
     connection.key('thing').should.equal(specHelper.namespace + ':thing')
     connection.end()
   })
+
+  it('removes empty namespace from generated key', async () => {
+    let connectionDetails = specHelper.cleanConnectionDetails()
+    connectionDetails['namespace'] = ''
+    let connection = new NodeResque.Connection(connectionDetails)
+    await connection.connect()
+    connection.key('thing').should.equal('thing')
+    connection.end()
+  })
 })
