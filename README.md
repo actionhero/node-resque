@@ -7,7 +7,7 @@
 [![Build Status](https://secure.travis-ci.org/taskrabbit/node-resque.png?branch=master)](http://travis-ci.org/taskrabbit/node-resque)
 
 ## Version Notes
-* ‼️ Version 6+ of Node Resque uses async/await.  There is no upgrade path from previous versions.  Node v8.0.0+ is required.
+* ‼️ Version 5+ of Node Resque uses async/await.  There is no upgrade path from previous versions.  Node v8.0.0+ is required.
 
 ## Usage
 
