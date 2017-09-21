@@ -47,32 +47,16 @@ async function boot () {
         JobLock: {}
       },
       perform: async (a, b) => {
-        await new Promise((resolve) => { setTimeout(resolve, 1000) })
-        jobsToComplete--
-        tryShutdown()
-
         let answer = a + b
+        await new Promise((resolve) => { setTimeout(resolve, 1000) })
         return answer
       }
     },
     'subtract': {
       perform: (a, b) => {
-        jobsToComplete--
-        tryShutdown()
-
         let answer = a - b
         return answer
       }
-    }
-  }
-
-  // just a helper for this demo
-  async function tryShutdown () {
-    if (jobsToComplete === 0) {
-      await new Promise((resolve) => { setTimeout(resolve, 500) })
-      await scheduler.end()
-      await worker.end()
-      process.exit()
     }
   }
 
@@ -127,7 +111,6 @@ async function boot () {
   await queue.enqueue('math', 'add', [1, 2])
   await queue.enqueue('math', 'add', [2, 3])
   await queue.enqueueIn(3000, 'math', 'subtract', [2, 1])
-  jobsToComplete = 4
 }
 
 boot()
@@ -217,33 +200,54 @@ await queue.connect()
 
 Additional methods provided on the `queue` object:
 
-- **let stats = await queue.stats()**
-  - stats will contain details about all the queues in your redis, and how many jobs are in each
-- **let arrayOfQueues = await queue.queues()**
-  - a list of the queues
-- **let didDelete = await queue.delQueue()**
-  - delete a queue, and all jobs in that queue.  There is no undo.
-- **let jobsInQueue = await queue.queued(q, start, stop)**
+**`let stats = await queue.stats()`**
+  - stats will be a hash containing details about all the queues in your redis, and how many jobs are in each
+
+**`let queues = await queue.queues()`**
+  - queues is an Array with the names of all your queues
+
+**`let didDelete = await queue.delQueue()`**
+  - delete a queue, and all jobs in that queue.
+  - didDelete is a boolean indicating if the queue was deleted (false would indicate the queue didn't exist to delete)
+
+**`let jobs = await queue.queued(q, start, stop)`**
   - list all the jobs (with their payloads) in a queue between start index and stop index.
-- **let numberOfJobsInQueue = await queue.length(q)**
-  - an integer.
-- **let listOfLocks = await queue.locks()**
+  - jobs is an array containing the payload of the job enqueued
+
+**`let length = await queue.length(q)`**
+  - length is an integer counting the length of the jobs in the queue
+  - this does not include delayed jobs for this queue
+
+**`let locks = await queue.locks()`**
   - types of locks include queue and worker locks, as created by the plugins below
-- **let numberOfLocksDeleted = await queue.delLock(lockName)**
-  - an integer.
-- **let numberOfJobsDeleted = await queue.del(q, func, args, count)**
-  - jobs are deleted by those matching a `func` and agument collection within a given queue.  You might match none, or you might match many.
-- **let timestampsOfTheDeletedJobs = await queue.delDelayed(q, func, args)**
+  - `locks` is a hash by type and timestamp
+
+**`let count = await queue.delLock(lockName)`**
+  - `count` is an integer.  You might delete more than one lock by the name.
+
+**`let numberOfJobsDeleted = await queue.del(q, func, args, count)`**
+  - jobs are deleted by those matching a `func` and agument collection within a given queue.
+  - You might match none, or you might match many.
+
+**`let timestamps = await queue.delDelayed(q, func, args)`**
   - same as the above, but for delayed jobs at any timestamp(s)
-- **let timestampsForJob = await queue.scheduledAt(q, func, args)**
+  - You might match none, or you might match many.  `timestamps` is an array of integers.
+
+**`let timestampsForJob = await queue.scheduledAt(q, func, args)`**
   - learn the timestamps at which a job is scheduled to be run.
-- **await queue.end()**
+  - `timestampsForJob` is an array of integers
+
+**await queue.end()**
 
 ## Delayed Status
 
-- **let timestamps = await queue.timestamps()**
-- **let jobsEnqueuedForThisTimestamp = await queue.delayedAt(timestamp)**
-- **let jobs = queue.allDelayed(timestamp)**
+**`let timestamps = await queue.timestamps()`**
+  - `timestamps` is an array of integers for all timestamps which have at least one job scheduled in the future
+
+**`let jobsEnqueuedForThisTimestamp = await queue.delayedAt(timestamp)`**
+  - `jobsEnqueuedForThisTimestamp` is an array, matching the style of the response of `queue.queued`
+
+**`let jobs = queue.allDelayed()`**
   - jobsHash is an object with its keys being timestamps, and the vales are arrays of jobs at each time.
   - note that this operation can be very slow and very ram-heavy
 
@@ -251,11 +255,13 @@ Additional methods provided on the `queue` object:
 
 You can use the queue object to check on your workers:
 
-- **let workers = await queue.workers()**
-  - returns: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
-- **let workerStatus = await queue.workingOn(workerName, queues)**
+**`let workers = await queue.workers()`**
+  - returns a hash of the form: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
+
+**`let workerStatus = await queue.workingOn(workerName, queues)`**
   - returns: `{"run_at":"Fri Dec 12 2014 14:01:16 GMT-0800 (PST)","queue":"test_queue","payload":{"class":"slowJob","queue":"test_queue","args":[null]},"worker":"workerA"}`
-- **let details = await queue.allWorkingOn()**
+
+**`let details = await queue.allWorkingOn()`**
   - returns a hash of the results of `queue.workingOn` with the worker names as keys.
 
 ## Failed Job Management
@@ -266,10 +272,10 @@ From time to time, your jobs/workers may fail.  Resque workers will move failed 
 
 You can work with these failed jobs with the following methods:
 
-- **let failedCount = await queue.failedCount()**
+**`let failedCount = await queue.failedCount()`**
   - `failedCount` is the number of jobs in the failed queue
 
-- **let failedJobs = await queue.failed(start, stop)**
+**`let failedJobs = await queue.failed(start, stop)`**
   - `failedJobs` is an array listing the data of the failed jobs.  Each element looks like:
 
 ### Failing a Job
@@ -285,10 +291,10 @@ We use a try/catch pattern to catch errors in your jobs. If any job throws an un
   failed_at: 'Sun Apr 26 2015 14:00:44 GMT+0100 (BST)' }
 ```
 
-- **await queue.removeFailed(failedJob)**
+**`await queue.removeFailed(failedJob)`**
   - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
 
-- **await queue.retryAndRemoveFailed(failedJob)**
+**`await queue.retryAndRemoveFailed(failedJob)`**
   - the input `failedJob` is an expanded node object representing the failed job, retrieved via `queue.failed`
   - this method will instantly re-enqueue a failed job back to its original queue, and delete the failed entry for that job
 
