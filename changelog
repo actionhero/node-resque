@@ -1,7 +1,0 @@
-- dropped support for fakeredis; you must use a redis connection which supports promises
-- async!!!
-- capitol names for all classes
-- plugin lifecycles are now camel case: beforeEnqueue, afterEnqueue, beforePerform, afterPerform
-- plugin lifecycle methods are now async methods, with no callback
-- plugins now inherit from NodeResque.Plugin
-- allow for empty/null namespaces (to match sidekiq's default)
