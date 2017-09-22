@@ -1,6 +1,6 @@
-# node-resque
+# node-resque: The best background jobs in node.
 
-**Distributed delayed jobs in nodejs**.  Resque is a background job system based on [Redis](http://redis.io) (version 2.0.0 and up required).  It includes priority queues, plugins, locking, delayed jobs, and more!  This project is a very opinionated but API-compatible with [Resque](https://github.com/resque/resque) and [Sidekiq](http://sidekiq.org/).  We also implement some of the popular Resque plugins, including [resque-scheduler](https://github.com/resque/resque-scheduler) and [resque-retry](https://github.com/lantins/resque-retry)
+**Distributed delayed jobs in nodejs**.  Resque is a background job system backed by [Redis](http://redis.io) (version 2.0.0 and up required).  It includes priority queues, plugins, locking, delayed jobs, and more!  This project is a very opinionated but API-compatible with [Resque](https://github.com/resque/resque) and [Sidekiq](http://sidekiq.org/).  We also implement some of the popular Resque plugins, including [resque-scheduler](https://github.com/resque/resque-scheduler) and [resque-retry](https://github.com/lantins/resque-retry)
 
 [![Nodei stats](https://nodei.co/npm/node-resque.png?downloads=true)](https://npmjs.org/package/node-resque)
 
