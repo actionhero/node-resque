@@ -78,7 +78,7 @@ async function boot () {
   scheduler.start()
 
   // //////////////////////
-  // REGESTER FOR EVENTS //
+  // REGISTER FOR EVENTS //
   // //////////////////////
 
   worker.on('start', () => { console.log('worker started') })
@@ -466,5 +466,5 @@ This package was featured heavily in [this presentation I gave](https://blog.eva
 
 ## Acknowledgments
 - Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler).  Thanks!
-- This Resque package aims to be fully compatible with [Ruby's Resque](https://github.com/resque/resque) and implamentations of [Resque Scheduler](https://github.com/resque/resque-scheduler).  Other packages from other langauges may conflict.
+- This Resque package aims to be fully compatible with [Ruby's Resque](https://github.com/resque/resque) and implementations of [Resque Scheduler](https://github.com/resque/resque-scheduler).  Other packages from other langauges may conflict.
 - If you are looking for a UI to manage your Resque instances in nodejs, check out [ActionHero's Resque UI](https://github.com/evantahler/ah-resque-ui)
