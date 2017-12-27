@@ -461,12 +461,13 @@ describe('queue', () => {
         })
       })
 
-      it('can remove stuck workers', async () => {
+      it('can remove stuck workers and re-enquue thier jobs', async () => {
         let age = 1
-        queue.enqueue(specHelper.queue, 'slowJob')
-        workerA.start()
+        await queue.enqueue(specHelper.queue, 'slowJob', {a: 1})
+        await workerA.start()
 
         await new Promise((resolve) => {
+          // hijack a worker in the middle of working on a job
           workerA.on('job', async () => {
             workerA.removeAllListeners('job')
 
@@ -474,12 +475,18 @@ describe('queue', () => {
             let paylaod = workingOnData.workerA.payload
             paylaod.queue.should.equal('test_queue')
             paylaod['class'].should.equal('slowJob')
+            paylaod.args[0].a.should.equal(1)
+
+            let runAt = Date.parse(workingOnData.workerA.run_at)
+            let now = (new Date()).getTime()
+            runAt.should.be.within(now - 1001, now)
 
             let cleanData = await queue.cleanOldWorkers(age)
             Object.keys(cleanData).length.should.equal(1)
             cleanData.workerA.queue.should.equal('test_queue')
             cleanData.workerA.worker.should.equal('workerA')
             cleanData.workerA.payload['class'].should.equal('slowJob')
+            cleanData.workerA.payload.args[0].a.should.equal(1)
 
             let failedData = await specHelper.redis.rpop(specHelper.namespace + ':' + 'failed')
             failedData = JSON.parse(failedData)
@@ -487,6 +494,7 @@ describe('queue', () => {
             failedData.exception.should.equal('Worker Timeout (killed manually)')
             failedData.error.should.equal('Worker Timeout (killed manually)')
             failedData.payload['class'].should.equal('slowJob')
+            failedData.payload.args[0].a.should.equal(1)
 
             let workingOnDataAgain = await queue.allWorkingOn()
             Object.keys(workingOnDataAgain).length.should.equal(1)
