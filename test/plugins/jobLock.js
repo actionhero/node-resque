@@ -17,14 +17,6 @@ const jobs = {
       await new Promise((resolve) => { setTimeout(resolve, jobDelay) })
       return answer
     }
-  },
-  'uniqueJob': {
-    plugins: ['QueueLock', 'DelayQueueLock'],
-    pluginOptions: { queueLock: {}, delayQueueLock: {} },
-    perform: (a, b) => {
-      let answer = a + b
-      return answer
-    }
   }
 }
 

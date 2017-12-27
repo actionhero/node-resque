@@ -17,7 +17,7 @@ const jobs = {
     }
   },
   'uniqueJob': {
-    plugins: ['QueueLock', 'DelayQueueLock'],
+    plugins: ['DelayQueueLock'],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
     perform: async (a, b) => {
       let answer = a + b

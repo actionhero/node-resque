@@ -7,7 +7,7 @@ let queue
 
 const jobs = {
   'uniqueJob': {
-    plugins: ['QueueLock', 'DelayQueueLock'],
+    plugins: ['QueueLock'],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
     perform: (a, b) => {
       return (a + b)
