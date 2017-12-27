@@ -5,13 +5,19 @@ const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let queue
 
+class NeverRunPlugin extends NodeResque.Plugin {
+  beforePerform () { return false }
+}
+
 const jobs = {
   'uniqueJob': {
     plugins: ['QueueLock'],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
-    perform: (a, b) => {
-      return (a + b)
-    }
+    perform: (a, b) => (a + b)
+  },
+  'blockingJob': {
+    plugins: ['QueueLock', NeverRunPlugin],
+    perform: (a, b) => (a + b)
   }
 }
 
@@ -43,6 +49,43 @@ describe('plugins', () => {
       length.should.equal(2)
       tryOne.should.equal(true)
       tryTwo.should.equal(true)
+    })
+
+    describe('with worker', () => {
+      let worker
+
+      beforeEach(async () => {
+        worker = new NodeResque.Worker({
+          connection: specHelper.cleanConnectionDetails(),
+          timeout: specHelper.timeout,
+          queues: specHelper.queue
+        }, jobs)
+
+        worker.on('error', (error) => { throw error })
+        await worker.connect()
+      })
+
+      it('will remove a lock on a job when the job has been worked', async () => {
+        const enqueue = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+        enqueue.should.equal(true)
+
+        await worker.start()
+        await worker.end()
+
+        const result = await specHelper.redis.keys(specHelper.namespace + ':lock*')
+        result.should.have.lengthOf(0)
+      })
+
+      it('will remove a lock on a job if a plugin does not run the job', async () => {
+        const enqueue = await queue.enqueue(specHelper.queue, 'blockingJob', [1, 2])
+        enqueue.should.equal(true)
+
+        await worker.start()
+        await worker.end()
+
+        const result = await specHelper.redis.keys(specHelper.namespace + ':lock*')
+        result.should.have.lengthOf(0)
+      })
     })
   })
 })
