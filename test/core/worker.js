@@ -36,7 +36,7 @@ let queue
 
 describe('worker', () => {
   it('can connect', async () => {
-    let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, queues: specHelper.queue})
+    let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique})
     await worker.connect()
     await worker.end()
   })
@@ -51,7 +51,7 @@ describe('worker', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    let worker = new NodeResque.Worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue})
+    let worker = new NodeResque.Worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique})
 
     await new Promise((resolve) => {
       worker.connect()
@@ -66,7 +66,7 @@ describe('worker', () => {
 
   describe('performInline', () => {
     before(() => {
-      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
     })
 
     it('can run a successful job', async () => {
@@ -92,14 +92,14 @@ describe('worker', () => {
   describe('[with connection]', () => {
     before(async () => {
       await specHelper.connect()
-      queue = new NodeResque.Queue({connection: specHelper.connectionDetails})
+      queue = new NodeResque.Queue({connection: specHelper.connectionDetails, tasksAreUnique: specHelper.tasksAreUnique})
       await queue.connect()
     })
 
     after(async () => { await specHelper.cleanup() })
 
     it('can boot and stop', async () => {
-      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
       await worker.connect()
       await worker.start()
       await worker.end()
@@ -109,7 +109,7 @@ describe('worker', () => {
       it('can clear previously crashed workers from the same host', async () => {
         let name1 = os.hostname() + ':' + '0' // fake pid
         let name2 = os.hostname() + ':' + process.pid // real pid
-        let worker1 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs)
+        let worker1 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
 
         await worker1.connect()
         await worker1.init()
@@ -117,12 +117,11 @@ describe('worker', () => {
 
         await new Promise((resolve) => { setTimeout(resolve, 500) })
 
-        let worker2 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs)
+        let worker2 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
         await worker2.connect()
 
         await new Promise((resolve) => {
           worker2.workerCleanup()
-
           worker2.on('cleaning_worker', (worker, pid) => {
             worker.should.match(new RegExp(name1))
             pid.should.equal(0)
@@ -133,20 +132,19 @@ describe('worker', () => {
     })
 
     it('will determine the proper queue names', async () => {
-      let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs)
+      let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
       await worker.connect()
       worker.queues.should.deepEqual([])
       await queue.enqueue(specHelper.queue, 'badAdd', [1, 2])
       await worker.checkQueues()
       worker.queues.should.deepEqual([specHelper.queue])
-
       await queue.del(specHelper.queue)
       await worker.end()
     })
 
     describe('integration', function () {
       beforeEach(async () => {
-        worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+        worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
         await worker.connect()
       })
 
@@ -158,12 +156,12 @@ describe('worker', () => {
         await new Promise(async (resolve) => {
           worker.start()
 
-          worker.on('failure', (q, job, failire) => {
+          worker.on('failure', (q, job, failure) => {
             q.should.equal(specHelper.queue)
             job['class'].should.equal('badAdd')
-            failire.message.should.equal('Blue Smoke')
+            failure.message.should.equal('Blue Smoke')
 
-            worker.removeAllListeners('failire')
+            worker.removeAllListeners('failure')
             return resolve()
           })
         })
@@ -174,13 +172,11 @@ describe('worker', () => {
 
         await new Promise(async (resolve) => {
           worker.start()
-
           worker.on('success', function (q, job, result) {
             q.should.equal(specHelper.queue)
             job['class'].should.equal('add')
             result.should.equal(3)
             worker.result.should.equal(result)
-
             worker.removeAllListeners('success')
             return resolve()
           })

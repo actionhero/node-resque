@@ -15,7 +15,7 @@ describe('plugins', () => {
         }
       }
 
-      const queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+      const queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
 
       await queue.connect()
       let enqueueResponse = await queue.enqueue(specHelper.queue, 'myJob', [1, 2])

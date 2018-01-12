@@ -24,7 +24,7 @@ describe('plugins', () => {
   before(async () => {
     await specHelper.connect()
     await specHelper.cleanup()
-    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
     await queue.connect()
   })
 
@@ -34,8 +34,8 @@ describe('plugins', () => {
 
   describe('jobLock', () => {
     it('will not lock jobs since arg objects are different', async () => {
-      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
+      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
 
       worker1.on('error', (error) => { throw error })
       worker2.on('error', (error) => { throw error })
@@ -94,7 +94,7 @@ describe('plugins', () => {
           }
         }
 
-        worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, functionJobs)
+        worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, functionJobs)
         worker1.on('error', (error) => { throw error })
         await worker1.connect()
         await queue.enqueue(specHelper.queue, 'jobLockAdd', [1, 2])
@@ -104,8 +104,8 @@ describe('plugins', () => {
 
     it('will not run 2 jobs with the same args at the same time', async () => {
       let count = 0
-      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
+      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
 
       worker1.on('error', (error) => { throw error })
       worker2.on('error', (error) => { throw error })
@@ -142,8 +142,8 @@ describe('plugins', () => {
     })
 
     it('will run 2 jobs with the different args at the same time', async () => {
-      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
-      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
+      worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
 
       worker1.on('error', (error) => { throw error })
       worker2.on('error', (error) => { throw error })

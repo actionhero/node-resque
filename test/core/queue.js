@@ -2,11 +2,12 @@ const path = require('path')
 const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
 const should = require('should')
 const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
+
 let queue
 
 describe('queue', () => {
   it('can connect', async () => {
-    queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+    queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique})
     await queue.connect()
     await queue.end()
   })
@@ -21,7 +22,7 @@ describe('queue', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    queue = new NodeResque.Queue({connection: connectionDetails, queue: specHelper.queue})
+    queue = new NodeResque.Queue({connection: connectionDetails, queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique})
 
     await new Promise((resolve) => {
       queue.connect()
@@ -37,7 +38,7 @@ describe('queue', () => {
   describe('[with connection]', function () {
     before(async () => {
       await specHelper.connect()
-      queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+      queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique})
       await queue.connect()
     })
 
@@ -119,7 +120,8 @@ describe('queue', () => {
       await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
       await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
       let length = await queue.length(specHelper.queue)
-      length.should.equal(2)
+      let expectedCount = specHelper.tasksAreUnique ? 1 : 2
+      length.should.equal(expectedCount)
     })
 
     it('can get the jobs in the queue', async () => {
@@ -191,10 +193,12 @@ describe('queue', () => {
       await queue.enqueue(specHelper.queue, 'noParams', [])
       await queue.enqueue(specHelper.queue, 'noParams', [])
       let length = await queue.length(specHelper.queue)
-      length.should.equal(2)
+      let expectedCount = specHelper.tasksAreUnique ? 1 : 2
+
+      length.should.equal(expectedCount)
 
       let deletedCount = await queue.del(specHelper.queue, 'noParams')
-      deletedCount.should.equal(2)
+      deletedCount.should.equal(expectedCount)
 
       let deletedCountAgain = await queue.del(specHelper.queue, 'noParams')
       deletedCountAgain.should.equal(0)
@@ -409,14 +413,16 @@ describe('queue', () => {
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
           queues: specHelper.queue,
-          name: 'workerA'
+          name: 'workerA',
+          tasksAreUnique: specHelper.tasksAreUnique
         }, jobs)
 
         workerB = new NodeResque.Worker({
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
           queues: specHelper.queue,
-          name: 'workerB'
+          name: 'workerB',
+          tasksAreUnique: specHelper.tasksAreUnique
         }, jobs)
 
         await workerA.connect()

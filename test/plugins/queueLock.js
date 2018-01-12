@@ -26,7 +26,7 @@ describe('plugins', () => {
     before(async () => {
       await specHelper.connect()
       await specHelper.cleanup()
-      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
       await queue.connect()
     })
 
@@ -58,7 +58,8 @@ describe('plugins', () => {
         worker = new NodeResque.Worker({
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: specHelper.queue
+          queues: specHelper.queue,
+          tasksAreUnique: specHelper.tasksAreUnique
         }, jobs)
 
         worker.on('error', (error) => { throw error })

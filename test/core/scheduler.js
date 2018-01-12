@@ -8,7 +8,7 @@ let queue
 
 describe('scheduler', () => {
   it('can connect', async () => {
-    scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
+    scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout, tasksAreUnique: specHelper.tasksAreUnique})
     await scheduler.connect()
     await scheduler.end()
   })
@@ -23,7 +23,7 @@ describe('scheduler', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    scheduler = new NodeResque.Scheduler({connection: connectionDetails, timeout: specHelper.timeout})
+    scheduler = new NodeResque.Scheduler({connection: connectionDetails, timeout: specHelper.timeout, tasksAreUnique: specHelper.tasksAreUnique})
 
     scheduler.on('poll', () => { throw new Error('Should not emit poll') })
     scheduler.on('master', () => { throw new Error('Should not emit master') })
@@ -45,8 +45,8 @@ describe('scheduler', () => {
     after(async () => { await specHelper.cleanup() })
 
     it('should only have one master, and can failover', async () => {
-      const shedulerOne = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout})
-      const shedulerTwo = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout})
+      const shedulerOne = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout, tasksAreUnique: specHelper.tasksAreUnique})
+      const shedulerTwo = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout, tasksAreUnique: specHelper.tasksAreUnique})
 
       await shedulerOne.connect()
       await shedulerTwo.connect()
@@ -71,8 +71,8 @@ describe('scheduler', () => {
 
     beforeEach(async () => {
       await specHelper.cleanup()
-      scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
-      queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+      scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout, tasksAreUnique: specHelper.tasksAreUnique})
+      queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique})
       await scheduler.connect()
       await queue.connect()
     })
@@ -96,7 +96,11 @@ describe('scheduler', () => {
       await queue.enqueueAt((new Date().getTime() + 10000), specHelper.queue, 'someJob', [1, 2, 3])
       await scheduler.poll()
       let obj = await specHelper.popFromQueue()
-      should.not.exist(obj)
+      if (specHelper.tasksAreUnique) {
+        obj.length.should.equal(0)
+      } else {
+        should.not.exist(obj)
+      }
     })
   })
 })

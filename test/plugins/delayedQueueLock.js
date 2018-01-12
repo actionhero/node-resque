@@ -30,7 +30,7 @@ describe('plugins', () => {
   before(async () => {
     await specHelper.connect()
     await specHelper.cleanup()
-    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
+    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
     queue.connect()
   })
 

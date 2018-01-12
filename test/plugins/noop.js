@@ -33,8 +33,8 @@ describe('plugins', () => {
     before(async () => {
       await specHelper.connect()
       await specHelper.cleanup()
-      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
-      scheduler = new NodeResque.Scheduler({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout})
+      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
+      scheduler = new NodeResque.Scheduler({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, tasksAreUnique: specHelper.tasksAreUnique})
       await scheduler.connect()
       scheduler.start()
       await queue.connect()
@@ -52,7 +52,8 @@ describe('plugins', () => {
       let worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, jobs)
 
       await new Promise(async (resolve) => {
@@ -60,7 +61,7 @@ describe('plugins', () => {
 
         worker.on('success', async () => {
           loggedErrors.length.should.equal(0)
-          let length = await specHelper.redis.llen('resque_test:failed')
+          let length = await specHelper.redis.llen(specHelper.namespace + ':failed')
           length.should.equal(0)
           await worker.end()
           resolve()
@@ -80,13 +81,14 @@ describe('plugins', () => {
       let worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, jobs)
 
       await new Promise(async (resolve) => {
         worker.on('success', async () => {
           loggedErrors.length.should.equal(1)
-          let length = await specHelper.redis.llen('resque_test:failed')
+          let length = await specHelper.redis.llen(specHelper.namespace + ':failed')
           length.should.equal(0)
           await worker.end()
           resolve()
