@@ -48,7 +48,7 @@ const jobs = {
 describe('multiWorker', function () {
   before(async () => {
     await specHelper.connect()
-    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue})
+    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique})
     await queue.connect()
   })
 
@@ -60,7 +60,8 @@ describe('multiWorker', function () {
       minTaskProcessors: minTaskProcessors,
       maxTaskProcessors: maxTaskProcessors,
       queues: [specHelper.queue],
-      toDisconnectProcessors: toDisconnectProcessors
+      toDisconnectProcessors: toDisconnectProcessors,
+      tasksAreUnique: specHelper.tasksAreUnique
     }, jobs)
 
     await multiWorker.end()
@@ -86,7 +87,7 @@ describe('multiWorker', function () {
 
     var i = 0
     while (i < 100) {
-      await queue.enqueue(specHelper.queue, 'slowSleepJob', [])
+      await queue.enqueue(specHelper.queue, 'slowSleepJob', [i]) // argument needs to be supplied for a non-unique job to pass the test :)
       i++
     }
 

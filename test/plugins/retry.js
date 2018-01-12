@@ -34,8 +34,8 @@ describe('plugins', () => {
     before(async () => {
       await specHelper.connect()
       await specHelper.cleanup()
-      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
-      scheduler = new NodeResque.Scheduler({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout})
+      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue, tasksAreUnique: specHelper.tasksAreUnique}, jobs)
+      scheduler = new NodeResque.Scheduler({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, tasksAreUnique: specHelper.tasksAreUnique})
       await scheduler.connect()
       scheduler.start()
       await queue.connect()
@@ -52,7 +52,8 @@ describe('plugins', () => {
       var worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, jobs)
 
       worker.on('failure', () => { throw new Error('should not get here') })
@@ -61,7 +62,7 @@ describe('plugins', () => {
         await worker.connect()
 
         worker.on('success', async () => {
-          let length = await specHelper.redis.llen('resque_test:failed')
+          let length = await specHelper.redis.llen(specHelper.namespace + ':failed')
           length.should.equal(0)
           await worker.end()
           resolve()
@@ -82,7 +83,8 @@ describe('plugins', () => {
       let worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, jobs)
 
       worker.on('success', () => { failButRetryCount++ })
@@ -96,7 +98,7 @@ describe('plugins', () => {
           failureCount.should.equal(1);
           (failButRetryCount + failureCount).should.equal(3)
 
-          let length = await specHelper.redis.llen('resque_test:failed')
+          let length = await specHelper.redis.llen(specHelper.namespace + ':failed')
           length.should.equal(1)
           await worker.end()
           resolve()
@@ -130,7 +132,8 @@ describe('plugins', () => {
       let worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, customJobs)
 
       worker.on('success', () => { failButRetryCount++ })
@@ -144,7 +147,7 @@ describe('plugins', () => {
           failureCount.should.equal(1);
           (failButRetryCount + failureCount).should.equal(5)
 
-          let length = await specHelper.redis.llen('resque_test:failed')
+          let length = await specHelper.redis.llen(specHelper.namespace + ':failed')
           length.should.equal(1)
           await worker.end()
           resolve()
@@ -178,7 +181,8 @@ describe('plugins', () => {
       let worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, customJobs)
 
       worker.on('success', () => { failButRetryCount++ })
@@ -192,7 +196,7 @@ describe('plugins', () => {
           failureCount.should.equal(1);
           (failButRetryCount + failureCount).should.equal(5)
 
-          let length = await specHelper.redis.llen('resque_test:failed')
+          let length = await specHelper.redis.llen(specHelper.namespace + ':failed')
           length.should.equal(1)
           await worker.end()
           resolve()
@@ -208,7 +212,8 @@ describe('plugins', () => {
       let worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, jobs)
 
       await new Promise(async (resolve) => {
@@ -216,7 +221,7 @@ describe('plugins', () => {
         worker.on('success', async () => {
           let timestamps = await queue.scheduledAt(specHelper.queue, 'brokenJob', [1, 2])
           timestamps.length.should.be.equal(1)
-          let length = await specHelper.redis.llen('resque_test:failed')
+          let length = await specHelper.redis.llen(specHelper.namespace + ':failed')
           length.should.equal(0)
           await worker.end()
           resolve()
@@ -232,16 +237,17 @@ describe('plugins', () => {
       let worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, jobs)
 
       await new Promise(async (resolve) => {
         await worker.connect()
         worker.on('success', async () => {
-          let globalProcessed = await specHelper.redis.get('resque_test:stat:processed')
-          let globalFailed = await specHelper.redis.get('resque_test:stat:failed')
-          let workerProcessed = await specHelper.redis.get('resque_test:stat:processed:' + worker.name)
-          let workerFailed = await specHelper.redis.get('resque_test:stat:failed:' + worker.name)
+          let globalProcessed = await specHelper.redis.get(specHelper.namespace + ':stat:processed')
+          let globalFailed = await specHelper.redis.get(specHelper.namespace + ':stat:failed')
+          let workerProcessed = await specHelper.redis.get(specHelper.namespace + ':stat:processed:' + worker.name)
+          let workerFailed = await specHelper.redis.get(specHelper.namespace + ':stat:failed:' + worker.name)
           String(globalProcessed).should.equal('0')
           String(globalFailed).should.equal('1')
           String(workerProcessed).should.equal('0')
@@ -260,14 +266,15 @@ describe('plugins', () => {
       let worker = new NodeResque.Worker({
         connection: specHelper.cleanConnectionDetails(),
         timeout: specHelper.timeout,
-        queues: specHelper.queue
+        queues: specHelper.queue,
+        tasksAreUnique: specHelper.tasksAreUnique
       }, jobs)
 
       await new Promise(async (resolve) => {
         await worker.connect()
         worker.on('success', async () => {
-          let retryAttempts = await specHelper.redis.get('resque_test:resque-retry:brokenJob:1-2')
-          let failureData = await specHelper.redis.get('resque_test:failure-resque-retry:brokenJob:1-2')
+          let retryAttempts = await specHelper.redis.get(specHelper.namespace + ':resque-retry:brokenJob:1-2')
+          let failureData = await specHelper.redis.get(specHelper.namespace + ':failure-resque-retry:brokenJob:1-2')
           String(retryAttempts).should.equal('0')
           failureData = JSON.parse(failureData)
           failureData.payload.should.deepEqual([1, 2])
