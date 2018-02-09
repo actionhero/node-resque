@@ -22,17 +22,25 @@
     "task"
   ],
   "engines": {
-    "node": ">= 8"
+    "node": ">= 6.10"
   },
   "dependencies": {
     "ioredis": "^3.2.2"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-eslint": "^8.2.1",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-function-bind": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0",
     "fakeredis": "latest",
     "mocha": "^5.0.0",
     "node-schedule": "^1.3.0",
     "should": "^13.2.1",
-    "standard": "^10.0.3"
+    "standard": "^10.0.3",
+    "rimraf": "^2.6.2"
   },
   "standard": {
     "globals": [
@@ -46,6 +54,9 @@
   },
   "scripts": {
     "pretest": "standard",
-    "test": "mocha"
+    "test": "mocha",
+    "compile": "rimraf lib/*; NODE_ENV=production babel src/ -d lib/ -s",
+    "compile:watch": "npm run compile -- -w",
+    "prepublish": "npm run compile"
   }
 }
