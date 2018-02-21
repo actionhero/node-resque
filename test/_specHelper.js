@@ -43,6 +43,9 @@ exports.specHelper = {
     } else if (typeof this.redis.quit === 'function') {
       await this.redis.quit()
     }
+
+    delete this.redis
+    delete this.connectionDetails.redis
   },
 
   startAll: async function (jobs) {
