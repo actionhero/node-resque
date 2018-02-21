@@ -35,6 +35,10 @@ let worker
 let queue
 
 describe('worker', () => {
+  after(async () => {
+    await specHelper.disconnect()
+  })
+
   it('can connect', async () => {
     let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, queues: specHelper.queue})
     await worker.connect()
@@ -53,12 +57,12 @@ describe('worker', () => {
 
     let worker = new NodeResque.Worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue})
 
-    await new Promise((resolve) => {
+    await new Promise(async (resolve) => {
       worker.connect()
 
-      worker.on('error', (error) => {
+      worker.on('error', async (error) => {
         error.message.should.match(/getaddrinfo ENOTFOUND/)
-        worker.end()
+        await worker.end()
         resolve()
       })
     })

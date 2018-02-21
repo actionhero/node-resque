@@ -9,8 +9,6 @@ let checkTimeout = specHelper.timeout / 10
 let minTaskProcessors = 1
 let maxTaskProcessors = 5
 
-let toDisconnectProcessors = false
-
 const blockingSleep = function (naptime) {
   let sleeping = true
   let now = new Date()
@@ -50,17 +48,14 @@ describe('multiWorker', function () {
     await specHelper.connect()
     queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue})
     await queue.connect()
-  })
 
-  before(async () => {
     multiWorker = new NodeResque.MultiWorker({
       connection: specHelper.cleanConnectionDetails(),
       timeout: specHelper.timeout,
       checkTimeout: checkTimeout,
       minTaskProcessors: minTaskProcessors,
       maxTaskProcessors: maxTaskProcessors,
-      queues: [specHelper.queue],
-      toDisconnectProcessors: toDisconnectProcessors
+      queues: [specHelper.queue]
     }, jobs)
 
     await multiWorker.end()
@@ -70,6 +65,11 @@ describe('multiWorker', function () {
 
   afterEach(async () => {
     await queue.delQueue(specHelper.queue)
+  })
+
+  after(async () => {
+    await queue.end()
+    await specHelper.disconnect()
   })
 
   it('should never have less than one worker', async () => {

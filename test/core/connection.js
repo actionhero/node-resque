@@ -9,7 +9,10 @@ describe('connection', () => {
     await specHelper.cleanup()
   })
 
-  after(async () => { await specHelper.cleanup() })
+  after(async () => {
+    await specHelper.cleanup()
+    await specHelper.disconnect()
+  })
 
   it('can provide an error if connection failed', async () => {
     const connectionDetails = {
