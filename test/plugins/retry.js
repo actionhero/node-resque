@@ -41,7 +41,12 @@ describe('plugins', () => {
       await queue.connect()
     })
 
-    after(async () => { await scheduler.end() })
+    after(async () => {
+      await scheduler.end()
+      await queue.end()
+      await specHelper.disconnect()
+    })
+
     afterEach(async () => { await specHelper.cleanup() })
 
     it('will work fine with non-crashing jobs', async () => {
