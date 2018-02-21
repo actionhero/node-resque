@@ -29,10 +29,10 @@
   },
   "devDependencies": {
     "fakeredis": "latest",
-    "mocha": "^5.0.0",
+    "mocha": "^5.0.1",
     "node-schedule": "^1.3.0",
     "should": "^13.2.1",
-    "standard": "^10.0.3"
+    "standard": "^11.0.0"
   },
   "standard": {
     "globals": [
