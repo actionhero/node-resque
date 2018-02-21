@@ -37,6 +37,7 @@ describe('plugins', () => {
   after(async () => {
     await queue.end()
     await specHelper.cleanup()
+    await specHelper.disconnect()
   })
 
   beforeEach(async () => {

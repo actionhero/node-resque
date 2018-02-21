@@ -5,6 +5,8 @@ const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 let queue
 
 describe('queue', () => {
+  after(async () => { await specHelper.disconnect() })
+
   it('can connect', async () => {
     queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
     await queue.connect()

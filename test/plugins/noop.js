@@ -41,7 +41,13 @@ describe('plugins', () => {
     })
 
     beforeEach(() => { loggedErrors = [] })
-    after(async () => { await scheduler.end() })
+
+    after(async () => {
+      await scheduler.end()
+      await queue.end()
+      await specHelper.disconnect()
+    })
+
     afterEach(async () => { await specHelper.cleanup() })
 
     it('will work fine with non-crashing jobs', async () => {
@@ -56,8 +62,6 @@ describe('plugins', () => {
       }, jobs)
 
       await new Promise(async (resolve) => {
-        await worker.connect()
-
         worker.on('success', async () => {
           loggedErrors.length.should.equal(0)
           let length = await specHelper.redis.llen('resque_test:failed')

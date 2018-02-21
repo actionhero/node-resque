@@ -37,6 +37,17 @@ exports.specHelper = {
     if (keys.length > 0) { await this.redis.del(keys) }
   },
 
+  disconnect: async function () {
+    if (typeof this.redis.disconnect === 'function') {
+      await this.redis.disconnect()
+    } else if (typeof this.redis.quit === 'function') {
+      await this.redis.quit()
+    }
+
+    delete this.redis
+    delete this.connectionDetails.redis
+  },
+
   startAll: async function (jobs) {
     let Worker = NodeResque.Worker
     let Scheduler = NodeResque.Scheduler

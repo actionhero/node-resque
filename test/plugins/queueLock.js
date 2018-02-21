@@ -30,8 +30,13 @@ describe('plugins', () => {
       await queue.connect()
     })
 
-    afterEach(async () => { await specHelper.cleanup() })
     beforeEach(async () => { await specHelper.cleanup() })
+    afterEach(async () => { await specHelper.cleanup() })
+
+    after(async () => {
+      await queue.end()
+      await specHelper.disconnect()
+    })
 
     it('will not enque a job with the same args if it is already in the queue', async () => {
       let tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])

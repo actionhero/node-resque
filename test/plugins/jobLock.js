@@ -32,6 +32,11 @@ describe('plugins', () => {
     await specHelper.cleanup()
   })
 
+  after(async () => {
+    await queue.end()
+    await specHelper.disconnect()
+  })
+
   describe('jobLock', () => {
     it('will not lock jobs since arg objects are different', async () => {
       worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
