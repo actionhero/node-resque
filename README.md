@@ -277,6 +277,8 @@ You can work with these failed jobs with the following methods:
 
 **`let failedJobs = await queue.failed(start, stop)`**
   - `failedJobs` is an array listing the data of the failed jobs.  Each element looks like:
+  `{"worker": "host:pid", "queue": "test_queue", "payload": {"class":"slowJob", "queue":"test_queue", "args":[null]}, "exception": "TypeError", "error": "MyImport is not a function", "backtrace": ['   at Worker.perform (/path/to/worker:111:24)', '   at <anonymous>'], "failed_at": "Fri Dec 12 2014 14:01:16 GMT-0800 (PST)"}`
+  - To retrieve all failed jobs, use arguments: `await queue.failed(0, -1)`
 
 ### Failing a Job
 
