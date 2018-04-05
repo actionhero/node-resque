@@ -1,6 +1,5 @@
 const path = require('path')
-const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-const should = require('should') // eslint-disable-line
+const specHelper = require(path.join(__dirname, '..', 'utils', 'specHelper.js'))
 const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let queue
@@ -21,7 +20,7 @@ const jobs = {
 }
 
 describe('plugins', () => {
-  before(async () => {
+  beforeAll(async () => {
     await specHelper.connect()
     await specHelper.cleanup()
     queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
@@ -32,13 +31,13 @@ describe('plugins', () => {
     await specHelper.cleanup()
   })
 
-  after(async () => {
+  afterAll(async () => {
     await queue.end()
     await specHelper.disconnect()
   })
 
   describe('jobLock', () => {
-    it('will not lock jobs since arg objects are different', async () => {
+    test('will not lock jobs since arg objects are different', async () => {
       worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
       worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
 
@@ -56,8 +55,8 @@ describe('plugins', () => {
           completed++
           if (completed === 2) {
             worker1.end()
-            worker2.end();
-            (new Date().getTime() - startTime).should.be.below(jobDelay * 2)
+            worker2.end()
+            expect(new Date().getTime() - startTime).toBeLessThan(jobDelay * 2)
             resolve()
           }
         }
@@ -73,7 +72,7 @@ describe('plugins', () => {
       })
     })
 
-    it('allows the key to be specified as a function', async () => {
+    test('allows the key to be specified as a function', async () => {
       let calls = 0
 
       await new Promise(async (resolve) => {
@@ -107,7 +106,7 @@ describe('plugins', () => {
       })
     })
 
-    it('will not run 2 jobs with the same args at the same time', async () => {
+    test('will not run 2 jobs with the same args at the same time', async () => {
       let count = 0
       worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
       worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
@@ -121,16 +120,16 @@ describe('plugins', () => {
 
         const onComplete = async () => {
           count++
-          count.should.equal(1)
+          expect(count).toBe(1)
           worker1.end()
           worker2.end()
 
           let timestamps = await queue.timestamps()
           let dealyedJob = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + Math.round(timestamps[0] / 1000))
-          should.exist(dealyedJob)
+          expect(dealyedJob).toBeDefined()
           dealyedJob = JSON.parse(dealyedJob)
-          dealyedJob['class'].should.equal('slowAdd')
-          dealyedJob.args.should.eql([1, 2])
+          expect(dealyedJob['class']).toBe('slowAdd')
+          expect(dealyedJob.args).toEqual([1, 2])
 
           resolve()
         }
@@ -146,7 +145,7 @@ describe('plugins', () => {
       })
     })
 
-    it('will run 2 jobs with the different args at the same time', async () => {
+    test('will run 2 jobs with the different args at the same time', async () => {
       worker1 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
       worker2 = new NodeResque.Worker({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
 
@@ -166,7 +165,7 @@ describe('plugins', () => {
             worker1.end()
             worker2.end()
             var delta = (new Date().getTime() - startTime)
-            delta.should.be.below(jobDelay * 2)
+            expect(delta).toBeLessThan(jobDelay * 2)
             resolve()
           }
         }

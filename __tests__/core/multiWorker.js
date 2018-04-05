@@ -1,6 +1,5 @@
 const path = require('path')
-const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-const should = require('should') // eslint-disable-line
+const specHelper = require(path.join(__dirname, '..', 'utils', 'specHelper.js'))
 const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let queue
@@ -9,7 +8,7 @@ let checkTimeout = specHelper.timeout / 10
 let minTaskProcessors = 1
 let maxTaskProcessors = 5
 
-const blockingSleep = function (naptime) {
+const blockingSleep = (naptime) => {
   let sleeping = true
   let now = new Date()
   let alarm
@@ -43,8 +42,8 @@ const jobs = {
   }
 }
 
-describe('multiWorker', function () {
-  before(async () => {
+describe('multiWorker', () => {
+  beforeAll(async () => {
     await specHelper.connect()
     queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue})
     await queue.connect()
@@ -67,39 +66,38 @@ describe('multiWorker', function () {
     await queue.delQueue(specHelper.queue)
   })
 
-  after(async () => {
+  afterAll(async () => {
     await queue.end()
     await specHelper.disconnect()
   })
 
-  it('should never have less than one worker', async () => {
-    multiWorker.workers.length.should.equal(0)
+  test('should never have less than one worker', async () => {
+    expect(multiWorker.workers.length).toBe(0)
     await multiWorker.start()
     await new Promise((resolve) => { setTimeout(resolve, (checkTimeout * 3) + 500) })
 
-    multiWorker.workers.length.should.be.above(0)
+    expect(multiWorker.workers.length).toBeGreaterThan(0)
     await multiWorker.end()
   })
 
-  it('should stop adding workers when the max is hit & CPU utilization is low', async function () {
-    this.timeout(10 * 1000)
+  test(
+    'should stop adding workers when the max is hit & CPU utilization is low',
+    async () => {
+      let i = 0
+      while (i < 100) {
+        await queue.enqueue(specHelper.queue, 'slowSleepJob', [])
+        i++
+      }
 
-    var i = 0
-    while (i < 100) {
-      await queue.enqueue(specHelper.queue, 'slowSleepJob', [])
-      i++
-    }
+      await multiWorker.start()
+      await new Promise((resolve) => { setTimeout(resolve, (checkTimeout * 30)) })
+      expect(multiWorker.workers.length).toBe(maxTaskProcessors)
+      await multiWorker.end()
+    }, (10 * 1000)
+  )
 
-    await multiWorker.start()
-    await new Promise((resolve) => { setTimeout(resolve, (checkTimeout * 30)) })
-    multiWorker.workers.length.should.equal(maxTaskProcessors)
-    await multiWorker.end()
-  })
-
-  it('should not add workers when CPU utilization is high', async function () {
-    this.timeout(30 * 1000)
-
-    var i = 0
+  test('should not add workers when CPU utilization is high', async () => {
+    let i = 0
     while (i < 100) {
       await queue.enqueue(specHelper.queue, 'slowCPUJob', [])
       i++
@@ -107,22 +105,25 @@ describe('multiWorker', function () {
 
     await multiWorker.start()
     await new Promise((resolve) => { setTimeout(resolve, (checkTimeout * 30)) })
-    multiWorker.workers.length.should.equal(minTaskProcessors)
+    expect(multiWorker.workers.length).toBe(minTaskProcessors)
     await multiWorker.end()
-  })
+  }, (30 * 1000))
 
-  it('should pass on all worker emits to the instance of multiWorker', async () => {
-    await queue.enqueue(specHelper.queue, 'missingJob', [])
+  test(
+    'should pass on all worker emits to the instance of multiWorker',
+    async () => {
+      await queue.enqueue(specHelper.queue, 'missingJob', [])
 
-    await new Promise((resolve, reject) => {
-      multiWorker.start()
+      await new Promise((resolve, reject) => {
+        multiWorker.start()
 
-      multiWorker.on('failure', async (workerId, queue, job, error) => {
-        String(error).should.equal('Error: No job defined for class "missingJob"')
-        multiWorker.removeAllListeners('error')
-        await multiWorker.end()
-        resolve()
+        multiWorker.on('failure', async (workerId, queue, job, error) => {
+          expect(String(error)).toBe('Error: No job defined for class "missingJob"')
+          multiWorker.removeAllListeners('error')
+          await multiWorker.end()
+          resolve()
+        })
       })
-    })
-  })
+    }
+  )
 })

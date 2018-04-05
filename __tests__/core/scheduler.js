@@ -1,23 +1,22 @@
 const path = require('path')
-const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-const should = require('should')
+const specHelper = require(path.join(__dirname, '..', 'utils', 'specHelper.js'))
 const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let scheduler
 let queue
 
 describe('scheduler', () => {
-  it('can connect', async () => {
+  test('can connect', async () => {
     scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
     await scheduler.connect()
     await scheduler.end()
   })
 
   describe('with specHelper', () => {
-    before(async () => { await specHelper.connect() })
-    after(async () => { await specHelper.disconnect() })
+    beforeAll(async () => { await specHelper.connect() })
+    afterAll(async () => { await specHelper.disconnect() })
 
-    it('can provide an error if connection failed', async () => {
+    test('can provide an error if connection failed', async () => {
       let connectionDetails = {
         pkg: specHelper.connectionDetails.pkg,
         host: 'wronghostname',
@@ -36,7 +35,7 @@ describe('scheduler', () => {
         scheduler.connect()
 
         scheduler.on('error', async (error) => {
-          error.message.should.match(/getaddrinfo ENOTFOUND/)
+          expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
           await scheduler.end()
           resolve()
         })
@@ -45,9 +44,9 @@ describe('scheduler', () => {
 
     describe('locking', () => {
       beforeEach(async () => { await specHelper.cleanup() })
-      after(async () => { await specHelper.cleanup() })
+      afterAll(async () => { await specHelper.cleanup() })
 
-      it('should only have one master, and can failover', async () => {
+      test('should only have one master, and can failover', async () => {
         const shedulerOne = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout})
         const shedulerTwo = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout})
 
@@ -57,18 +56,18 @@ describe('scheduler', () => {
         await shedulerTwo.start()
 
         await new Promise((resolve) => { setTimeout(resolve, specHelper.timeout * 2) })
-        shedulerOne.master.should.equal(true)
-        shedulerTwo.master.should.equal(false)
+        expect(shedulerOne.master).toBe(true)
+        expect(shedulerTwo.master).toBe(false)
         await shedulerOne.end()
 
         await new Promise((resolve) => { setTimeout(resolve, specHelper.timeout * 2) })
-        shedulerOne.master.should.equal(false)
-        shedulerTwo.master.should.equal(true)
+        expect(shedulerOne.master).toBe(false)
+        expect(shedulerTwo.master).toBe(true)
         await shedulerTwo.end()
       })
     })
 
-    describe('[with connection]', function () {
+    describe('[with connection]', () => {
       beforeEach(async () => {
         await specHelper.cleanup()
         scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
@@ -77,28 +76,28 @@ describe('scheduler', () => {
         await queue.connect()
       })
 
-      it('can start and stop', async () => {
+      test('can start and stop', async () => {
         await scheduler.start()
         await scheduler.end()
         await queue.end()
       })
 
-      it('will move enqueued jobs when the time comes', async () => {
+      test('will move enqueued jobs when the time comes', async () => {
         await queue.enqueueAt(1000 * 10, specHelper.queue, 'someJob', [1, 2, 3])
         await scheduler.poll()
         let obj = await specHelper.popFromQueue()
-        should.exist(obj)
+        expect(obj).toBeDefined()
         obj = JSON.parse(obj)
-        obj['class'].should.equal('someJob')
-        obj.args.should.eql([1, 2, 3])
+        expect(obj['class']).toBe('someJob')
+        expect(obj.args).toEqual([1, 2, 3])
         await scheduler.end()
       })
 
-      it('will not move jobs in the future', async () => {
+      test('will not move jobs in the future', async () => {
         await queue.enqueueAt((new Date().getTime() + 10000), specHelper.queue, 'someJob', [1, 2, 3])
         await scheduler.poll()
         let obj = await specHelper.popFromQueue()
-        should.not.exist(obj)
+        expect(obj).toBeFalsy()
         await scheduler.end()
       })
     })
