@@ -1,6 +1,5 @@
 const path = require('path')
 const specHelper = require(path.join(__dirname, '..', 'utils', 'specHelper.js'))
-const os = require('os')
 const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let jobs = {
@@ -106,33 +105,6 @@ describe('worker', () => {
       await worker.connect()
       await worker.start()
       await worker.end()
-    })
-
-    describe('crashing workers', () => {
-      test('can clear previously crashed workers from the same host', async () => {
-        let name1 = os.hostname() + ':' + '0' // fake pid
-        let name2 = os.hostname() + ':' + process.pid // real pid
-        let worker1 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs)
-
-        await worker1.connect()
-        await worker1.init()
-        worker1.running = false
-
-        await new Promise((resolve) => { setTimeout(resolve, 500) })
-
-        let worker2 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs)
-        await worker2.connect()
-
-        await new Promise((resolve) => {
-          worker2.workerCleanup()
-
-          worker2.on('cleaning_worker', (worker, pid) => {
-            expect(worker).toMatch(new RegExp(name1))
-            expect(pid).toBe(0)
-            return resolve()
-          })
-        })
-      })
     })
 
     test('will determine the proper queue names', async () => {

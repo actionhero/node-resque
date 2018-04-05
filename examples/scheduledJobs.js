@@ -39,7 +39,6 @@ async function boot () {
 
   const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['time']}, jobs)
   await worker.connect()
-  await worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
   worker.start()
 
   // ////////////////////
