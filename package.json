@@ -28,24 +28,28 @@
     "ioredis": "^3.2.2"
   },
   "devDependencies": {
-    "fakeredis": "latest",
-    "mocha": "^5.0.1",
+    "jest": "^22.4.3",
     "node-schedule": "^1.3.0",
-    "should": "^13.2.1",
     "standard": "^11.0.0"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "<rootDir>/__tests__/utils"
+    ]
   },
   "standard": {
     "globals": [
-      "it",
-      "after",
+      "expect",
+      "test",
+      "afterAll",
       "afterEach",
-      "before",
+      "beforeAll",
       "beforeEach",
       "describe"
     ]
   },
   "scripts": {
     "pretest": "standard",
-    "test": "mocha"
+    "test": "jest"
   }
 }

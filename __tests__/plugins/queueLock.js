@@ -1,6 +1,5 @@
 const path = require('path')
-const specHelper = require(path.join(__dirname, '..', '_specHelper.js')).specHelper
-const should = require('should') // eslint-disable-line
+const specHelper = require(path.join(__dirname, '..', 'utils', 'specHelper.js'))
 const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let queue
@@ -23,7 +22,7 @@ const jobs = {
 
 describe('plugins', () => {
   describe('queueLock', () => {
-    before(async () => {
+    beforeAll(async () => {
       await specHelper.connect()
       await specHelper.cleanup()
       queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
@@ -33,27 +32,30 @@ describe('plugins', () => {
     beforeEach(async () => { await specHelper.cleanup() })
     afterEach(async () => { await specHelper.cleanup() })
 
-    after(async () => {
+    afterAll(async () => {
       await queue.end()
       await specHelper.disconnect()
     })
 
-    it('will not enque a job with the same args if it is already in the queue', async () => {
-      let tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
-      let tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
-      let length = await queue.length(specHelper.queue)
-      length.should.equal(1)
-      tryOne.should.equal(true)
-      tryTwo.should.equal(false)
-    })
+    test(
+      'will not enque a job with the same args if it is already in the queue',
+      async () => {
+        let tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+        let tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+        let length = await queue.length(specHelper.queue)
+        expect(length).toBe(1)
+        expect(tryOne).toBe(true)
+        expect(tryTwo).toBe(false)
+      }
+    )
 
-    it('will enque a job with the different args', async () => {
+    test('will enque a job with the different args', async () => {
       let tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
       let tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [3, 4])
       let length = await queue.length(specHelper.queue)
-      length.should.equal(2)
-      tryOne.should.equal(true)
-      tryTwo.should.equal(true)
+      expect(length).toBe(2)
+      expect(tryOne).toBe(true)
+      expect(tryTwo).toBe(true)
     })
 
     describe('with worker', () => {
@@ -70,27 +72,30 @@ describe('plugins', () => {
         await worker.connect()
       })
 
-      it('will remove a lock on a job when the job has been worked', async () => {
+      test('will remove a lock on a job when the job has been worked', async () => {
         const enqueue = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
-        enqueue.should.equal(true)
+        expect(enqueue).toBe(true)
 
         await worker.start()
         await worker.end()
 
         const result = await specHelper.redis.keys(specHelper.namespace + ':lock*')
-        result.should.have.lengthOf(0)
+        expect(result).toHaveLength(0)
       })
 
-      it('will remove a lock on a job if a plugin does not run the job', async () => {
-        const enqueue = await queue.enqueue(specHelper.queue, 'blockingJob', [1, 2])
-        enqueue.should.equal(true)
+      test(
+        'will remove a lock on a job if a plugin does not run the job',
+        async () => {
+          const enqueue = await queue.enqueue(specHelper.queue, 'blockingJob', [1, 2])
+          expect(enqueue).toBe(true)
 
-        await worker.start()
-        await worker.end()
+          await worker.start()
+          await worker.end()
 
-        const result = await specHelper.redis.keys(specHelper.namespace + ':lock*')
-        result.should.have.lengthOf(0)
-      })
+          const result = await specHelper.redis.keys(specHelper.namespace + ':lock*')
+          expect(result).toHaveLength(0)
+        }
+      )
     })
   })
 })
