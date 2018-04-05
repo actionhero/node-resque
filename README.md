@@ -15,8 +15,7 @@ I learn best by examples:
 
 ```javascript
 const path = require('path')
-const NodeResque = require(path.join(__dirname, '..', 'index.js'))
-// In your projects: const NR = require('node-resque');
+const NodeResque = require('node-resque')
 
 async function boot () {
   // ////////////////////////
@@ -84,6 +83,7 @@ async function boot () {
   worker.on('end', () => { console.log('worker ended') })
   worker.on('cleaning_worker', (worker, pid) => { console.log(`cleaning old worker ${worker}`) })
   worker.on('poll', (queue) => { console.log(`worker polling ${queue}`) })
+  worker.on('ping', (time) => { console.log(`worker check in @ ${time}`) })
   worker.on('job', (queue, job) => { console.log(`working job ${queue} ${JSON.stringify(job)}`) })
   worker.on('reEnqueue', (queue, job, plugin) => { console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`) })
   worker.on('success', (queue, job, result) => { console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`) })
@@ -95,6 +95,7 @@ async function boot () {
   scheduler.on('end', () => { console.log('scheduler ended') })
   scheduler.on('poll', () => { console.log('scheduler polling') })
   scheduler.on('master', (state) => { console.log('scheduler became master') })
+  scheduler.on('cleanStuckWorker', (workerName, errorPayload, delta) => { console.log(`failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`) })
   scheduler.on('error', (error) => { console.log(`scheduler error >> ${error}`) })
   scheduler.on('workingTimestamp', (timestamp) => { console.log(`scheduler working timestamp ${timestamp}`) })
   scheduler.on('transferredJob', (timestamp, job) => { console.log(`scheduler enquing job ${timestamp} >> ${JSON.stringify(job)}`) })
@@ -301,6 +302,30 @@ We use a try/catch pattern to catch errors in your jobs. If any job throws an un
 
 ## Failed Worker Management
 
+### Automatically
+
+By default, the scheduler will check for workers which haven't pinged redis in 60 minutes.  If this happens, we will assume the process crashed, and remove it from redis.  If this worker was working on a job, we will place it in the failed queue for later inspection.  Every worker has a timer running in which it then updates a key in redis every `timeout` (default: 5 seconds).  If your job is slow, but async, there should be no problem.  However, if your job consumes 100% of the CPU of the process, this timer might not fire. 
+
+To modify the 60 minute check, change `stuckWorkerTimeout` when configuring your scheudler, ie:
+
+```js
+const scheduler = new NodeResque.Scheduler({
+  stuckWorkerTimeout: (1000 * 60 * 60) // 1 hour, in ms
+  connection: connectionDetails
+})
+```
+
+Set your scheduler's `stuckWorkerTimeout = false` to disable this behavior.
+
+```js
+const scheduler = new NodeResque.Scheduler({
+  stuckWorkerTimeout: false // will not fail jobs which haven't pinged redis
+  connection: connectionDetails
+})
+```
+
+### Manually
+
 Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance to notify redis that it is leaving the pool (this happens all the time on PAAS providers like Heroku).  When this happens, you will not only need to extract the job from the now-zombie worker's "working on" status, but also remove the stuck worker.  To aid you in these edge cases, `await queue.cleanOldWorkers(age)` is available.  
 
 Because there are no 'heartbeats' in resque, it is imposable for the application to know if a worker has been working on a long job or it is dead.  You are required to provide an "age" for how long a worker has been "working", and all those older than that age will be removed, and the job they are working on moved to the error queue (where you can then use `queue.retryAndRemoveFailed`) to re-enqueue the job.
@@ -436,6 +461,7 @@ multiWorker.on('start',             (workerId) => {                      console
 multiWorker.on('end',               (workerId) => {                      console.log("worker["+workerId+"] ended"); })
 multiWorker.on('cleaning_worker',   (workerId, worker, pid) => {         console.log("cleaning old worker " + worker); })
 multiWorker.on('poll',              (workerId, queue) => {               console.log("worker["+workerId+"] polling " + queue); })
+multiWorker.on('ping',              (workerId, time) => {               console.log("worker["+workerId+"] check in @ " + time); })
 multiWorker.on('job',               (workerId, queue, job) => {          console.log("worker["+workerId+"] working job " + queue + " " + JSON.stringify(job)); })
 multiWorker.on('reEnqueue',         (workerId, queue, job, plugin) => {  console.log("worker["+workerId+"] reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
 multiWorker.on('success',           (workerId, queue, job, result) => {  console.log("worker["+workerId+"] job success " + queue + " " + JSON.stringify(job) + " >> " + result); })

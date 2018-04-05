@@ -22,41 +22,15 @@ async function boot () {
   // DEFINE YOUR WORKER TASKS //
   // ///////////////////////////
 
-  let jobsToComplete = 0
-
   const jobs = {
-    'add': {
-      plugins: ['JobLock'],
-      pluginOptions: {
-        JobLock: {}
-      },
-      perform: async (a, b) => {
-        await new Promise((resolve) => { setTimeout(resolve, 1000) })
-        jobsToComplete--
-        tryShutdown()
-
-        let answer = a + b
-        return answer
+    'stuck': {
+      perform: async function () {
+        console.log(`${this.name} is starting stuck job...`)
+        await new Promise((resolve) => {
+          clearTimeout(this.pingTimer)// stop the worker from checkin in, like the process crashed
+          setTimeout(resolve, 60 * 60 * 1000) // 1 hour job
+        })
       }
-    },
-    'subtract': {
-      perform: (a, b) => {
-        jobsToComplete--
-        tryShutdown()
-
-        let answer = a - b
-        return answer
-      }
-    }
-  }
-
-  // just a helper for this demo
-  async function tryShutdown () {
-    if (jobsToComplete === 0) {
-      await new Promise((resolve) => { setTimeout(resolve, 500) })
-      await scheduler.end()
-      await worker.end()
-      process.exit()
     }
   }
 
@@ -64,7 +38,7 @@ async function boot () {
   // START A WORKER //
   // /////////////////
 
-  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
+  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['stuckJobs']}, jobs)
   await worker.connect()
   worker.start()
 
@@ -72,7 +46,11 @@ async function boot () {
   // START A SCHEDULER //
   // ////////////////////
 
-  const scheduler = new NodeResque.Scheduler({connection: connectionDetails})
+  const scheduler = new NodeResque.Scheduler({
+    stuckWorkerTimeout: (10 * 1000),
+    connection: connectionDetails
+  })
+
   await scheduler.connect()
   scheduler.start()
 
@@ -97,9 +75,13 @@ async function boot () {
   scheduler.on('poll', () => { console.log('scheduler polling') })
   scheduler.on('master', (state) => { console.log('scheduler became master') })
   scheduler.on('error', (error) => { console.log(`scheduler error >> ${error}`) })
-  scheduler.on('cleanStuckWorker', (workerName, errorPayload, delta) => { console.log(`failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`) })
   scheduler.on('workingTimestamp', (timestamp) => { console.log(`scheduler working timestamp ${timestamp}`) })
   scheduler.on('transferredJob', (timestamp, job) => { console.log(`scheduler enquing job ${timestamp} >> ${JSON.stringify(job)}`) })
+
+  scheduler.on('cleanStuckWorker', (workerName, errorPayload, delta) => {
+    console.log(`failing ${workerName} (stuck for ${delta}s) and failing job: ${JSON.stringify(errorPayload)}`)
+    process.exit()
+  })
 
   // //////////////////////
   // CONNECT TO A QUEUE //
@@ -108,11 +90,7 @@ async function boot () {
   const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
   queue.on('error', function (error) { console.log(error) })
   await queue.connect()
-  await queue.enqueue('math', 'add', [1, 2])
-  await queue.enqueue('math', 'add', [1, 2])
-  await queue.enqueue('math', 'add', [2, 3])
-  await queue.enqueueIn(3000, 'math', 'subtract', [2, 1])
-  jobsToComplete = 4
+  await queue.enqueue('stuckJobs', 'stuck', ['oh no'])
 }
 
 boot()
