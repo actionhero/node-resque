@@ -26,7 +26,7 @@ describe('scheduler', () => {
         namespace: specHelper.connectionDetails.namespace
       }
 
-      scheduler = new NodeResque.Scheduler({connection: connectionDetails, timeout: specHelper.timeout})
+      scheduler = new NodeResque.Scheduler({ connection: connectionDetails, timeout: specHelper.timeout })
 
       scheduler.on('poll', () => { throw new Error('Should not emit poll') })
       scheduler.on('master', () => { throw new Error('Should not emit master') })
@@ -70,7 +70,11 @@ describe('scheduler', () => {
     describe('[with connection]', () => {
       beforeEach(async () => {
         await specHelper.cleanup()
-        scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
+        scheduler = new NodeResque.Scheduler({
+          connection: specHelper.connectionDetails,
+          timeout: specHelper.timeout,
+          stuckWorkerTimeout: 1000
+        })
         queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
         await scheduler.connect()
         await queue.connect()
@@ -99,6 +103,70 @@ describe('scheduler', () => {
         let obj = await specHelper.popFromQueue()
         expect(obj).toBeFalsy()
         await scheduler.end()
+      })
+
+      describe('stuck workers', () => {
+        let worker
+        const jobs = {
+          'stuck': {
+            perform: async function () {
+              await new Promise((resolve) => {
+                // stop the worker from checkin in, like the process crashed
+                // don't resolve
+                clearTimeout(this.pingTimer)
+              })
+            }
+          }
+        }
+
+        beforeAll(async () => {
+          worker = new NodeResque.Worker({
+            connection: specHelper.connectionDetails,
+            timeout: specHelper.timeout,
+            queues: ['stuckJobs']
+          }, jobs)
+          await worker.connect()
+        })
+
+        afterAll(async () => {
+          await scheduler.end()
+          await worker.end()
+        })
+
+        test('will remove stuck workers and fail thier jobs', async () => {
+          await scheduler.connect()
+          await scheduler.start()
+          await worker.start()
+
+          const workers = await queue.allWorkingOn()
+          let h = {}
+          h[worker.name] = 'started'
+          expect(workers).toEqual(h)
+
+          await queue.enqueue('stuckJobs', 'stuck', ['oh no!'])
+
+          await new Promise(async (resolve) => {
+            scheduler.on('cleanStuckWorker', async (workerName, errorPayload, delta) => {
+              // response data should contain failure
+              expect(workerName).toEqual(worker.name)
+              expect(errorPayload.worker).toEqual(worker.name)
+              expect(errorPayload.error).toEqual('Worker Timeout (killed manually)')
+
+              // check the workers list, should be empty now
+              expect(await queue.allWorkingOn()).toEqual({})
+
+              // check the failed list
+              let failed = await specHelper.redis.rpop(specHelper.namespace + ':' + 'failed')
+              failed = JSON.parse(failed)
+              expect(failed.queue).toBe('stuckJobs')
+              expect(failed.exception).toBe('Worker Timeout (killed manually)')
+              expect(failed.error).toBe('Worker Timeout (killed manually)')
+
+              scheduler.removeAllListeners('cleanStuckWorker')
+              resolve()
+            })
+          })
+        })
       })
     })
   })

@@ -66,7 +66,6 @@ async function boot () {
 
   const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
   await worker.connect()
-  await worker.workerCleanup() // optional: cleanup any previous improperly shutdown workers on this host
   worker.start()
 
   // ////////////////////
@@ -85,6 +84,7 @@ async function boot () {
   worker.on('end', () => { console.log('worker ended') })
   worker.on('cleaning_worker', (worker, pid) => { console.log(`cleaning old worker ${worker}`) })
   worker.on('poll', (queue) => { console.log(`worker polling ${queue}`) })
+  worker.on('ping', (time) => { console.log(`worker check in @ ${time}`) })
   worker.on('job', (queue, job) => { console.log(`working job ${queue} ${JSON.stringify(job)}`) })
   worker.on('reEnqueue', (queue, job, plugin) => { console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`) })
   worker.on('success', (queue, job, result) => { console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`) })
@@ -97,6 +97,7 @@ async function boot () {
   scheduler.on('poll', () => { console.log('scheduler polling') })
   scheduler.on('master', (state) => { console.log('scheduler became master') })
   scheduler.on('error', (error) => { console.log(`scheduler error >> ${error}`) })
+  scheduler.on('cleanStuckWorker', (workerName, errorPayload, delta) => { console.log(`failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`) })
   scheduler.on('workingTimestamp', (timestamp) => { console.log(`scheduler working timestamp ${timestamp}`) })
   scheduler.on('transferredJob', (timestamp, job) => { console.log(`scheduler enquing job ${timestamp} >> ${JSON.stringify(job)}`) })
 

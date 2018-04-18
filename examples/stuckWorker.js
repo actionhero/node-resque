@@ -1,35 +1,36 @@
 const path = require('path')
 const NodeResque = require(path.join(__dirname, '..', 'index.js'))
-// In your projects: var NodeResque = require('node-resque');
-
-// We'll use https://github.com/tejasmanohar/node-schedule for this example,
-// but there are many other excelent node scheduling projects
-const schedule = require('node-schedule')
-
-// ////////////////////////
-// SET UP THE CONNECTION //
-// ////////////////////////
-
-const connectionDetails = {
-  pkg: 'ioredis',
-  host: '127.0.0.1',
-  password: null,
-  port: 6379,
-  database: 0
-  // namespace: 'resque',
-  // looping: true,
-  // options: {password: 'abc'},
-}
+// In your projects: const NodeResque = require('node-resque');
 
 async function boot () {
+  // ////////////////////////
+  // SET UP THE CONNECTION //
+  // ////////////////////////
+
+  const connectionDetails = {
+    pkg: 'ioredis',
+    host: '127.0.0.1',
+    password: null,
+    port: 6379,
+    database: 0
+    // namespace: 'resque',
+    // looping: true,
+    // options: {password: 'abc'},
+  }
+
   // ///////////////////////////
   // DEFINE YOUR WORKER TASKS //
   // ///////////////////////////
 
   const jobs = {
-    ticktock: (time, callback) => {
-      console.log(`*** THE TIME IS ${time} ***`)
-      return true
+    'stuck': {
+      perform: async function () {
+        console.log(`${this.name} is starting stuck job...`)
+        await new Promise((resolve) => {
+          clearTimeout(this.pingTimer)// stop the worker from checkin in, like the process crashed
+          setTimeout(resolve, 60 * 60 * 1000) // 1 hour job
+        })
+      }
     }
   }
 
@@ -37,7 +38,7 @@ async function boot () {
   // START A WORKER //
   // /////////////////
 
-  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['time']}, jobs)
+  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['stuckJobs']}, jobs)
   await worker.connect()
   worker.start()
 
@@ -45,7 +46,11 @@ async function boot () {
   // START A SCHEDULER //
   // ////////////////////
 
-  const scheduler = new NodeResque.Scheduler({connection: connectionDetails})
+  const scheduler = new NodeResque.Scheduler({
+    stuckWorkerTimeout: (10 * 1000),
+    connection: connectionDetails
+  })
+
   await scheduler.connect()
   scheduler.start()
 
@@ -57,6 +62,7 @@ async function boot () {
   worker.on('end', () => { console.log('worker ended') })
   worker.on('cleaning_worker', (worker, pid) => { console.log(`cleaning old worker ${worker}`) })
   worker.on('poll', (queue) => { console.log(`worker polling ${queue}`) })
+  worker.on('ping', (time) => { console.log(`worker check in @ ${time}`) })
   worker.on('job', (queue, job) => { console.log(`working job ${queue} ${JSON.stringify(job)}`) })
   worker.on('reEnqueue', (queue, job, plugin) => { console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`) })
   worker.on('success', (queue, job, result) => { console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`) })
@@ -72,35 +78,19 @@ async function boot () {
   scheduler.on('workingTimestamp', (timestamp) => { console.log(`scheduler working timestamp ${timestamp}`) })
   scheduler.on('transferredJob', (timestamp, job) => { console.log(`scheduler enquing job ${timestamp} >> ${JSON.stringify(job)}`) })
 
-  // //////////////
-  // DEFINE JOBS //
-  // //////////////
+  scheduler.on('cleanStuckWorker', (workerName, errorPayload, delta) => {
+    console.log(`failing ${workerName} (stuck for ${delta}s) and failing job: ${JSON.stringify(errorPayload)}`)
+    process.exit()
+  })
+
+  // //////////////////////
+  // CONNECT TO A QUEUE //
+  // //////////////////////
 
   const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
   queue.on('error', function (error) { console.log(error) })
   await queue.connect()
-  schedule.scheduleJob('0,10,20,30,40,50 * * * * *', async () => { // do this job every 10 seconds, cron style
-    // we want to ensure that only one instance of this job is scheduled in our enviornment at once,
-    // no matter how many schedulers we have running
-    if (scheduler.master) {
-      console.log('>>> enquing a job')
-      await queue.enqueue('time', 'ticktock', new Date().toString())
-    }
-  })
-
-  // ////////////////////
-  // SHUTDOWN HELPERS //
-  // ////////////////////
-
-  const shutdown = async () => {
-    await scheduler.end()
-    await worker.end()
-    console.log('bye.')
-    process.exit()
-  }
-
-  process.on('SIGTERM', shutdown)
-  process.on('SIGINT', shutdown)
+  await queue.enqueue('stuckJobs', 'stuck', ['oh no'])
 }
 
 boot()

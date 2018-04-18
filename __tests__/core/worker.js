@@ -1,6 +1,5 @@
 const path = require('path')
 const specHelper = require(path.join(__dirname, '..', 'utils', 'specHelper.js'))
-const os = require('os')
 const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
 let jobs = {
@@ -25,6 +24,12 @@ let jobs = {
     perform: async () => {
       await new Promise((resolve) => { setTimeout(resolve, 100) })
       return 'yay'
+    }
+  },
+  'twoSeconds': {
+    perform: async () => {
+      await new Promise((resolve) => { setTimeout(resolve, 1000 * 2) })
+      return 'slow'
     }
   },
   'quickDefine': async () => { return 'ok' }
@@ -108,33 +113,6 @@ describe('worker', () => {
       await worker.end()
     })
 
-    describe('crashing workers', () => {
-      test('can clear previously crashed workers from the same host', async () => {
-        let name1 = os.hostname() + ':' + '0' // fake pid
-        let name2 = os.hostname() + ':' + process.pid // real pid
-        let worker1 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name1}, jobs)
-
-        await worker1.connect()
-        await worker1.init()
-        worker1.running = false
-
-        await new Promise((resolve) => { setTimeout(resolve, 500) })
-
-        let worker2 = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, name: name2}, jobs)
-        await worker2.connect()
-
-        await new Promise((resolve) => {
-          worker2.workerCleanup()
-
-          worker2.on('cleaning_worker', (worker, pid) => {
-            expect(worker).toMatch(new RegExp(name1))
-            expect(pid).toBe(0)
-            return resolve()
-          })
-        })
-      })
-    })
-
     test('will determine the proper queue names', async () => {
       let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs)
       await worker.connect()
@@ -178,7 +156,7 @@ describe('worker', () => {
         await new Promise(async (resolve) => {
           worker.start()
 
-          worker.on('success', function (q, job, result) {
+          worker.on('success', (q, job, result) => {
             expect(q).toBe(specHelper.queue)
             expect(job['class']).toBe('add')
             expect(result).toBe(3)
@@ -196,7 +174,7 @@ describe('worker', () => {
         await new Promise(async (resolve) => {
           worker.start()
 
-          worker.on('success', function (q, job, result) {
+          worker.on('success', (q, job, result) => {
             expect(result.a).toBe('starting value')
             expect(worker.result).toBe(result)
 
@@ -212,7 +190,7 @@ describe('worker', () => {
         await new Promise(async (resolve) => {
           worker.start()
 
-          worker.on('success', function (q, job, result) {
+          worker.on('success', (q, job, result) => {
             expect(result).toBe('ok')
             worker.removeAllListeners('success')
             return resolve()
@@ -226,7 +204,7 @@ describe('worker', () => {
         await new Promise(async (resolve) => {
           worker.start()
 
-          worker.on('failure', function (q, job, failure) {
+          worker.on('failure', (q, job, failure) => {
             expect(q).toBe(specHelper.queue)
             expect(String(failure)).toBe('Error: No job defined for class "somethingFake"')
 
@@ -242,6 +220,30 @@ describe('worker', () => {
         expect(data.queue).toBe(specHelper.queue)
         expect(data.exception).toBe('Error')
         expect(data.error).toBe('No job defined for class "somethingFake"')
+      })
+
+      test('will ping with status even when working a slow job', async () => {
+        const nowInSeconds = Math.round(new Date().getTime() / 1000)
+        await worker.start()
+        await new Promise((resolve) => setTimeout(resolve, (worker.options.timeout * 2)))
+        const pingKey = worker.connection.key('worker', 'ping', worker.name)
+        let firstPayload = JSON.parse(await specHelper.redis.get(pingKey))
+        expect(firstPayload.name).toEqual(worker.name)
+        expect(firstPayload.time).toBeGreaterThanOrEqual(nowInSeconds)
+
+        await queue.enqueue(specHelper.queue, 'twoSeconds')
+
+        await new Promise(async (resolve) => {
+          worker.on('success', (q, job, result) => {
+            expect(result).toBe('slow')
+            worker.removeAllListeners('success')
+            return resolve()
+          })
+        })
+
+        let secondPayload = JSON.parse(await specHelper.redis.get(pingKey))
+        expect(secondPayload.name).toEqual(worker.name)
+        expect(secondPayload.time).toBeGreaterThanOrEqual(firstPayload.time)
       })
     })
   })
