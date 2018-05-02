@@ -48,7 +48,7 @@ describe('connection', () => {
     connection.end()
   })
 
-  test('will select redis db before returning connection', async () => {
+  test('will select redis db from options', async () => {
     let connectionDetails = specHelper.cleanConnectionDetails()
     connectionDetails.database = 9
     let connection = new NodeResque.Connection(connectionDetails)
