@@ -48,6 +48,15 @@ describe('connection', () => {
     connection.end()
   })
 
+  test('will select redis db from options', async () => {
+    let connectionDetails = specHelper.cleanConnectionDetails()
+    connectionDetails.database = 9
+    let connection = new NodeResque.Connection(connectionDetails)
+    await connection.connect()
+    expect(connection.redis.options.db).toBe(connectionDetails.database)
+    connection.end()
+  })
+
   test('removes empty namespace from generated key', async () => {
     let connectionDetails = specHelper.cleanConnectionDetails()
     connectionDetails['namespace'] = ''
