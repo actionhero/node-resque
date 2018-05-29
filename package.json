@@ -28,7 +28,7 @@
     "ioredis": "^3.2.2"
   },
   "devDependencies": {
-    "jest": "^22.4.3",
+    "jest": "^22.4.4",
     "node-schedule": "^1.3.0",
     "standard": "^11.0.0"
   },
