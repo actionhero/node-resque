@@ -181,6 +181,7 @@ worker.start()
   - https://github.com/lantins/resque-retry
   - https://github.com/resque/resque/wiki/Failure-Backends
 - If you plan to run more than one worker per nodejs process, be sure to name them something distinct.  Names **must** follow the pattern `hostname:pid+unique_id`.  For example:
+- For the Retry plugin, a success message will be emitted from the worker on each attempt (even if the job fails) except the final retry. The final retry will emit a failure message instead.
 
 ```javascript
 var name = os.hostname() + ":" + process.pid + "+" + counter;
