@@ -305,7 +305,7 @@ We use a try/catch pattern to catch errors in your jobs. If any job throws an un
 
 ### Automatically
 
-By default, the scheduler will check for workers which haven't pinged redis in 60 minutes.  If this happens, we will assume the process crashed, and remove it from redis.  If this worker was working on a job, we will place it in the failed queue for later inspection.  Every worker has a timer running in which it then updates a key in redis every `timeout` (default: 5 seconds).  If your job is slow, but async, there should be no problem.  However, if your job consumes 100% of the CPU of the process, this timer might not fire. 
+By default, the scheduler will check for workers which haven't pinged redis in 60 minutes.  If this happens, we will assume the process crashed, and remove it from redis.  If this worker was working on a job, we will place it in the failed queue for later inspection.  Every worker has a timer running in which it then updates a key in redis every `timeout` (default: 5 seconds).  If your job is slow, but async, there should be no problem.  However, if your job consumes 100% of the CPU of the process, this timer might not fire.
 
 To modify the 60 minute check, change `stuckWorkerTimeout` when configuring your scheudler, ie:
 
@@ -331,7 +331,7 @@ Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance
 
 Because there are no 'heartbeats' in resque, it is imposable for the application to know if a worker has been working on a long job or it is dead.  You are required to provide an "age" for how long a worker has been "working", and all those older than that age will be removed, and the job they are working on moved to the error queue (where you can then use `queue.retryAndRemoveFailed`) to re-enqueue the job.
 
-If you know the name of a worker that should be removed, you can also call `await queue.forceCleanWorker(workerName)` directly, and that will also remove the worker and move any job it was working on into the error queue.
+If you know the name of a worker that should be removed, you can also call `await queue.forceCleanWorker(workerName)` directly, and that will also remove the worker and move any job it was working on into the error queue.  This method will still proceed for workers which are only partially in redis, indicting a previous connection failure.  In this case, the job which the worker was working on is irrecoverably lost.
 
 ## Job Schedules
 
