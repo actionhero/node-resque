@@ -480,7 +480,7 @@ describe('queue', () => {
         })
       })
 
-      test('can remove stuck workers and re-enquue thier jobs', async () => {
+      test('can remove stuck workers and re-enqueue their jobs', async () => {
         let age = 1
         await queue.enqueue(specHelper.queue, 'slowJob', {a: 1})
         await workerA.start()
