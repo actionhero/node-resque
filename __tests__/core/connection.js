@@ -1,4 +1,5 @@
 const path = require('path')
+const Ioredis = require('ioredis')
 const specHelper = require(path.join(__dirname, '..', 'utils', 'specHelper.js'))
 const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
 
@@ -41,11 +42,66 @@ describe('connection', () => {
     expect(keys.length).toBe(0)
   })
 
-  test('will properly build namespace strings', async () => {
-    let connection = new NodeResque.Connection(specHelper.cleanConnectionDetails())
-    await connection.connect()
-    expect(connection.key('thing')).toBe(specHelper.namespace + ':thing')
-    connection.end()
+  describe('keys and namespaces', () => {
+    const db = specHelper.connectionDetails.database
+    let connection
+    beforeAll(async () => {
+      connection = new NodeResque.Connection(specHelper.cleanConnectionDetails())
+      await connection.connect()
+    })
+
+    let prefixedConnection
+    let prefixedRedis
+    beforeAll(async () => {
+      prefixedRedis = new Ioredis({keyPrefix: 'customNamespace:', db: db})
+      prefixedConnection = new NodeResque.Connection({redis: prefixedRedis, namespace: specHelper.namespace})
+      await prefixedConnection.connect()
+    })
+
+    afterAll(async () => {
+      connection.end()
+      prefixedConnection.end()
+      prefixedRedis.quit()
+    })
+
+    test('keys built with the default namespace are correct', () => {
+      expect(connection.key('thing')).toBe(`resque-test-${db}:thing`)
+      expect(prefixedConnection.key('thing')).toBe(`resque-test-${db}:thing`)
+      // the value retunred by a redis prefix should match a plain redis connection
+      expect(connection.key('thing')).toBe(prefixedConnection.key('thing'))
+    })
+
+    test('ioredis transparent key prefix writes keys with the prefix even if they are not returned', async () => {
+      await connection.redis.set(connection.key('testPrefixKey'), 'abc123')
+      await prefixedConnection.redis.set(prefixedConnection.key('testPrefixKey'), 'abc123')
+
+      const result = await connection.redis.get(connection.key('testPrefixKey'))
+      const prefixedResult = await prefixedConnection.redis.get(prefixedConnection.key('testPrefixKey'))
+      expect(result).toBe('abc123')
+      expect(prefixedResult).toBe('abc123')
+
+      const keys = await connection.redis.keys('*')
+      expect(keys).toContain(`resque-test-${db}:testPrefixKey`)
+      expect(keys).toContain(`customNamespace:resque-test-${db}:testPrefixKey`)
+    })
+
+    test('keys built with a custom namespace are correct', () => {
+      connection.options.namespace = 'customNamespace'
+      expect(connection.key('thing')).toBe(`customNamespace:thing`)
+
+      prefixedConnection.options.namespace = 'customNamespace'
+      expect(prefixedConnection.key('thing')).toBe(`customNamespace:thing`)
+    })
+
+    test('will properly build namespace strings dynamically', async () => {
+      connection.options.namespace = specHelper.namespace
+      expect(connection.key('thing')).toBe(specHelper.namespace + ':thing')
+
+      prefixedConnection.options.namespace = specHelper.namespace
+      expect(prefixedConnection.key('thing')).toBe(specHelper.namespace + ':thing')
+
+      expect(connection.key('thing')).toBe(prefixedConnection.key('thing'))
+    })
   })
 
   test('will select redis db from options', async () => {
