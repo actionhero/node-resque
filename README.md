@@ -141,7 +141,7 @@ var connectionDetails = {
   password:  "",
   port:      6379,
   database:  0,
-  namespace: "resque",
+  namespace: "resque", // Also allow array of strings
 }
 
 var worker = new NodeResque.Worker({connection: connectionDetails, queues: 'math'}, jobs);

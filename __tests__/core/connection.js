@@ -93,6 +93,14 @@ describe('connection', () => {
       expect(prefixedConnection.key('thing')).toBe(`customNamespace:thing`)
     })
 
+    test('keys built with a array namespace are correct', () => {
+      connection.options.namespace = ['custom', 'namespace']
+      expect(connection.key('thing')).toBe(`custom:namespace:thing`)
+
+      prefixedConnection.options.namespace = ['custom', 'namespace']
+      expect(prefixedConnection.key('thing')).toBe(`custom:namespace:thing`)
+    })
+
     test('will properly build namespace strings dynamically', async () => {
       connection.options.namespace = specHelper.namespace
       expect(connection.key('thing')).toBe(specHelper.namespace + ':thing')
