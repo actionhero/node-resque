@@ -361,7 +361,7 @@ schedule.scheduleJob('10,20,30,40,50 * * * * *', async () => { // do this job ev
 
 ## Plugins
 
-Just like ruby's resque, you can write worker plugins.  They look look like this.  The 4 hooks you have are `beforeEnqueue`, `afterEnqueue`, `beforePerform`, and `afterPerform`.  Plugins are `classes` which extend `NodeResque.Plugin`
+Just like ruby's resque, you can write worker plugins.  They look like this.  The 4 hooks you have are `beforeEnqueue`, `afterEnqueue`, `beforePerform`, and `afterPerform`.  Plugins are `classes` which extend `NodeResque.Plugin`
 
 ```javascript
 const NodeResque = require('node-resque')
