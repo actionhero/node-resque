@@ -64,6 +64,37 @@ describe('connection', () => {
       prefixedRedis.quit()
     })
 
+    test('getKeys returns appropriate keys based on matcher given', async () => {
+      // seed the DB with keys to test with
+      await Promise.all(
+        new Array(25).fill(0).map((v, i) => i + 1).map(async v => {
+          await connection.redis.set(`test-key${v}`, v.toString())
+          if (v <= 5) {
+            await connection.redis.set(`test-not-key${v}`, v.toString())
+          }
+        })
+      )
+
+      // sanity checks to confirm keys above are set and exist
+      expect(await connection.redis.get('test-key1')).toBe('1')
+      expect(await connection.redis.get('test-key20')).toBe('20')
+      expect(await connection.redis.get('test-not-key1')).toBe('1')
+      expect(await connection.redis.get('test-not-key5')).toBe('5')
+
+      const foundKeys = await connection.getKeys('test-key*')
+
+      expect(foundKeys.length).toBe(25)
+      expect(foundKeys).toContain('test-key1')
+      expect(foundKeys).toContain('test-key5')
+      expect(foundKeys).toContain('test-key20')
+      expect(foundKeys).toContain('test-key25')
+      expect(foundKeys).not.toContain('test-key50')
+      expect(foundKeys).not.toContain('test-not-key1')
+      expect(foundKeys).not.toContain('test-not-key3')
+      expect(foundKeys).not.toContain('test-not-key5')
+      expect(foundKeys).not.toContain('test-not-key50')
+    })
+
     test('keys built with the default namespace are correct', () => {
       expect(connection.key('thing')).toBe(`resque-test-${db}:thing`)
       expect(prefixedConnection.key('thing')).toBe(`resque-test-${db}:thing`)
@@ -80,7 +111,7 @@ describe('connection', () => {
       expect(result).toBe('abc123')
       expect(prefixedResult).toBe('abc123')
 
-      const keys = await connection.redis.keys('*')
+      const keys = await connection.getKeys('*')
       expect(keys).toContain(`resque-test-${db}:testPrefixKey`)
       expect(keys).toContain(`customNamespace:resque-test-${db}:testPrefixKey`)
     })
