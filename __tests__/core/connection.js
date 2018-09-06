@@ -69,11 +69,9 @@ describe('connection', () => {
       await Promise.all(
         new Array(25).fill(0).map((v, i) => i + 1).map(async v => {
           await connection.redis.set(`test-key${v}`, v.toString())
-        })
-      )
-      await Promise.all(
-        new Array(5).fill(0).map((v, i) => i + 1).map(async v => {
-          await connection.redis.set(`test-not-key${v}`, v.toString())
+          if (v <= 5) {
+            await connection.redis.set(`test-not-key${v}`, v.toString())
+          }
         })
       )
 
