@@ -80,7 +80,7 @@ describe('connection', () => {
       expect(result).toBe('abc123')
       expect(prefixedResult).toBe('abc123')
 
-      const keys = await connection.redis.keys('*')
+      const keys = await connection.getKeys('*')
       expect(keys).toContain(`resque-test-${db}:testPrefixKey`)
       expect(keys).toContain(`customNamespace:resque-test-${db}:testPrefixKey`)
     })
