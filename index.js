@@ -1,9 +1,7 @@
-const path = require('path')
-
-exports.Connection = require(path.join(__dirname, 'lib', 'connection.js')).Connection
-exports.Queue = require(path.join(__dirname, 'lib', 'queue.js')).Queue
-exports.Worker = require(path.join(__dirname, 'lib', 'worker.js')).Worker
-exports.MultiWorker = require(path.join(__dirname, 'lib', 'multiWorker.js')).MultiWorker
-exports.Scheduler = require(path.join(__dirname, 'lib', 'scheduler.js')).Scheduler
-exports.PluginRunner = require(path.join(__dirname, 'lib', 'pluginRunner.js'))
-exports.Plugin = require(path.join(__dirname, 'lib', 'plugin.js')).Plugin
+exports.Connection = require('./lib/connection.js').Connection
+exports.Queue = require('./lib/queue.js').Queue
+exports.Worker = require('./lib/worker.js').Worker
+exports.MultiWorker = require('./lib/multiWorker.js').MultiWorker
+exports.Scheduler = require('./lib/scheduler.js').Scheduler
+exports.PluginRunner = require('./lib/pluginRunner.js')
+exports.Plugin = require('./lib/plugin.js').Plugin

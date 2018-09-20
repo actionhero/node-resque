@@ -14,7 +14,6 @@
 I learn best by examples:
 
 ```javascript
-const path = require('path')
 const NodeResque = require('node-resque')
 
 async function boot () {

@@ -1,6 +1,5 @@
 // Simple plugin to prevent all jobs
-const path = require('path')
-const NodeResque = require(path.join('..', '..', 'index.js'))
+const NodeResque = require('../../index.js')
 
 class CustomPlugin extends NodeResque.Plugin {
   beforeEnqueue () {

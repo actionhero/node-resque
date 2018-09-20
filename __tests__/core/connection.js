@@ -1,7 +1,6 @@
-const path = require('path')
 const Ioredis = require('ioredis')
-const specHelper = require(path.join(__dirname, '..', 'utils', 'specHelper.js'))
-const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
+const specHelper = require('../utils/specHelper.js')
+const NodeResque = require('../../index.js')
 
 describe('connection', () => {
   beforeAll(async () => {
