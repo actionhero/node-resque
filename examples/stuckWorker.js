@@ -1,5 +1,4 @@
-const path = require('path')
-const NodeResque = require(path.join(__dirname, '..', 'index.js'))
+const NodeResque = require('../index.js')
 // In your projects: const NodeResque = require('node-resque');
 
 async function boot () {

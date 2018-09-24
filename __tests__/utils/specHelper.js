@@ -1,9 +1,8 @@
-const path = require('path')
 const Redis = require('ioredis')
 const namespace = `resque-test-${(process.env.JEST_WORKER_ID || 0)}`
 const queue = 'test_queue'
 const pkg = 'ioredis'
-const NodeResque = require(path.join(__dirname, '..', '..', 'index.js'))
+const NodeResque = require('../../index.js')
 
 module.exports = {
   pkg: pkg,
