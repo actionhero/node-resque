@@ -39,7 +39,7 @@ async function boot () {
   // BUILD A WORKER & WORK A JOB //
   // //////////////////////////////
 
-  var worker = new NodeResque.Worker({connection: connectionDetails, queues: ['math', 'otherQueue']}, jobs)
+  var worker = new NodeResque.Worker({ connection: connectionDetails, queues: ['math', 'otherQueue'] }, jobs)
   await worker.connect()
   let result = await worker.performInline('add', [1, 2])
   console.log('Result: ' + result)

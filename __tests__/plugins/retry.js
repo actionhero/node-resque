@@ -32,8 +32,8 @@ describe('plugins', () => {
     beforeAll(async () => {
       await specHelper.connect()
       await specHelper.cleanup()
-      queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue}, jobs)
-      scheduler = new NodeResque.Scheduler({connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout})
+      queue = new NodeResque.Queue({ connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue }, jobs)
+      scheduler = new NodeResque.Scheduler({ connection: specHelper.cleanConnectionDetails(), timeout: specHelper.timeout })
       await scheduler.connect()
       scheduler.start()
       await queue.connect()

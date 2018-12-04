@@ -6,7 +6,7 @@ let queue
 
 describe('scheduler', () => {
   test('can connect', async () => {
-    scheduler = new NodeResque.Scheduler({connection: specHelper.connectionDetails, timeout: specHelper.timeout})
+    scheduler = new NodeResque.Scheduler({ connection: specHelper.connectionDetails, timeout: specHelper.timeout })
     await scheduler.connect()
     await scheduler.end()
   })
@@ -46,8 +46,8 @@ describe('scheduler', () => {
       afterAll(async () => { await specHelper.cleanup() })
 
       test('should only have one master, and can failover', async () => {
-        const shedulerOne = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout})
-        const shedulerTwo = new NodeResque.Scheduler({connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout})
+        const shedulerOne = new NodeResque.Scheduler({ connection: specHelper.connectionDetails, name: 'scheduler_1', timeout: specHelper.timeout })
+        const shedulerTwo = new NodeResque.Scheduler({ connection: specHelper.connectionDetails, name: 'scheduler_2', timeout: specHelper.timeout })
 
         await shedulerOne.connect()
         await shedulerTwo.connect()
@@ -74,7 +74,7 @@ describe('scheduler', () => {
           timeout: specHelper.timeout,
           stuckWorkerTimeout: 1000
         })
-        queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+        queue = new NodeResque.Queue({ connection: specHelper.connectionDetails, queue: specHelper.queue })
         await scheduler.connect()
         await queue.connect()
       })

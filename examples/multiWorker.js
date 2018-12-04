@@ -59,7 +59,7 @@ async function boot () {
   // ENQUEUE TASKS //
   // ////////////////
 
-  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  const queue = new NodeResque.Queue({ connection: connectionDetails }, jobs)
   await queue.connect()
   var i
   i = 0

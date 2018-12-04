@@ -45,7 +45,7 @@ async function boot () {
   // START A WORKER //
   // /////////////////
 
-  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['math']}, jobs)
+  const worker = new NodeResque.Worker({ connection: connectionDetails, queues: ['math'] }, jobs)
   await worker.connect()
   worker.start()
 
@@ -53,7 +53,7 @@ async function boot () {
   // START A SCHEDULER //
   // ////////////////////
 
-  const scheduler = new NodeResque.Scheduler({connection: connectionDetails})
+  const scheduler = new NodeResque.Scheduler({ connection: connectionDetails })
   await scheduler.connect()
   scheduler.start()
 
@@ -87,7 +87,7 @@ async function boot () {
   // CONNECT TO A QUEUE AND WORK IT //
   // /////////////////////////////////
 
-  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  const queue = new NodeResque.Queue({ connection: connectionDetails }, jobs)
   queue.on('error', function (error) { console.log(error) })
   await queue.connect()
   queue.enqueue('math', 'add', [1, 2])

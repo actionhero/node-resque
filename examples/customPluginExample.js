@@ -60,7 +60,7 @@ async function boot () {
   // START A WORKER //
   // /////////////////
 
-  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['default']}, jobs)
+  const worker = new NodeResque.Worker({ connection: connectionDetails, queues: ['default'] }, jobs)
   await worker.connect()
   worker.start()
 
@@ -83,7 +83,7 @@ async function boot () {
   // CONNECT TO A QUEUE //
   // /////////////////////
 
-  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  const queue = new NodeResque.Queue({ connection: connectionDetails }, jobs)
   queue.on('error', function (error) { console.log(error) })
   await queue.connect()
   await queue.enqueue('default', 'jobby', [1, 2])

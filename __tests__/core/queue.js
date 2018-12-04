@@ -6,7 +6,7 @@ describe('queue', () => {
   afterAll(async () => { await specHelper.disconnect() })
 
   test('can connect', async () => {
-    queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+    queue = new NodeResque.Queue({ connection: specHelper.connectionDetails, queue: specHelper.queue })
     await queue.connect()
     await queue.end()
   })
@@ -21,7 +21,7 @@ describe('queue', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    queue = new NodeResque.Queue({connection: connectionDetails, queue: specHelper.queue})
+    queue = new NodeResque.Queue({ connection: connectionDetails, queue: specHelper.queue })
 
     await new Promise((resolve) => {
       queue.connect()
@@ -37,7 +37,7 @@ describe('queue', () => {
   describe('[with connection]', () => {
     beforeAll(async () => {
       await specHelper.connect()
-      queue = new NodeResque.Queue({connection: specHelper.connectionDetails, queue: specHelper.queue})
+      queue = new NodeResque.Queue({ connection: specHelper.connectionDetails, queue: specHelper.queue })
       await queue.connect()
     })
 
@@ -481,7 +481,7 @@ describe('queue', () => {
 
       test('can remove stuck workers and re-enqueue their jobs', async () => {
         let age = 1
-        await queue.enqueue(specHelper.queue, 'slowJob', {a: 1})
+        await queue.enqueue(specHelper.queue, 'slowJob', { a: 1 })
         await workerA.start()
 
         await new Promise((resolve) => {

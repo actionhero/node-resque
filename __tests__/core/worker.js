@@ -43,7 +43,7 @@ describe('worker', () => {
   })
 
   test('can connect', async () => {
-    let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, queues: specHelper.queue})
+    let worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, queues: specHelper.queue })
     await worker.connect()
     await worker.end()
   })
@@ -58,7 +58,7 @@ describe('worker', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    let worker = new NodeResque.Worker({connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue})
+    let worker = new NodeResque.Worker({ connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue })
 
     await new Promise(async (resolve) => {
       worker.connect()
@@ -73,7 +73,7 @@ describe('worker', () => {
 
   describe('performInline', () => {
     beforeAll(() => {
-      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue }, jobs)
     })
 
     test('can run a successful job', async () => {
@@ -99,21 +99,21 @@ describe('worker', () => {
   describe('[with connection]', () => {
     beforeAll(async () => {
       await specHelper.connect()
-      queue = new NodeResque.Queue({connection: specHelper.connectionDetails})
+      queue = new NodeResque.Queue({ connection: specHelper.connectionDetails })
       await queue.connect()
     })
 
     afterAll(async () => { await specHelper.cleanup() })
 
     test('can boot and stop', async () => {
-      worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+      worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue }, jobs)
       await worker.connect()
       await worker.start()
       await worker.end()
     })
 
     test('will determine the proper queue names', async () => {
-      let worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout}, jobs)
+      let worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, timeout: specHelper.timeout }, jobs)
       await worker.connect()
       expect(worker.queues).toEqual([])
       await queue.enqueue(specHelper.queue, 'badAdd', [1, 2])
@@ -126,7 +126,7 @@ describe('worker', () => {
 
     describe('integration', () => {
       beforeEach(async () => {
-        worker = new NodeResque.Worker({connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue}, jobs)
+        worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue }, jobs)
         await worker.connect()
       })
 
@@ -168,7 +168,7 @@ describe('worker', () => {
       })
 
       test('job arguments are immutable', async () => {
-        await queue.enqueue(specHelper.queue, 'messWithData', {a: 'starting value'})
+        await queue.enqueue(specHelper.queue, 'messWithData', { a: 'starting value' })
 
         await new Promise(async (resolve) => {
           worker.start()
