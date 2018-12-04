@@ -36,7 +36,7 @@ async function boot () {
   // START A WORKER //
   // /////////////////
 
-  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['time']}, jobs)
+  const worker = new NodeResque.Worker({ connection: connectionDetails, queues: ['time'] }, jobs)
   await worker.connect()
   worker.start()
 
@@ -44,7 +44,7 @@ async function boot () {
   // START A SCHEDULER //
   // ////////////////////
 
-  const scheduler = new NodeResque.Scheduler({connection: connectionDetails})
+  const scheduler = new NodeResque.Scheduler({ connection: connectionDetails })
   await scheduler.connect()
   scheduler.start()
 
@@ -75,7 +75,7 @@ async function boot () {
   // DEFINE JOBS //
   // //////////////
 
-  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  const queue = new NodeResque.Queue({ connection: connectionDetails }, jobs)
   queue.on('error', function (error) { console.log(error) })
   await queue.connect()
   schedule.scheduleJob('0,10,20,30,40,50 * * * * *', async () => { // do this job every 10 seconds, cron style

@@ -37,7 +37,7 @@ async function boot () {
   // START A WORKER //
   // /////////////////
 
-  const worker = new NodeResque.Worker({connection: connectionDetails, queues: ['stuckJobs']}, jobs)
+  const worker = new NodeResque.Worker({ connection: connectionDetails, queues: ['stuckJobs'] }, jobs)
   await worker.connect()
   worker.start()
 
@@ -86,7 +86,7 @@ async function boot () {
   // CONNECT TO A QUEUE //
   // //////////////////////
 
-  const queue = new NodeResque.Queue({connection: connectionDetails}, jobs)
+  const queue = new NodeResque.Queue({ connection: connectionDetails }, jobs)
   queue.on('error', function (error) { console.log(error) })
   await queue.connect()
   await queue.enqueue('stuckJobs', 'stuck', ['oh no'])

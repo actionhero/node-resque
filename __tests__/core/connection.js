@@ -52,8 +52,8 @@ describe('connection', () => {
     let prefixedConnection
     let prefixedRedis
     beforeAll(async () => {
-      prefixedRedis = new Ioredis({keyPrefix: 'customNamespace:', db: db})
-      prefixedConnection = new NodeResque.Connection({redis: prefixedRedis, namespace: specHelper.namespace})
+      prefixedRedis = new Ioredis({ keyPrefix: 'customNamespace:', db: db })
+      prefixedConnection = new NodeResque.Connection({ redis: prefixedRedis, namespace: specHelper.namespace })
       await prefixedConnection.connect()
     })
 

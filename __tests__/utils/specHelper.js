@@ -50,13 +50,13 @@ module.exports = {
     let Scheduler = NodeResque.Scheduler
     let Queue = NodeResque.Queue
 
-    this.worker = new Worker({connection: {redis: this.redis}, queues: this.queue, timeout: this.timeout}, jobs)
+    this.worker = new Worker({ connection: { redis: this.redis }, queues: this.queue, timeout: this.timeout }, jobs)
     await this.worker.connect()
 
-    this.scheduler = new Scheduler({connection: {redis: this.redis}, timeout: this.timeout})
+    this.scheduler = new Scheduler({ connection: { redis: this.redis }, timeout: this.timeout })
     await this.scheduler.connect()
 
-    this.queue = new Queue({connection: {redis: this.redis}})
+    this.queue = new Queue({ connection: { redis: this.redis } })
     await this.queue.connect()
   },
 

@@ -44,7 +44,7 @@ const jobs = {
 describe('multiWorker', () => {
   beforeAll(async () => {
     await specHelper.connect()
-    queue = new NodeResque.Queue({connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue})
+    queue = new NodeResque.Queue({ connection: specHelper.cleanConnectionDetails(), queue: specHelper.queue })
     await queue.connect()
 
     multiWorker = new NodeResque.MultiWorker({
