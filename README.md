@@ -114,6 +114,11 @@ async function boot () {
 
 boot()
 
+// and when you are done
+// await queue.end()
+// await scheduler.end()
+// await worker.end()
+
 ```
 
 ## Configuration Options:
@@ -151,6 +156,9 @@ worker.on('error', (error) => {
 
 await worker.connect()
 worker.start()
+
+// and when you are done
+// await worker.end()
 ```
 
 You can also pass redis client directly.
@@ -169,6 +177,9 @@ worker.on('error', (error) => {
 
 await worker.connect()
 worker.start()
+
+// and when you are done
+// await worker.end()
 ```
 
 ## Notes

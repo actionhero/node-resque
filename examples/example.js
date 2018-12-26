@@ -115,3 +115,8 @@ async function boot () {
 }
 
 boot()
+
+// and when you are done
+// await queue.end()
+// await scheduler.end()
+// await worker.end()
