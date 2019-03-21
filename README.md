@@ -424,7 +424,7 @@ const jobs = {
 ```javascript
 var jobs = {
   "add": {
-    plugins: [ require('Myplugin') ],
+    plugins: [ require('Myplugin').Myplugin ],
     pluginOptions: {
       MyPlugin: { thing: 'stuff' },
     },
