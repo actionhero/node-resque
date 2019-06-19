@@ -209,6 +209,22 @@ var worker = new NodeResque.Worker({connection: connectionDetails, queues: 'math
 const queue = new NodeResque.Queue({connection: connectionDetails, jobs})
 await queue.connect()
 ```
+The main methods you will be using to enqueue jobs to be worked:
+
+**`let stats = await queue.enqueue(queueName, jobName, [args])`**
+  - Enqueue a named job (defined in `jobs` to be worked by a worker)
+  - The job will be added to the `queueName` queue, and that queue will be worked down by available workers assigned to that queue
+  - args is optional, but should be an array of arguments passed to the job.  Order of arguments is maintained
+
+**`let stats = await queue.enqueueIn(queueName, jobName, [args])`**
+  - In ms, the number of ms to delay before this job is able to start being worked on.
+    - Depending on the number of other jobs in `queueName`, it is likely that this job will not be excecuted at exactly the delay specified, but shortly thereafter.
+  - other options the same as `queue.enqueue`
+
+  **`let stats = await queue.enqueueAt(delay queueName, jobName, [args])`**
+  - In ms, the unix timestamp at which this job is able to start being worked on.
+    - Depending on the number of other jobs in `queueName`, it is likely that this job will not be excecuted at exactly the time specified, but shortly thereafter.
+  - other options the same as `queue.enqueue`
 
 Additional methods provided on the `queue` object:
 
@@ -338,7 +354,7 @@ const scheduler = new NodeResque.Scheduler({
 
 ### Manually
 
-Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance to notify redis that it is leaving the pool (this happens all the time on PAAS providers like Heroku).  When this happens, you will not only need to extract the job from the now-zombie worker's "working on" status, but also remove the stuck worker.  To aid you in these edge cases, `await queue.cleanOldWorkers(age)` is available.  
+Sometimes a worker crashes is a *severe* way, and it doesn't get the time/chance to notify redis that it is leaving the pool (this happens all the time on PAAS providers like Heroku).  When this happens, you will not only need to extract the job from the now-zombie worker's "working on" status, but also remove the stuck worker.  To aid you in these edge cases, `await queue.cleanOldWorkers(age)` is available.
 
 Because there are no 'heartbeats' in resque, it is imposable for the application to know if a worker has been working on a long job or it is dead.  You are required to provide an "age" for how long a worker has been "working", and all those older than that age will be removed, and the job they are working on moved to the error queue (where you can then use `queue.retryAndRemoveFailed`) to re-enqueue the job.
 
@@ -346,7 +362,7 @@ If you know the name of a worker that should be removed, you can also call `awai
 
 ## Job Schedules
 
-You may want to use node-resque to schedule jobs every minute/hour/day, like a distributed CRON system.  There are a number of excellent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and [node-cron](https://github.com/ncb000gt/node-cron).  Node-resque makes it possible for you to use the package of your choice to schedule jobs with.  
+You may want to use node-resque to schedule jobs every minute/hour/day, like a distributed CRON system.  There are a number of excellent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and [node-cron](https://github.com/ncb000gt/node-cron).  Node-resque makes it possible for you to use the package of your choice to schedule jobs with.
 
 Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduling the jobs.  To help you with this, you can inspect which of the scheduler processes is currently acting as master, and flag only the master scheduler process to run the schedule.  A full example can be found at [/examples/scheduledJobs.js](https://github.com/taskrabbit/node-resque/blob/master/examples/scheduledJobs.js), but the relevant section is:
 
@@ -448,7 +464,7 @@ The plugins which are included with this package are:
 
 ## Multi Worker
 
-`node-resque` provides a wrapper around the `Worker` class which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low  overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1.  The `MultiWorker` handles this by spawning more and more node-resque workers and managing the pool.  
+`node-resque` provides a wrapper around the `Worker` class which will auto-scale the number of resque workers.  This will process more than one job at a time as long as there is idle CPU within the event loop.  For example, if you have a slow job that sends email via SMTP (with low  overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1.  The `MultiWorker` handles this by spawning more and more node-resque workers and managing the pool.
 
 ```javascript
 var NodeResque = require(__dirname + "/../index.js");
@@ -465,7 +481,7 @@ var multiWorker = new NodeResque.MultiWorker({
   minTaskProcessors:   1,
   maxTaskProcessors:   100,
   checkTimeout:        1000,
-  maxEventLoopDelay:   10,  
+  maxEventLoopDelay:   10,
 }, jobs);
 
 // normal worker emitters
@@ -496,7 +512,7 @@ The Options available for the multiWorker are:
 - `minTaskProcessors`: The minimum number of workers to spawn under this multiWorker, even if there is no work to do.  You need at least one, or no work will ever be processed or checked
 - `maxTaskProcessors`: The maximum number of workers to spawn under this multiWorker, even if the queues are long and there is available CPU (the event loop isn't entirely blocked) to this node process.
 - `checkTimeout`: How often to check if the event loop is blocked (in ms) (for adding or removing multiWorker children),
-- `maxEventLoopDelay`: How long the event loop has to be delayed before considering it blocked (in ms),  
+- `maxEventLoopDelay`: How long the event loop has to be delayed before considering it blocked (in ms),
 
 ## Presentation
 This package was featured heavily in [this presentation I gave](https://blog.evantahler.com/background-tasks-in-node-js-a-survey-with-redis-971d3575d9d2#.rzph5ofgy) about background jobs + node.js.  It contains more examples!
