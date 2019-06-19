@@ -211,17 +211,17 @@ await queue.connect()
 ```
 The main methods you will be using to enqueue jobs to be worked:
 
-**`let stats = await queue.enqueue(queueName, jobName, [args])`**
+**`await queue.enqueue(queueName, jobName, [args])`**
   - Enqueue a named job (defined in `jobs` to be worked by a worker)
   - The job will be added to the `queueName` queue, and that queue will be worked down by available workers assigned to that queue
   - args is optional, but should be an array of arguments passed to the job.  Order of arguments is maintained
 
-**`let stats = await queue.enqueueIn(queueName, jobName, [args])`**
+**`await queue.enqueueIn(queueName, jobName, [args])`**
   - In ms, the number of ms to delay before this job is able to start being worked on.
     - Depending on the number of other jobs in `queueName`, it is likely that this job will not be excecuted at exactly the delay specified, but shortly thereafter.
   - other options the same as `queue.enqueue`
 
-  **`let stats = await queue.enqueueAt(delay queueName, jobName, [args])`**
+  **`await queue.enqueueAt(delay queueName, jobName, [args])`**
   - In ms, the unix timestamp at which this job is able to start being worked on.
     - Depending on the number of other jobs in `queueName`, it is likely that this job will not be excecuted at exactly the time specified, but shortly thereafter.
   - other options the same as `queue.enqueue`
