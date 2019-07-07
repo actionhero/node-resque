@@ -1,5 +1,6 @@
 version: 2
 
+refrences:
   cache-options: &cache-options
     key: package-cache-{{ .Branch }}-{{ .Revision }}
 
