@@ -1,0 +1,87 @@
+version: 2
+
+  cache-options: &cache-options
+    key: package-cache-{{ .Branch }}-{{ .Revision }}
+
+  shared-test-steps: &shared-test-steps
+    steps:
+      - checkout
+      - restore_cache:
+          <<: *cache-options
+      - run:
+          name: test-log-setup
+          command: mkdir -p ./log
+      - run:
+          name: test-reporter-setup
+          command: mkdir ./junit
+      - run:
+          name: test
+          command: ./node_modules/.bin/jest --ci --testResultsProcessor="jest-junit" --runInBand
+          environment:
+            NODE_ENV: test
+            JEST_JUNIT_OUTPUT: reports/junit/jest.xml
+            maxMemoryAlloted: 500
+          when: always
+      - store_test_results:
+          path: ./reports/junit/
+      - store_artifacts:
+          path: ./reports/junit/
+
+# Test the common workflow on multiple versions of node
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10
+    steps:
+      - checkout
+      - restore_cache:
+          <<: *cache-options
+      - run:
+          name: npm-install
+          command: npm install
+      - run:
+          name: test-reporter-setup
+          command: npm install jest-junit --no-save
+      - save_cache:
+          <<: *cache-options
+          paths:
+            - ./node_modules
+
+  linter:
+    docker:
+      - image: circleci/node:10
+    steps:
+      - checkout
+      - restore_cache:
+          <<: *cache-options
+      - run:
+          name: linter
+          command: ./node_modules/.bin/standard
+
+  test-node-v10:
+    docker:
+      - image: circleci/node:10
+      - image: redis:4
+      - image: selenium/standalone-chrome:latest
+    <<: *shared-test-steps
+
+# Run all the tests is parallel
+workflows:
+  version: 2
+  test:
+    jobs:
+      - build:
+          filters:
+            <<: *ignored-branches
+
+      - linter:
+          filters:
+            <<: *ignored-branches
+          requires:
+            - build
+
+      - test-node-v10:
+          filters:
+            <<: *ignored-branches
+          requires:
+            - linter
