@@ -4,7 +4,7 @@
 
 [![Nodei stats](https://nodei.co/npm/node-resque.png?downloads=true)](https://npmjs.org/package/node-resque)
 
-[![Build Status](https://secure.travis-ci.org/taskrabbit/node-resque.png?branch=master)](http://travis-ci.org/taskrabbit/node-resque)
+[![CircleCI](https://circleci.com/gh/taskrabbit/node-resque.svg?style=svg)](https://circleci.com/gh/taskrabbit/node-resque)
 
 ## Version Notes
 * ‼️ Version 5+ of Node Resque uses async/await.  There is no upgrade path from previous versions.  Node v8.0.0+ is required.
