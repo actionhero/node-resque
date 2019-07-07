@@ -1,9 +1,0 @@
-sudo: false
-language: node_js
-node_js:
-  - "10"
-services:
-  - redis-server
-# before_script:
-after_failure:
-  - "cat /home/travis/builds/taskrabbit/node-resque/npm-debug.log"
