@@ -71,18 +71,12 @@ workflows:
   version: 2
   test:
     jobs:
-      - build:
-          filters:
-            <<: *ignored-branches
+      - build
 
       - linter:
-          filters:
-            <<: *ignored-branches
           requires:
             - build
 
       - test-node-v10:
-          filters:
-            <<: *ignored-branches
           requires:
             - linter
