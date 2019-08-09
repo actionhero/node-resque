@@ -30,7 +30,7 @@ module.exports = {
   },
 
   cleanup: async function () {
-    let keys = await this.redis.keys(this.namespace + '*')
+    const keys = await this.redis.keys(this.namespace + '*')
     if (keys.length > 0) { await this.redis.del(keys) }
   },
 
@@ -46,9 +46,9 @@ module.exports = {
   },
 
   startAll: async function (jobs) {
-    let Worker = NodeResque.Worker
-    let Scheduler = NodeResque.Scheduler
-    let Queue = NodeResque.Queue
+    const Worker = NodeResque.Worker
+    const Scheduler = NodeResque.Scheduler
+    const Queue = NodeResque.Queue
 
     this.worker = new Worker({ connection: { redis: this.redis }, queues: this.queue, timeout: this.timeout }, jobs)
     await this.worker.connect()
@@ -70,8 +70,8 @@ module.exports = {
   },
 
   cleanConnectionDetails: function () {
-    let out = {}
-    for (let i in this.connectionDetails) {
+    const out = {}
+    for (const i in this.connectionDetails) {
       if (i !== 'redis') { out[i] = this.connectionDetails[i] }
     }
 

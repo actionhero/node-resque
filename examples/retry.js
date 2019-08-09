@@ -21,7 +21,7 @@ const connectionDetails = {
 // ///////////////////////////
 
 const jobs = {
-  'add': {
+  add: {
     plugins: ['Retry'],
     pluginOptions: {
       Retry: {

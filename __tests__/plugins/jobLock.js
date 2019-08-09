@@ -7,11 +7,11 @@ let worker1
 let worker2
 
 const jobs = {
-  'slowAdd': {
+  slowAdd: {
     plugins: ['JobLock'],
     pluginOptions: { jobLock: {} },
     perform: async (a, b) => {
-      let answer = a + b
+      const answer = a + b
       await new Promise((resolve) => { setTimeout(resolve, jobDelay) })
       return answer
     }
@@ -47,7 +47,7 @@ describe('plugins', () => {
       await worker2.connect()
 
       await new Promise((resolve) => {
-        let startTime = new Date().getTime()
+        const startTime = new Date().getTime()
         let completed = 0
 
         const onComplete = function (q, job, result) {
@@ -75,7 +75,7 @@ describe('plugins', () => {
       let calls = 0
 
       await new Promise(async (resolve) => {
-        let functionJobs = {
+        const functionJobs = {
           jobLockAdd: {
             plugins: ['JobLock'],
             pluginOptions: {
@@ -86,7 +86,7 @@ describe('plugins', () => {
                     worker1.end()
                     resolve()
                   }
-                  let key = this.worker.connection.key('customKey', Math.max.apply(Math.max, this.args))
+                  const key = this.worker.connection.key('customKey', Math.max.apply(Math.max, this.args))
                   return key
                 }
               }
@@ -123,7 +123,7 @@ describe('plugins', () => {
           worker1.end()
           worker2.end()
 
-          let timestamps = await queue.timestamps()
+          const timestamps = await queue.timestamps()
           let dealyedJob = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + Math.round(timestamps[0] / 1000))
           expect(dealyedJob).toBeDefined()
           dealyedJob = JSON.parse(dealyedJob)
@@ -154,7 +154,7 @@ describe('plugins', () => {
       await worker1.connect()
       await worker2.connect()
 
-      let startTime = new Date().getTime()
+      const startTime = new Date().getTime()
       let completed = 0
 
       await new Promise(async (resolve) => {

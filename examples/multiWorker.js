@@ -35,20 +35,20 @@ async function boot () {
   }
 
   const jobs = {
-    'slowSleepJob': {
+    slowSleepJob: {
       plugins: [],
       pluginOptions: {},
       perform: async () => {
-        let start = new Date().getTime()
+        const start = new Date().getTime()
         await new Promise((resolve) => { setTimeout(resolve, 1000) })
         return (new Date().getTime() - start)
       }
     },
-    'slowCPUJob': {
+    slowCPUJob: {
       plugins: [],
       pluginOptions: {},
       perform: async () => {
-        let start = new Date().getTime()
+        const start = new Date().getTime()
         blockingSleep(1000)
         return (new Date().getTime() - start)
       }

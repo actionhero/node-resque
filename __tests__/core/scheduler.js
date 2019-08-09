@@ -16,7 +16,7 @@ describe('scheduler', () => {
     afterAll(async () => { await specHelper.disconnect() })
 
     test('can provide an error if connection failed', async () => {
-      let connectionDetails = {
+      const connectionDetails = {
         pkg: specHelper.connectionDetails.pkg,
         host: 'wronghostname',
         password: specHelper.connectionDetails.password,
@@ -99,7 +99,7 @@ describe('scheduler', () => {
       test('will not move jobs in the future', async () => {
         await queue.enqueueAt((new Date().getTime() + 10000), specHelper.queue, 'someJob', [1, 2, 3])
         await scheduler.poll()
-        let obj = await specHelper.popFromQueue()
+        const obj = await specHelper.popFromQueue()
         expect(obj).toBeFalsy()
         await scheduler.end()
       })
@@ -107,7 +107,7 @@ describe('scheduler', () => {
       describe('stuck workers', () => {
         let worker
         const jobs = {
-          'stuck': {
+          stuck: {
             perform: async function () {
               await new Promise((resolve) => {
                 // stop the worker from checkin in, like the process crashed
@@ -138,7 +138,7 @@ describe('scheduler', () => {
           await worker.start()
 
           const workers = await queue.allWorkingOn()
-          let h = {}
+          const h = {}
           h[worker.name] = 'started'
           expect(workers).toEqual(h)
 

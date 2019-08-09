@@ -12,7 +12,7 @@ describe('queue', () => {
   })
 
   test('can provide an error if connection failed', async () => {
-    let connectionDetails = {
+    const connectionDetails = {
       pkg: specHelper.connectionDetails.pkg,
       host: 'wronghostname',
       password: specHelper.connectionDetails.password,
@@ -55,7 +55,7 @@ describe('queue', () => {
 
     test('can add delayed job (enqueueAt)', async () => {
       await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
-      let score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10')
+      const score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10')
       expect(String(score)).toBe('10')
 
       let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10')
@@ -69,7 +69,7 @@ describe('queue', () => {
       'can add delayed job whose timestamp is a string (enqueueAt)',
       async () => {
         await queue.enqueueAt('10000', specHelper.queue, 'someJob', [1, 2, 3])
-        let score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10')
+        const score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', '10')
         expect(String(score)).toBe('10')
 
         let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10')
@@ -94,9 +94,9 @@ describe('queue', () => {
     )
 
     test('can add delayed job (enqueueIn)', async () => {
-      let now = Math.round(new Date().getTime() / 1000) + 5
+      const now = Math.round(new Date().getTime() / 1000) + 5
       await queue.enqueueIn(5 * 1000, specHelper.queue, 'someJob', [1, 2, 3])
-      let score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now)
+      const score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now)
       expect(String(score)).toBe(String(now))
 
       let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now)
@@ -107,11 +107,11 @@ describe('queue', () => {
     })
 
     test('can add a delayed job whose time is a string (enqueueIn)', async () => {
-      let now = Math.round(new Date().getTime() / 1000) + 5
-      let time = 5 * 1000
+      const now = Math.round(new Date().getTime() / 1000) + 5
+      const time = 5 * 1000
 
       await queue.enqueueIn(time.toString(), specHelper.queue, 'someJob', [1, 2, 3])
-      let score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now)
+      const score = await specHelper.redis.zscore(specHelper.namespace + ':delayed_queue_schedule', now)
       expect(String(score)).toBe(String(now))
 
       let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now)
@@ -124,14 +124,14 @@ describe('queue', () => {
     test('can get the number of jobs currently enqueued', async () => {
       await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
       await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
-      let length = await queue.length(specHelper.queue)
+      const length = await queue.length(specHelper.queue)
       expect(length).toBe(2)
     })
 
     test('can get the jobs in the queue', async () => {
       await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
       await queue.enqueue(specHelper.queue, 'someJob', [4, 5, 6])
-      let jobs = await queue.queued(specHelper.queue, 0, -1)
+      const jobs = await queue.queued(specHelper.queue, 0, -1)
       expect(jobs.length).toBe(2)
       expect(jobs[0].args).toEqual([1, 2, 3])
       expect(jobs[1].args).toEqual([4, 5, 6])
@@ -139,7 +139,7 @@ describe('queue', () => {
 
     test('can find previously scheduled jobs', async () => {
       await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
-      let timestamps = await queue.scheduledAt(specHelper.queue, 'someJob', [1, 2, 3])
+      const timestamps = await queue.scheduledAt(specHelper.queue, 'someJob', [1, 2, 3])
       expect(timestamps.length).toBe(1)
       expect(timestamps[0]).toBe('10')
     })
@@ -148,24 +148,24 @@ describe('queue', () => {
       'will not match previously scheduled jobs with differnt args',
       async () => {
         await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
-        let timestamps = await queue.scheduledAt(specHelper.queue, 'someJob', [3, 2, 1])
+        const timestamps = await queue.scheduledAt(specHelper.queue, 'someJob', [3, 2, 1])
         expect(timestamps.length).toBe(0)
       }
     )
 
     test('can deleted an enqued job', async () => {
       await queue.enqueue(specHelper.queue, 'someJob', [1, 2, 3])
-      let length = await queue.length(specHelper.queue)
+      const length = await queue.length(specHelper.queue)
       expect(length).toBe(1)
 
       await queue.del(specHelper.queue, 'someJob', [1, 2, 3])
-      let lengthAgain = await queue.length(specHelper.queue)
+      const lengthAgain = await queue.length(specHelper.queue)
       expect(lengthAgain).toBe(0)
     })
 
     test('can deleted a delayed job', async () => {
       await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
-      let timestamps = await queue.delDelayed(specHelper.queue, 'someJob', [1, 2, 3])
+      const timestamps = await queue.delDelayed(specHelper.queue, 'someJob', [1, 2, 3])
       expect(timestamps.length).toBe(1)
       expect(timestamps[0]).toBe('10')
     })
@@ -174,8 +174,8 @@ describe('queue', () => {
       'can delete a delayed job, and delayed queue should be empty',
       async () => {
         await queue.enqueueAt(10000, specHelper.queue, 'someJob', [1, 2, 3])
-        let timestamps = await queue.delDelayed(specHelper.queue, 'someJob', [1, 2, 3])
-        let hash = await queue.allDelayed()
+        const timestamps = await queue.delDelayed(specHelper.queue, 'someJob', [1, 2, 3])
+        const hash = await queue.allDelayed()
         expect(Object.keys(hash)).toHaveLength(0)
         expect(timestamps.length).toBe(1)
         expect(timestamps[0]).toBe('10')
@@ -184,13 +184,13 @@ describe('queue', () => {
 
     test('can handle single arguments without explicit array', async () => {
       await queue.enqueue(specHelper.queue, 'someJob', 1)
-      let obj = await specHelper.popFromQueue()
+      const obj = await specHelper.popFromQueue()
       expect(JSON.parse(obj).args).toEqual([1])
     })
 
     test('allows omitting arguments when enqueuing', async () => {
       await queue.enqueue(specHelper.queue, 'noParams')
-      let length = await queue.length(specHelper.queue)
+      const length = await queue.length(specHelper.queue)
       expect(length).toBe(1)
       let obj = await specHelper.popFromQueue()
       obj = JSON.parse(obj)
@@ -202,20 +202,20 @@ describe('queue', () => {
     test('allows omitting arguments when deleting', async () => {
       await queue.enqueue(specHelper.queue, 'noParams', [])
       await queue.enqueue(specHelper.queue, 'noParams', [])
-      let length = await queue.length(specHelper.queue)
+      const length = await queue.length(specHelper.queue)
       expect(length).toBe(2)
 
-      let deletedCount = await queue.del(specHelper.queue, 'noParams')
+      const deletedCount = await queue.del(specHelper.queue, 'noParams')
       expect(deletedCount).toBe(2)
 
-      let deletedCountAgain = await queue.del(specHelper.queue, 'noParams')
+      const deletedCountAgain = await queue.del(specHelper.queue, 'noParams')
       expect(deletedCountAgain).toBe(0)
-      let lengthAgain = await queue.length(specHelper.queue)
+      const lengthAgain = await queue.length(specHelper.queue)
       expect(lengthAgain).toBe(0)
     })
 
     test('allows omitting arguments when adding delayed job', async () => {
-      let hash = await queue.allDelayed()
+      const hash = await queue.allDelayed()
       expect(Object.keys(hash)).toHaveLength(0)
 
       await queue.enqueueAt(10000, specHelper.queue, 'noParams', [])
@@ -223,29 +223,29 @@ describe('queue', () => {
       await queue.enqueueAt(12000, specHelper.queue, 'noParams', [])
       await queue.enqueueIn(13000, specHelper.queue, 'noParams', [])
 
-      let timestamps = await queue.scheduledAt(specHelper.queue, 'noParams', [])
+      const timestamps = await queue.scheduledAt(specHelper.queue, 'noParams', [])
       expect(timestamps.length).toBe(4)
-      let hashAgain = await queue.allDelayed()
+      const hashAgain = await queue.allDelayed()
       expect(Object.keys(hashAgain).length).toBe(4)
-      for (let key in hashAgain) {
+      for (const key in hashAgain) {
         expect(hashAgain[key][0].args).toHaveLength(0)
         expect(Array.isArray(hashAgain[key][0].args)).toBe(true)
       }
     })
 
     test('allows omitting arguments when deleting a delayed job', async () => {
-      let hash = await queue.allDelayed()
+      const hash = await queue.allDelayed()
       expect(Object.keys(hash)).toHaveLength(0)
 
       await queue.enqueueAt(10000, specHelper.queue, 'noParams')
       await queue.enqueueAt(12000, specHelper.queue, 'noParams')
 
-      let hashAgain = await queue.allDelayed()
+      const hashAgain = await queue.allDelayed()
       expect(Object.keys(hashAgain).length).toBe(2)
 
       await queue.delDelayed(specHelper.queue, 'noParams')
       await queue.delDelayed(specHelper.queue, 'noParams')
-      let hashThree = queue.allDelayed()
+      const hashThree = queue.allDelayed()
       expect(Object.keys(hashThree)).toHaveLength(0)
     })
 
@@ -253,7 +253,7 @@ describe('queue', () => {
       await queue.connection.redis.set(specHelper.namespace + ':stat:failed', 1)
       await queue.connection.redis.set(specHelper.namespace + ':stat:processed', 2)
 
-      let stats = await queue.stats()
+      const stats = await queue.stats()
       expect(stats.processed).toBe('2')
       expect(stats.failed).toBe('1')
     })
@@ -270,28 +270,28 @@ describe('queue', () => {
       })
 
       test('can get locks', async () => {
-        let locks = await queue.locks()
+        const locks = await queue.locks()
         expect(Object.keys(locks).length).toBe(2)
         expect(locks['lock:lists:queueName:jobName:[{}]']).toBe('123')
         expect(locks['workerslock:lists:queueName:jobName:[{}]']).toBe('456')
       })
 
       test('can remove locks', async () => {
-        let locks = await queue.locks()
+        const locks = await queue.locks()
         expect(Object.keys(locks).length).toBe(2)
-        let count = await queue.delLock('workerslock:lists:queueName:jobName:[{}]')
+        const count = await queue.delLock('workerslock:lists:queueName:jobName:[{}]')
         expect(count).toBe(1)
       })
     })
 
     describe('failed job managment', () => {
       beforeEach(async () => {
-        let errorPayload = function (id) {
+        const errorPayload = function (id) {
           return JSON.stringify({
             worker: 'busted-worker-' + id,
             queue: 'busted-queue',
             payload: {
-              'class': 'busted_job',
+              class: 'busted_job',
               queue: 'busted-queue',
               args: [1, 2, 3]
             },
@@ -307,12 +307,12 @@ describe('queue', () => {
       })
 
       test('can list how many failed jobs there are', async () => {
-        let failedCount = await queue.failedCount()
+        const failedCount = await queue.failedCount()
         expect(failedCount).toBe(3)
       })
 
       test('can get the body content for a collection of failed jobs', async () => {
-        let failedJobs = await queue.failed(1, 2)
+        const failedJobs = await queue.failed(1, 2)
         expect(failedJobs.length).toBe(2)
 
         expect(failedJobs[0].worker).toBe('busted-worker-2')
@@ -329,23 +329,23 @@ describe('queue', () => {
       })
 
       test('can remove a failed job by payload', async () => {
-        let failedJobs = await queue.failed(1, 1)
+        const failedJobs = await queue.failed(1, 1)
         expect(failedJobs.length).toBe(1)
-        let removedJobs = await queue.removeFailed(failedJobs[0])
+        const removedJobs = await queue.removeFailed(failedJobs[0])
         expect(removedJobs).toBe(1)
-        let failedCountAgain = await queue.failedCount()
+        const failedCountAgain = await queue.failedCount()
         expect(failedCountAgain).toBe(2)
       })
 
       test(
         'can re-enqueue a specific job, removing it from the failed queue',
         async () => {
-          let failedJobs = await queue.failed(0, 999)
+          const failedJobs = await queue.failed(0, 999)
           expect(failedJobs.length).toBe(3)
           expect(failedJobs[2].worker).toBe('busted-worker-3')
 
           await queue.retryAndRemoveFailed(failedJobs[2])
-          let failedJobsAgain = await queue.failed(0, 999)
+          const failedJobsAgain = await queue.failed(0, 999)
           expect(failedJobsAgain.length).toBe(2)
           expect(failedJobsAgain[0].worker).toBe('busted-worker-1')
           expect(failedJobsAgain[1].worker).toBe('busted-worker-2')
@@ -355,17 +355,17 @@ describe('queue', () => {
       test(
         'will return an error when trying to retry a job not in the failed queue',
         async () => {
-          let failedJobs = await queue.failed(0, 999)
+          const failedJobs = await queue.failed(0, 999)
           expect(failedJobs.length).toBe(3)
 
-          let failedJob = failedJobs[2]
+          const failedJob = failedJobs[2]
           failedJob.worker = 'a-fake-worker'
           try {
             await queue.retryAndRemoveFailed(failedJob)
             throw new Error('should not get here')
           } catch (error) {
             expect(String(error)).toBe('Error: This job is not in failed queue')
-            let failedJobsAgain = await queue.failed(0, 999)
+            const failedJobsAgain = await queue.failed(0, 999)
             expect(failedJobsAgain.length).toBe(3)
           }
         }
@@ -380,27 +380,27 @@ describe('queue', () => {
       })
 
       test('can list the timestamps that exist', async () => {
-        let timestamps = await queue.timestamps()
+        const timestamps = await queue.timestamps()
         expect(timestamps.length).toBe(2)
         expect(timestamps[0]).toBe(10000)
         expect(timestamps[1]).toBe(20000)
       })
 
       test('can list the jobs delayed at a timestamp', async () => {
-        let tasksA = await queue.delayedAt(10000)
+        const tasksA = await queue.delayedAt(10000)
         expect(tasksA.rTimestamp).toBe(10)
         expect(tasksA.tasks.length).toBe(2)
         expect(tasksA.tasks[0]['class']).toBe('job1')
         expect(tasksA.tasks[1]['class']).toBe('job2')
 
-        let tasksB = await queue.delayedAt(20000)
+        const tasksB = await queue.delayedAt(20000)
         expect(tasksB.rTimestamp).toBe(20)
         expect(tasksB.tasks.length).toBe(1)
         expect(tasksB.tasks[0]['class']).toBe('job3')
       })
 
       test('can also return a hash with all delayed tasks', async () => {
-        let hash = await queue.allDelayed()
+        const hash = await queue.allDelayed()
         expect(Object.keys(hash).length).toBe(2)
         expect(Object.keys(hash)[0]).toBe('10000')
         expect(Object.keys(hash)[1]).toBe('20000')
@@ -412,10 +412,10 @@ describe('queue', () => {
     describe('worker status', () => {
       let workerA
       let workerB
-      let timeout = 500
+      const timeout = 500
 
-      let jobs = {
-        'slowJob': {
+      const jobs = {
+        slowJob: {
           perform: async () => {
             await new Promise((resolve) => { setTimeout(resolve, timeout) })
           }
@@ -449,13 +449,13 @@ describe('queue', () => {
       })
 
       test('can list running workers', async () => {
-        let workers = await queue.workers()
+        const workers = await queue.workers()
         expect(workers.workerA).toBe('test_queue')
         expect(workers.workerB).toBe('test_queue')
       })
 
       test('we can see what workers are working on (idle)', async () => {
-        let data = await queue.allWorkingOn()
+        const data = await queue.allWorkingOn()
         expect(data).toHaveProperty('workerA', 'started')
         expect(data).toHaveProperty('workerB', 'started')
       })
@@ -468,9 +468,9 @@ describe('queue', () => {
           workerA.on('job', async () => {
             workerA.removeAllListeners('job')
 
-            let data = await queue.allWorkingOn()
+            const data = await queue.allWorkingOn()
             expect(data).toHaveProperty('workerB', 'started')
-            let paylaod = data.workerA.payload
+            const paylaod = data.workerA.payload
             expect(paylaod.queue).toBe('test_queue')
             expect(paylaod['class']).toBe('slowJob')
 
@@ -480,7 +480,7 @@ describe('queue', () => {
       })
 
       test('can remove stuck workers and re-enqueue their jobs', async () => {
-        let age = 1
+        const age = 1
         await queue.enqueue(specHelper.queue, 'slowJob', { a: 1 })
         await workerA.start()
 
@@ -489,18 +489,18 @@ describe('queue', () => {
           workerA.on('job', async () => {
             workerA.removeAllListeners('job')
 
-            let workingOnData = await queue.allWorkingOn()
-            let paylaod = workingOnData.workerA.payload
+            const workingOnData = await queue.allWorkingOn()
+            const paylaod = workingOnData.workerA.payload
             expect(paylaod.queue).toBe('test_queue')
             expect(paylaod['class']).toBe('slowJob')
             expect(paylaod.args[0].a).toBe(1)
 
-            let runAt = Date.parse(workingOnData.workerA.run_at)
-            let now = (new Date()).getTime()
+            const runAt = Date.parse(workingOnData.workerA.run_at)
+            const now = (new Date()).getTime()
             expect(runAt).toBeGreaterThanOrEqual(now - 1001)
             expect(runAt).toBeLessThanOrEqual(now)
 
-            let cleanData = await queue.cleanOldWorkers(age)
+            const cleanData = await queue.cleanOldWorkers(age)
             expect(Object.keys(cleanData).length).toBe(1)
             expect(cleanData.workerA.queue).toBe('test_queue')
             expect(cleanData.workerA.worker).toBe('workerA')
@@ -515,7 +515,7 @@ describe('queue', () => {
             expect(failedData.payload['class']).toBe('slowJob')
             expect(failedData.payload.args[0].a).toBe(1)
 
-            let workingOnDataAgain = await queue.allWorkingOn()
+            const workingOnDataAgain = await queue.allWorkingOn()
             expect(Object.keys(workingOnDataAgain).length).toBe(1)
             expect(workingOnDataAgain.workerB).toBe('started')
 
@@ -533,10 +533,10 @@ describe('queue', () => {
           workerA.on('job', async () => {
             workerA.removeAllListeners('job')
 
-            let data = await queue.cleanOldWorkers(age)
+            const data = await queue.cleanOldWorkers(age)
             expect(Object.keys(data).length).toBe(0)
 
-            let workingOn = await queue.allWorkingOn()
+            const workingOn = await queue.allWorkingOn()
             var paylaod = workingOn.workerA.payload
             expect(paylaod.queue).toBe('test_queue')
             expect(paylaod['class']).toBe('slowJob')

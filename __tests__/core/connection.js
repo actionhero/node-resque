@@ -23,7 +23,7 @@ describe('connection', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    let connection = new NodeResque.Connection(connectionDetails)
+    const connection = new NodeResque.Connection(connectionDetails)
 
     await new Promise((resolve) => {
       connection.connect()
@@ -37,7 +37,7 @@ describe('connection', () => {
   })
 
   test('should stat with no redis keys in the namespace', async () => {
-    let keys = await specHelper.redis.keys(specHelper.namespace + '*')
+    const keys = await specHelper.redis.keys(specHelper.namespace + '*')
     expect(keys.length).toBe(0)
   })
 
@@ -143,18 +143,18 @@ describe('connection', () => {
   })
 
   test('will select redis db from options', async () => {
-    let connectionDetails = specHelper.cleanConnectionDetails()
+    const connectionDetails = specHelper.cleanConnectionDetails()
     connectionDetails.database = 9
-    let connection = new NodeResque.Connection(connectionDetails)
+    const connection = new NodeResque.Connection(connectionDetails)
     await connection.connect()
     expect(connection.redis.options.db).toBe(connectionDetails.database)
     connection.end()
   })
 
   test('removes empty namespace from generated key', async () => {
-    let connectionDetails = specHelper.cleanConnectionDetails()
+    const connectionDetails = specHelper.cleanConnectionDetails()
     connectionDetails['namespace'] = ''
-    let connection = new NodeResque.Connection(connectionDetails)
+    const connection = new NodeResque.Connection(connectionDetails)
     await connection.connect()
     expect(connection.key('thing')).toBe('thing')
     connection.end()

@@ -3,24 +3,24 @@ const NodeResque = require('../../index.js')
 
 let queue
 let multiWorker
-let checkTimeout = specHelper.timeout / 10
-let minTaskProcessors = 1
-let maxTaskProcessors = 5
+const checkTimeout = specHelper.timeout / 10
+const minTaskProcessors = 1
+const maxTaskProcessors = 5
 
 const blockingSleep = (naptime) => {
   let sleeping = true
-  let now = new Date()
+  const now = new Date()
   let alarm
-  let startingMSeconds = now.getTime()
+  const startingMSeconds = now.getTime()
   while (sleeping) {
     alarm = new Date()
-    let alarmMSeconds = alarm.getTime()
+    const alarmMSeconds = alarm.getTime()
     if (alarmMSeconds - startingMSeconds > naptime) { sleeping = false }
   }
 }
 
 const jobs = {
-  'slowSleepJob': {
+  slowSleepJob: {
     plugins: [],
     pluginOptions: {},
     perform: async () => {
@@ -31,7 +31,7 @@ const jobs = {
       })
     }
   },
-  'slowCPUJob': {
+  slowCPUJob: {
     plugins: [],
     pluginOptions: {},
     perform: async () => {

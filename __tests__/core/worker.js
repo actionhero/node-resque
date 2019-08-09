@@ -1,37 +1,37 @@
 const specHelper = require('../utils/specHelper.js')
 const NodeResque = require('../../index.js')
 
-let jobs = {
-  'add': {
+const jobs = {
+  add: {
     perform: (a, b) => {
       var answer = a + b
       return answer
     }
   },
-  'badAdd': {
+  badAdd: {
     perform: () => {
       throw new Error('Blue Smoke')
     }
   },
-  'messWithData': {
+  messWithData: {
     perform: (a) => {
       a.data = 'new thing'
       return a
     }
   },
-  'async': {
+  async: {
     perform: async () => {
       await new Promise((resolve) => { setTimeout(resolve, 100) })
       return 'yay'
     }
   },
-  'twoSeconds': {
+  twoSeconds: {
     perform: async () => {
       await new Promise((resolve) => { setTimeout(resolve, 1000 * 2) })
       return 'slow'
     }
   },
-  'quickDefine': async () => { return 'ok' }
+  quickDefine: async () => { return 'ok' }
 }
 
 let worker
@@ -43,13 +43,13 @@ describe('worker', () => {
   })
 
   test('can connect', async () => {
-    let worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, queues: specHelper.queue })
+    const worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, queues: specHelper.queue })
     await worker.connect()
     await worker.end()
   })
 
   test('can provide an error if connection failed', async () => {
-    let connectionDetails = {
+    const connectionDetails = {
       pkg: specHelper.connectionDetails.pkg,
       host: 'wronghostname',
       password: specHelper.connectionDetails.password,
@@ -58,7 +58,7 @@ describe('worker', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    let worker = new NodeResque.Worker({ connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue })
+    const worker = new NodeResque.Worker({ connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue })
 
     await new Promise(async (resolve) => {
       worker.connect()
@@ -77,12 +77,12 @@ describe('worker', () => {
     })
 
     test('can run a successful job', async () => {
-      let result = await worker.performInline('add', [1, 2])
+      const result = await worker.performInline('add', [1, 2])
       expect(result).toBe(3)
     })
 
     test('can run a successful async job', async () => {
-      let result = await worker.performInline('async')
+      const result = await worker.performInline('async')
       expect(result).toBe('yay')
     })
 
@@ -113,7 +113,7 @@ describe('worker', () => {
     })
 
     test('will determine the proper queue names', async () => {
-      let worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, timeout: specHelper.timeout }, jobs)
+      const worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, timeout: specHelper.timeout }, jobs)
       await worker.connect()
       expect(worker.queues).toEqual([])
       await queue.enqueue(specHelper.queue, 'badAdd', [1, 2])
@@ -226,7 +226,7 @@ describe('worker', () => {
         await worker.start()
         await new Promise((resolve) => setTimeout(resolve, (worker.options.timeout * 2)))
         const pingKey = worker.connection.key('worker', 'ping', worker.name)
-        let firstPayload = JSON.parse(await specHelper.redis.get(pingKey))
+        const firstPayload = JSON.parse(await specHelper.redis.get(pingKey))
         expect(firstPayload.name).toEqual(worker.name)
         expect(firstPayload.time).toBeGreaterThanOrEqual(nowInSeconds)
 
@@ -240,7 +240,7 @@ describe('worker', () => {
           })
         })
 
-        let secondPayload = JSON.parse(await specHelper.redis.get(pingKey))
+        const secondPayload = JSON.parse(await specHelper.redis.get(pingKey))
         expect(secondPayload.name).toEqual(worker.name)
         expect(secondPayload.time).toBeGreaterThanOrEqual(firstPayload.time)
       })
