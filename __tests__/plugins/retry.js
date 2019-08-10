@@ -47,7 +47,7 @@ describe('plugins', () => {
 
     afterEach(async () => { await specHelper.cleanup() })
 
-    test('will work fine with non-crashing jobs', async () => {
+    test('will work fine with non-crashing jobs', async (done) => {
       await queue.enqueue(specHelper.queue, 'happyJob', [1, 2])
       const length = await queue.length(specHelper.queue)
       expect(length).toBe(1)
@@ -60,21 +60,19 @@ describe('plugins', () => {
 
       worker.on('failure', () => { throw new Error('should not get here') })
 
-      await new Promise(async (resolve) => {
-        await worker.connect()
+      await worker.connect()
 
-        worker.on('success', async () => {
-          const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
-          expect(length).toBe(0)
-          await worker.end()
-          resolve()
-        })
-
-        worker.start()
+      worker.on('success', async () => {
+        const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
+        expect(length).toBe(0)
+        await worker.end()
+        done()
       })
+
+      worker.start()
     })
 
-    test('will retry the job n times before finally failing', async () => {
+    test('will retry the job n times before finally failing', async (done) => {
       await queue.enqueue(specHelper.queue, 'brokenJob')
       const length = await queue.length(specHelper.queue)
       expect(length).toBe(1)
@@ -90,26 +88,24 @@ describe('plugins', () => {
 
       worker.on('success', () => { failButRetryCount++ })
 
-      await new Promise(async (resolve) => {
-        await worker.connect()
+      await worker.connect()
 
-        worker.on('failure', async () => {
-          failureCount++
-          expect(failButRetryCount).toBe(2)
-          expect(failureCount).toBe(1)
-          expect(failButRetryCount + failureCount).toBe(3)
+      worker.on('failure', async () => {
+        failureCount++
+        expect(failButRetryCount).toBe(2)
+        expect(failureCount).toBe(1)
+        expect(failButRetryCount + failureCount).toBe(3)
 
-          const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
-          expect(length).toBe(1)
-          await worker.end()
-          resolve()
-        })
-
-        worker.start()
+        const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
+        expect(length).toBe(1)
+        await worker.end()
+        done()
       })
+
+      worker.start()
     })
 
-    test('can have a retry count set', async () => {
+    test('can have a retry count set', async (done) => {
       const customJobs = {
         jobWithRetryCount: {
           plugins: ['Retry'],
@@ -138,26 +134,24 @@ describe('plugins', () => {
 
       worker.on('success', () => { failButRetryCount++ })
 
-      await new Promise(async (resolve) => {
-        await worker.connect()
+      await worker.connect()
 
-        worker.on('failure', async () => {
-          failureCount++
-          expect(failButRetryCount).toBe(4)
-          expect(failureCount).toBe(1)
-          expect(failButRetryCount + failureCount).toBe(5)
+      worker.on('failure', async () => {
+        failureCount++
+        expect(failButRetryCount).toBe(4)
+        expect(failureCount).toBe(1)
+        expect(failButRetryCount + failureCount).toBe(5)
 
-          const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
-          expect(length).toBe(1)
-          await worker.end()
-          resolve()
-        })
-
-        worker.start()
+        const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
+        expect(length).toBe(1)
+        await worker.end()
+        done()
       })
+
+      worker.start()
     })
 
-    test('can have custom retry times set', async () => {
+    test('can have custom retry times set', async (done) => {
       const customJobs = {
         jobWithBackoffStrategy: {
           plugins: ['Retry'],
@@ -186,28 +180,26 @@ describe('plugins', () => {
 
       worker.on('success', () => { failButRetryCount++ })
 
-      await new Promise(async (resolve) => {
-        await worker.connect()
+      await worker.connect()
 
-        worker.on('failure', async () => {
-          failureCount++
-          expect(failButRetryCount).toBe(4)
-          expect(failureCount).toBe(1)
-          expect(failButRetryCount + failureCount).toBe(5)
+      worker.on('failure', async () => {
+        failureCount++
+        expect(failButRetryCount).toBe(4)
+        expect(failureCount).toBe(1)
+        expect(failButRetryCount + failureCount).toBe(5)
 
-          const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
-          expect(length).toBe(1)
-          await worker.end()
-          resolve()
-        })
-
-        worker.start()
+        const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
+        expect(length).toBe(1)
+        await worker.end()
+        done()
       })
+
+      worker.start()
     })
 
     test(
       'when a job fails it should be re-enqueued (and not go to the failure queue)',
-      async () => {
+      async (done) => {
         await queue.enqueue(specHelper.queue, 'brokenJob', [1, 2])
 
         const worker = new NodeResque.Worker({
@@ -216,23 +208,21 @@ describe('plugins', () => {
           queues: specHelper.queue
         }, jobs)
 
-        await new Promise(async (resolve) => {
-          await worker.connect()
-          worker.on('success', async () => {
-            const timestamps = await queue.scheduledAt(specHelper.queue, 'brokenJob', [1, 2])
-            expect(timestamps.length).toBe(1)
-            const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
-            expect(length).toBe(0)
-            await worker.end()
-            resolve()
-          })
-
-          worker.start()
+        await worker.connect()
+        worker.on('success', async () => {
+          const timestamps = await queue.scheduledAt(specHelper.queue, 'brokenJob', [1, 2])
+          expect(timestamps.length).toBe(1)
+          const length = await specHelper.redis.llen(`${specHelper.namespace}:failed`)
+          expect(length).toBe(0)
+          await worker.end()
+          done()
         })
+
+        worker.start()
       }
     )
 
-    test('will handle the stats properly for failing jobs', async () => {
+    test('will handle the stats properly for failing jobs', async (done) => {
       await queue.enqueue(specHelper.queue, 'brokenJob', [1, 2])
 
       const worker = new NodeResque.Worker({
@@ -241,26 +231,25 @@ describe('plugins', () => {
         queues: specHelper.queue
       }, jobs)
 
-      await new Promise(async (resolve) => {
-        await worker.connect()
-        worker.on('success', async () => {
-          const globalProcessed = await specHelper.redis.get(`${specHelper.namespace}:stat:processed`)
-          const globalFailed = await specHelper.redis.get(`${specHelper.namespace}:stat:failed`)
-          const workerProcessed = await specHelper.redis.get(`${specHelper.namespace}:stat:processed:${worker.name}`)
-          const workerFailed = await specHelper.redis.get(`${specHelper.namespace}:stat:failed:${worker.name}`)
-          expect(String(globalProcessed)).toBe('0')
-          expect(String(globalFailed)).toBe('1')
-          expect(String(workerProcessed)).toBe('0')
-          expect(String(workerFailed)).toBe('1')
-          await worker.end()
-          resolve()
-        })
+      await worker.connect()
 
-        worker.start()
+      worker.on('success', async () => {
+        const globalProcessed = await specHelper.redis.get(`${specHelper.namespace}:stat:processed`)
+        const globalFailed = await specHelper.redis.get(`${specHelper.namespace}:stat:failed`)
+        const workerProcessed = await specHelper.redis.get(`${specHelper.namespace}:stat:processed:${worker.name}`)
+        const workerFailed = await specHelper.redis.get(`${specHelper.namespace}:stat:failed:${worker.name}`)
+        expect(String(globalProcessed)).toBe('0')
+        expect(String(globalFailed)).toBe('1')
+        expect(String(workerProcessed)).toBe('0')
+        expect(String(workerFailed)).toBe('1')
+        await worker.end()
+        done()
       })
+
+      worker.start()
     })
 
-    test('will set the retry counter & retry data', async () => {
+    test('will set the retry counter & retry data', async (done) => {
       await queue.enqueue(specHelper.queue, 'brokenJob', [1, 2])
 
       const worker = new NodeResque.Worker({
@@ -269,23 +258,21 @@ describe('plugins', () => {
         queues: specHelper.queue
       }, jobs)
 
-      await new Promise(async (resolve) => {
-        await worker.connect()
-        worker.on('success', async () => {
-          const retryAttempts = await specHelper.redis.get(`${specHelper.namespace}:resque-retry:brokenJob:1-2`)
-          let failureData = await specHelper.redis.get(`${specHelper.namespace}:failure-resque-retry:brokenJob:1-2`)
-          expect(String(retryAttempts)).toBe('0')
-          failureData = JSON.parse(failureData)
-          expect(failureData.payload).toEqual([1, 2])
-          expect(failureData.exception).toBe('Error: BUSTED')
-          expect(failureData.worker).toBe('brokenJob')
-          expect(failureData.queue).toBe('test_queue')
-          await worker.end()
-          resolve()
-        })
-
-        worker.start()
+      await worker.connect()
+      worker.on('success', async () => {
+        const retryAttempts = await specHelper.redis.get(`${specHelper.namespace}:resque-retry:brokenJob:1-2`)
+        let failureData = await specHelper.redis.get(`${specHelper.namespace}:failure-resque-retry:brokenJob:1-2`)
+        expect(String(retryAttempts)).toBe('0')
+        failureData = JSON.parse(failureData)
+        expect(failureData.payload).toEqual([1, 2])
+        expect(failureData.exception).toBe('Error: BUSTED')
+        expect(failureData.worker).toBe('brokenJob')
+        expect(failureData.queue).toBe('test_queue')
+        await worker.end()
+        done()
       })
+
+      worker.start()
     })
   })
 })

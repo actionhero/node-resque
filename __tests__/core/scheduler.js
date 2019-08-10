@@ -15,7 +15,7 @@ describe('scheduler', () => {
     beforeAll(async () => { await specHelper.connect() })
     afterAll(async () => { await specHelper.disconnect() })
 
-    test('can provide an error if connection failed', async () => {
+    test('can provide an error if connection failed', async (done) => {
       const connectionDetails = {
         pkg: specHelper.connectionDetails.pkg,
         host: 'wronghostname',
@@ -30,14 +30,12 @@ describe('scheduler', () => {
       scheduler.on('poll', () => { throw new Error('Should not emit poll') })
       scheduler.on('master', () => { throw new Error('Should not emit master') })
 
-      await new Promise(async (resolve) => {
-        scheduler.connect()
+      await scheduler.connect()
 
-        scheduler.on('error', async (error) => {
-          expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
-          await scheduler.end()
-          resolve()
-        })
+      scheduler.on('error', async (error) => {
+        expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
+        await scheduler.end()
+        done()
       })
     })
 
@@ -132,7 +130,7 @@ describe('scheduler', () => {
           await worker.end()
         })
 
-        test('will remove stuck workers and fail thier jobs', async () => {
+        test('will remove stuck workers and fail thier jobs', async (done) => {
           await scheduler.connect()
           await scheduler.start()
           await worker.start()
@@ -144,26 +142,24 @@ describe('scheduler', () => {
 
           await queue.enqueue('stuckJobs', 'stuck', ['oh no!'])
 
-          await new Promise(async (resolve) => {
-            scheduler.on('cleanStuckWorker', async (workerName, errorPayload, delta) => {
-              // response data should contain failure
-              expect(workerName).toEqual(worker.name)
-              expect(errorPayload.worker).toEqual(worker.name)
-              expect(errorPayload.error).toEqual('Worker Timeout (killed manually)')
+          scheduler.on('cleanStuckWorker', async (workerName, errorPayload, delta) => {
+            // response data should contain failure
+            expect(workerName).toEqual(worker.name)
+            expect(errorPayload.worker).toEqual(worker.name)
+            expect(errorPayload.error).toEqual('Worker Timeout (killed manually)')
 
-              // check the workers list, should be empty now
-              expect(await queue.allWorkingOn()).toEqual({})
+            // check the workers list, should be empty now
+            expect(await queue.allWorkingOn()).toEqual({})
 
-              // check the failed list
-              let failed = await specHelper.redis.rpop(specHelper.namespace + ':' + 'failed')
-              failed = JSON.parse(failed)
-              expect(failed.queue).toBe('stuckJobs')
-              expect(failed.exception).toBe('Worker Timeout (killed manually)')
-              expect(failed.error).toBe('Worker Timeout (killed manually)')
+            // check the failed list
+            let failed = await specHelper.redis.rpop(specHelper.namespace + ':' + 'failed')
+            failed = JSON.parse(failed)
+            expect(failed.queue).toBe('stuckJobs')
+            expect(failed.exception).toBe('Worker Timeout (killed manually)')
+            expect(failed.error).toBe('Worker Timeout (killed manually)')
 
-              scheduler.removeAllListeners('cleanStuckWorker')
-              resolve()
-            })
+            scheduler.removeAllListeners('cleanStuckWorker')
+            done()
           })
         })
       })
