@@ -22,7 +22,7 @@ async function boot () {
   // ///////////////////////////
 
   const jobs = {
-    'stuck': {
+    stuck: {
       perform: async function () {
         console.log(`${this.name} is starting stuck job...`)
         await new Promise((resolve) => {

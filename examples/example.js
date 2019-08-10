@@ -24,7 +24,7 @@ async function boot () {
   let jobsToComplete = 0
 
   const jobs = {
-    'add': {
+    add: {
       plugins: ['JobLock'],
       pluginOptions: {
         JobLock: {}
@@ -34,16 +34,16 @@ async function boot () {
         jobsToComplete--
         tryShutdown()
 
-        let answer = a + b
+        const answer = a + b
         return answer
       }
     },
-    'subtract': {
+    subtract: {
       perform: (a, b) => {
         jobsToComplete--
         tryShutdown()
 
-        let answer = a - b
+        const answer = a - b
         return answer
       }
     }

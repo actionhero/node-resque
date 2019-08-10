@@ -1,37 +1,37 @@
 const specHelper = require('../utils/specHelper.js')
 const NodeResque = require('../../index.js')
 
-let jobs = {
-  'add': {
+const jobs = {
+  add: {
     perform: (a, b) => {
       var answer = a + b
       return answer
     }
   },
-  'badAdd': {
+  badAdd: {
     perform: () => {
       throw new Error('Blue Smoke')
     }
   },
-  'messWithData': {
+  messWithData: {
     perform: (a) => {
       a.data = 'new thing'
       return a
     }
   },
-  'async': {
+  async: {
     perform: async () => {
       await new Promise((resolve) => { setTimeout(resolve, 100) })
       return 'yay'
     }
   },
-  'twoSeconds': {
+  twoSeconds: {
     perform: async () => {
       await new Promise((resolve) => { setTimeout(resolve, 1000 * 2) })
       return 'slow'
     }
   },
-  'quickDefine': async () => { return 'ok' }
+  quickDefine: async () => { return 'ok' }
 }
 
 let worker
@@ -43,13 +43,13 @@ describe('worker', () => {
   })
 
   test('can connect', async () => {
-    let worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, queues: specHelper.queue })
+    const worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, queues: specHelper.queue })
     await worker.connect()
     await worker.end()
   })
 
-  test('can provide an error if connection failed', async () => {
-    let connectionDetails = {
+  test('can provide an error if connection failed', async (done) => {
+    const connectionDetails = {
       pkg: specHelper.connectionDetails.pkg,
       host: 'wronghostname',
       password: specHelper.connectionDetails.password,
@@ -58,16 +58,14 @@ describe('worker', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    let worker = new NodeResque.Worker({ connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue })
+    const worker = new NodeResque.Worker({ connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue })
 
-    await new Promise(async (resolve) => {
-      worker.connect()
+    await worker.connect()
 
-      worker.on('error', async (error) => {
-        expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
-        await worker.end()
-        resolve()
-      })
+    worker.on('error', async (error) => {
+      expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
+      await worker.end()
+      done()
     })
   })
 
@@ -77,12 +75,12 @@ describe('worker', () => {
     })
 
     test('can run a successful job', async () => {
-      let result = await worker.performInline('add', [1, 2])
+      const result = await worker.performInline('add', [1, 2])
       expect(result).toBe(3)
     })
 
     test('can run a successful async job', async () => {
-      let result = await worker.performInline('async')
+      const result = await worker.performInline('async')
       expect(result).toBe('yay')
     })
 
@@ -113,7 +111,7 @@ describe('worker', () => {
     })
 
     test('will determine the proper queue names', async () => {
-      let worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, timeout: specHelper.timeout }, jobs)
+      const worker = new NodeResque.Worker({ connection: specHelper.connectionDetails, timeout: specHelper.timeout }, jobs)
       await worker.connect()
       expect(worker.queues).toEqual([])
       await queue.enqueue(specHelper.queue, 'badAdd', [1, 2])
@@ -132,84 +130,74 @@ describe('worker', () => {
 
       afterEach(async () => { await worker.end() })
 
-      test('will mark a job as failed', async () => {
+      test('will mark a job as failed', async (done) => {
         await queue.enqueue(specHelper.queue, 'badAdd', [1, 2])
 
-        await new Promise(async (resolve) => {
-          worker.start()
+        await worker.start()
 
-          worker.on('failure', (q, job, failire) => {
-            expect(q).toBe(specHelper.queue)
-            expect(job['class']).toBe('badAdd')
-            expect(failire.message).toBe('Blue Smoke')
+        worker.on('failure', (q, job, failire) => {
+          expect(q).toBe(specHelper.queue)
+          expect(job['class']).toBe('badAdd')
+          expect(failire.message).toBe('Blue Smoke')
 
-            worker.removeAllListeners('failire')
-            return resolve()
-          })
+          worker.removeAllListeners('failire')
+          done()
         })
       })
 
-      test('can work a job and return succesful things', async () => {
+      test('can work a job and return succesful things', async (done) => {
         await queue.enqueue(specHelper.queue, 'add', [1, 2])
 
-        await new Promise(async (resolve) => {
-          worker.start()
+        worker.start()
 
-          worker.on('success', (q, job, result) => {
-            expect(q).toBe(specHelper.queue)
-            expect(job['class']).toBe('add')
-            expect(result).toBe(3)
-            expect(worker.result).toBe(result)
+        worker.on('success', (q, job, result) => {
+          expect(q).toBe(specHelper.queue)
+          expect(job['class']).toBe('add')
+          expect(result).toBe(3)
+          expect(worker.result).toBe(result)
 
-            worker.removeAllListeners('success')
-            return resolve()
-          })
+          worker.removeAllListeners('success')
+          done()
         })
       })
 
-      test('job arguments are immutable', async () => {
+      test('job arguments are immutable', async (done) => {
         await queue.enqueue(specHelper.queue, 'messWithData', { a: 'starting value' })
 
-        await new Promise(async (resolve) => {
-          worker.start()
+        worker.start()
 
-          worker.on('success', (q, job, result) => {
-            expect(result.a).toBe('starting value')
-            expect(worker.result).toBe(result)
+        worker.on('success', (q, job, result) => {
+          expect(result.a).toBe('starting value')
+          expect(worker.result).toBe(result)
 
-            worker.removeAllListeners('success')
-            return resolve()
-          })
+          worker.removeAllListeners('success')
+          done()
         })
       })
 
-      test('can accept jobs that are simple functions', async () => {
+      test('can accept jobs that are simple functions', async (done) => {
         await queue.enqueue(specHelper.queue, 'quickDefine')
 
-        await new Promise(async (resolve) => {
-          worker.start()
+        worker.start()
 
-          worker.on('success', (q, job, result) => {
-            expect(result).toBe('ok')
-            worker.removeAllListeners('success')
-            return resolve()
-          })
+        worker.on('success', (q, job, result) => {
+          expect(result).toBe('ok')
+          worker.removeAllListeners('success')
+          done()
         })
       })
 
-      test('will not work jobs that are not defined', async () => {
+      test('will not work jobs that are not defined', async (done) => {
         await queue.enqueue(specHelper.queue, 'somethingFake')
 
-        await new Promise(async (resolve) => {
-          worker.start()
+        worker.start()
 
-          worker.on('failure', (q, job, failure) => {
-            expect(q).toBe(specHelper.queue)
-            expect(String(failure)).toBe('Error: No job defined for class "somethingFake"')
+        worker.on('failure', (q, job, failure) => {
+          expect(q).toBe(specHelper.queue)
+          expect(String(failure)).toBe('Error: No job defined for class "somethingFake"')
 
-            worker.removeAllListeners('failure')
-            return resolve()
-          })
+          worker.removeAllListeners('failure')
+          done()
         })
       })
 
@@ -221,26 +209,24 @@ describe('worker', () => {
         expect(data.error).toBe('No job defined for class "somethingFake"')
       })
 
-      test('will ping with status even when working a slow job', async () => {
+      test('will ping with status even when working a slow job', async (done) => {
         const nowInSeconds = Math.round(new Date().getTime() / 1000)
         await worker.start()
         await new Promise((resolve) => setTimeout(resolve, (worker.options.timeout * 2)))
         const pingKey = worker.connection.key('worker', 'ping', worker.name)
-        let firstPayload = JSON.parse(await specHelper.redis.get(pingKey))
+        const firstPayload = JSON.parse(await specHelper.redis.get(pingKey))
         expect(firstPayload.name).toEqual(worker.name)
         expect(firstPayload.time).toBeGreaterThanOrEqual(nowInSeconds)
 
         await queue.enqueue(specHelper.queue, 'twoSeconds')
 
-        await new Promise(async (resolve) => {
-          worker.on('success', (q, job, result) => {
-            expect(result).toBe('slow')
-            worker.removeAllListeners('success')
-            return resolve()
-          })
+        worker.on('success', (q, job, result) => {
+          expect(result).toBe('slow')
+          worker.removeAllListeners('success')
+          done()
         })
 
-        let secondPayload = JSON.parse(await specHelper.redis.get(pingKey))
+        const secondPayload = JSON.parse(await specHelper.redis.get(pingKey))
         expect(secondPayload.name).toEqual(worker.name)
         expect(secondPayload.time).toBeGreaterThanOrEqual(firstPayload.time)
       })

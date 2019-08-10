@@ -8,12 +8,12 @@ class NeverRunPlugin extends NodeResque.Plugin {
 }
 
 const jobs = {
-  'uniqueJob': {
+  uniqueJob: {
     plugins: ['QueueLock'],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
     perform: (a, b) => (a + b)
   },
-  'blockingJob': {
+  blockingJob: {
     plugins: ['QueueLock', NeverRunPlugin],
     perform: (a, b) => (a + b)
   }
@@ -39,9 +39,9 @@ describe('plugins', () => {
     test(
       'will not enque a job with the same args if it is already in the queue',
       async () => {
-        let tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
-        let tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
-        let length = await queue.length(specHelper.queue)
+        const tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+        const tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+        const length = await queue.length(specHelper.queue)
         expect(length).toBe(1)
         expect(tryOne).toBe(true)
         expect(tryTwo).toBe(false)
@@ -49,9 +49,9 @@ describe('plugins', () => {
     )
 
     test('will enque a job with the different args', async () => {
-      let tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
-      let tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [3, 4])
-      let length = await queue.length(specHelper.queue)
+      const tryOne = await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
+      const tryTwo = await queue.enqueue(specHelper.queue, 'uniqueJob', [3, 4])
+      const length = await queue.length(specHelper.queue)
       expect(length).toBe(2)
       expect(tryOne).toBe(true)
       expect(tryTwo).toBe(true)

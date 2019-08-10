@@ -24,7 +24,7 @@ async function boot () {
   let jobsToComplete = 0
 
   const jobs = {
-    'brokenJob': {
+    brokenJob: {
       plugins: [],
       pluginOptions: {},
       perform: function (a, b) {

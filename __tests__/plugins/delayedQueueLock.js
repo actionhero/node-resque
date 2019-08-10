@@ -2,23 +2,23 @@ const specHelper = require('../utils/specHelper.js')
 const NodeResque = require('../../index.js')
 
 let queue
-let jobDelay = 100
+const jobDelay = 100
 
 const jobs = {
-  'slowAdd': {
+  slowAdd: {
     plugins: ['JobLock'],
     pluginOptions: { jobLock: {} },
     perform: async (a, b) => {
-      let answer = a + b
+      const answer = a + b
       await new Promise((resolve) => { setTimeout(resolve, jobDelay) })
       return answer
     }
   },
-  'uniqueJob': {
+  uniqueJob: {
     plugins: ['DelayQueueLock'],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
     perform: async (a, b) => {
-      let answer = a + b
+      const answer = a + b
       return answer
     }
   }
@@ -48,8 +48,8 @@ describe('plugins', () => {
       async () => {
         await queue.enqueueIn((10 * 1000), specHelper.queue, 'uniqueJob', [1, 2])
         await queue.enqueue(specHelper.queue, 'uniqueJob', [1, 2])
-        let delayedLen = await specHelper.redis.zcount(specHelper.namespace + ':delayed_queue_schedule', '-inf', '+inf')
-        let queueLen = await queue.length(specHelper.queue)
+        const delayedLen = await specHelper.redis.zcount(specHelper.namespace + ':delayed_queue_schedule', '-inf', '+inf')
+        const queueLen = await queue.length(specHelper.queue)
         expect(delayedLen).toBe(1)
         expect(queueLen).toBe(0)
       }
@@ -58,8 +58,8 @@ describe('plugins', () => {
     test('will enque a job with the different args', async () => {
       await queue.enqueueIn((10 * 1000), specHelper.queue, 'uniqueJob', [1, 2])
       await queue.enqueue(specHelper.queue, 'uniqueJob', [3, 4])
-      let delayedLen = await specHelper.redis.zcount(specHelper.namespace + ':delayed_queue_schedule', '-inf', '+inf')
-      let queueLen = await queue.length(specHelper.queue)
+      const delayedLen = await specHelper.redis.zcount(specHelper.namespace + ':delayed_queue_schedule', '-inf', '+inf')
+      const queueLen = await queue.length(specHelper.queue)
       expect(delayedLen).toBe(1)
       expect(queueLen).toBe(1)
     })

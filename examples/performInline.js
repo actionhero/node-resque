@@ -22,14 +22,14 @@ async function boot () {
   // ///////////////////////////
 
   const jobs = {
-    'add': {
+    add: {
       plugins: ['JobLock'],
       pluginOptions: {
         JobLock: {}
       },
       perform: async (a, b) => {
         await new Promise((resolve) => { setTimeout(resolve, 1000) })
-        let answer = a + b
+        const answer = a + b
         return answer
       }
     }
@@ -41,7 +41,7 @@ async function boot () {
 
   var worker = new NodeResque.Worker({ connection: connectionDetails, queues: ['math', 'otherQueue'] }, jobs)
   await worker.connect()
-  let result = await worker.performInline('add', [1, 2])
+  const result = await worker.performInline('add', [1, 2])
   console.log('Result: ' + result)
 
   process.exit()
