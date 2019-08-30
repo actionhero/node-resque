@@ -63,11 +63,11 @@ describe('worker', () => {
     await worker.connect()
 
     worker.on('error', async (error) => {
-      expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
+      expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/)
       await worker.end()
       done()
     })
-  })
+  }, 30 * 1000)
 
   describe('performInline', () => {
     beforeAll(() => {

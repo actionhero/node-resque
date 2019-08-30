@@ -33,11 +33,11 @@ describe('scheduler', () => {
       await scheduler.connect()
 
       scheduler.on('error', async (error) => {
-        expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
+        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/)
         await scheduler.end()
         done()
       })
-    })
+    }, 30 * 1000)
 
     describe('locking', () => {
       beforeEach(async () => { await specHelper.cleanup() })

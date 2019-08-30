@@ -29,12 +29,12 @@ describe('connection', () => {
       connection.connect()
 
       connection.on('error', (error) => {
-        expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
+        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/)
         connection.end()
         resolve()
       })
     })
-  })
+  }, 30 * 1000)
 
   test('should stat with no redis keys in the namespace', async () => {
     const keys = await specHelper.redis.keys(specHelper.namespace + '*')

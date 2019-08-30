@@ -27,12 +27,12 @@ describe('queue', () => {
       queue.connect()
 
       queue.on('error', (error) => {
-        expect(error.message).toMatch(/getaddrinfo ENOTFOUND/)
+        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/)
         queue.end()
         resolve()
       })
     })
-  })
+  }, 30 * 1000)
 
   describe('[with connection]', () => {
     beforeAll(async () => {

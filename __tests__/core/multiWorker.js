@@ -59,7 +59,7 @@ describe('multiWorker', () => {
     await multiWorker.end()
 
     multiWorker.on('error', (error) => { throw error })
-  })
+  }, 30 * 1000)
 
   afterEach(async () => {
     await queue.delQueue(specHelper.queue)
