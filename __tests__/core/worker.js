@@ -60,13 +60,13 @@ describe('worker', () => {
 
     const worker = new NodeResque.Worker({ connection: connectionDetails, timeout: specHelper.timeout, queues: specHelper.queue })
 
-    await worker.connect()
-
     worker.on('error', async (error) => {
       expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/)
       await worker.end()
       done()
     })
+
+    worker.connect()
   }, 30 * 1000)
 
   describe('performInline', () => {
