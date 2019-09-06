@@ -137,7 +137,7 @@ describe('worker', () => {
 
         worker.on('failure', (q, job, failire) => {
           expect(q).toBe(specHelper.queue)
-          expect(job['class']).toBe('badAdd')
+          expect(job.class).toBe('badAdd')
           expect(failire.message).toBe('Blue Smoke')
 
           worker.removeAllListeners('failire')
@@ -152,7 +152,7 @@ describe('worker', () => {
 
         worker.on('success', (q, job, result) => {
           expect(q).toBe(specHelper.queue)
-          expect(job['class']).toBe('add')
+          expect(job.class).toBe('add')
           expect(result).toBe(3)
           expect(worker.result).toBe(result)
 

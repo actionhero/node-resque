@@ -117,18 +117,18 @@ describe('connection', () => {
 
     test('keys built with a custom namespace are correct', () => {
       connection.options.namespace = 'customNamespace'
-      expect(connection.key('thing')).toBe(`customNamespace:thing`)
+      expect(connection.key('thing')).toBe('customNamespace:thing')
 
       prefixedConnection.options.namespace = 'customNamespace'
-      expect(prefixedConnection.key('thing')).toBe(`customNamespace:thing`)
+      expect(prefixedConnection.key('thing')).toBe('customNamespace:thing')
     })
 
     test('keys built with a array namespace are correct', () => {
       connection.options.namespace = ['custom', 'namespace']
-      expect(connection.key('thing')).toBe(`custom:namespace:thing`)
+      expect(connection.key('thing')).toBe('custom:namespace:thing')
 
       prefixedConnection.options.namespace = ['custom', 'namespace']
-      expect(prefixedConnection.key('thing')).toBe(`custom:namespace:thing`)
+      expect(prefixedConnection.key('thing')).toBe('custom:namespace:thing')
     })
 
     test('will properly build namespace strings dynamically', async () => {
@@ -153,7 +153,7 @@ describe('connection', () => {
 
   test('removes empty namespace from generated key', async () => {
     const connectionDetails = specHelper.cleanConnectionDetails()
-    connectionDetails['namespace'] = ''
+    connectionDetails.namespace = ''
     const connection = new NodeResque.Connection(connectionDetails)
     await connection.connect()
     expect(connection.key('thing')).toBe('thing')

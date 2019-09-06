@@ -49,7 +49,7 @@ describe('queue', () => {
       let obj = await specHelper.popFromQueue()
       expect(obj).toBeDefined()
       obj = JSON.parse(obj)
-      expect(obj['class']).toBe('someJob')
+      expect(obj.class).toBe('someJob')
       expect(obj.args).toEqual([1, 2, 3])
     })
 
@@ -61,7 +61,7 @@ describe('queue', () => {
       let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10')
       expect(obj).toBeDefined()
       obj = JSON.parse(obj)
-      expect(obj['class']).toBe('someJob')
+      expect(obj.class).toBe('someJob')
       expect(obj.args).toEqual([1, 2, 3])
     })
 
@@ -75,7 +75,7 @@ describe('queue', () => {
         let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + '10')
         expect(obj).toBeDefined()
         obj = JSON.parse(obj)
-        expect(obj['class']).toBe('someJob')
+        expect(obj.class).toBe('someJob')
         expect(obj.args).toEqual([1, 2, 3])
       }
     )
@@ -102,7 +102,7 @@ describe('queue', () => {
       let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now)
       expect(obj).toBeDefined()
       obj = JSON.parse(obj)
-      expect(obj['class']).toBe('someJob')
+      expect(obj.class).toBe('someJob')
       expect(obj.args).toEqual([1, 2, 3])
     })
 
@@ -117,7 +117,7 @@ describe('queue', () => {
       let obj = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + now)
       expect(obj).toBeDefined()
       obj = JSON.parse(obj)
-      expect(obj['class']).toBe('someJob')
+      expect(obj.class).toBe('someJob')
       expect(obj.args).toEqual([1, 2, 3])
     })
 
@@ -194,7 +194,7 @@ describe('queue', () => {
       expect(length).toBe(1)
       let obj = await specHelper.popFromQueue()
       obj = JSON.parse(obj)
-      expect(obj['class']).toBe('noParams')
+      expect(obj.class).toBe('noParams')
       expect(Array.isArray(obj.args)).toBe(true)
       expect(obj.args).toHaveLength(0)
     })
@@ -390,13 +390,13 @@ describe('queue', () => {
         const tasksA = await queue.delayedAt(10000)
         expect(tasksA.rTimestamp).toBe(10)
         expect(tasksA.tasks.length).toBe(2)
-        expect(tasksA.tasks[0]['class']).toBe('job1')
-        expect(tasksA.tasks[1]['class']).toBe('job2')
+        expect(tasksA.tasks[0].class).toBe('job1')
+        expect(tasksA.tasks[1].class).toBe('job2')
 
         const tasksB = await queue.delayedAt(20000)
         expect(tasksB.rTimestamp).toBe(20)
         expect(tasksB.tasks.length).toBe(1)
-        expect(tasksB.tasks[0]['class']).toBe('job3')
+        expect(tasksB.tasks[0].class).toBe('job3')
       })
 
       test('can also return a hash with all delayed tasks', async () => {
@@ -472,7 +472,7 @@ describe('queue', () => {
             expect(data).toHaveProperty('workerB', 'started')
             const paylaod = data.workerA.payload
             expect(paylaod.queue).toBe('test_queue')
-            expect(paylaod['class']).toBe('slowJob')
+            expect(paylaod.class).toBe('slowJob')
 
             return resolve()
           })
@@ -492,7 +492,7 @@ describe('queue', () => {
             const workingOnData = await queue.allWorkingOn()
             const paylaod = workingOnData.workerA.payload
             expect(paylaod.queue).toBe('test_queue')
-            expect(paylaod['class']).toBe('slowJob')
+            expect(paylaod.class).toBe('slowJob')
             expect(paylaod.args[0].a).toBe(1)
 
             const runAt = Date.parse(workingOnData.workerA.run_at)
@@ -504,7 +504,7 @@ describe('queue', () => {
             expect(Object.keys(cleanData).length).toBe(1)
             expect(cleanData.workerA.queue).toBe('test_queue')
             expect(cleanData.workerA.worker).toBe('workerA')
-            expect(cleanData.workerA.payload['class']).toBe('slowJob')
+            expect(cleanData.workerA.payload.class).toBe('slowJob')
             expect(cleanData.workerA.payload.args[0].a).toBe(1)
 
             let failedData = await specHelper.redis.rpop(specHelper.namespace + ':' + 'failed')
@@ -512,7 +512,7 @@ describe('queue', () => {
             expect(failedData.queue).toBe(specHelper.queue)
             expect(failedData.exception).toBe('Worker Timeout (killed manually)')
             expect(failedData.error).toBe('Worker Timeout (killed manually)')
-            expect(failedData.payload['class']).toBe('slowJob')
+            expect(failedData.payload.class).toBe('slowJob')
             expect(failedData.payload.args[0].a).toBe(1)
 
             const workingOnDataAgain = await queue.allWorkingOn()
@@ -539,7 +539,7 @@ describe('queue', () => {
             const workingOn = await queue.allWorkingOn()
             var paylaod = workingOn.workerA.payload
             expect(paylaod.queue).toBe('test_queue')
-            expect(paylaod['class']).toBe('slowJob')
+            expect(paylaod.class).toBe('slowJob')
 
             return resolve()
           })
