@@ -8,18 +8,22 @@ let loggedErrors = []
 const jobs = {
   brokenJob: {
     plugins: ['Noop'],
-    pluginOptions: { Noop: {
-      logger: (error) => { loggedErrors.push(error) }
-    } },
+    pluginOptions: {
+      Noop: {
+        logger: (error) => { loggedErrors.push(error) }
+      }
+    },
     perform: () => {
       throw new Error('BUSTED')
     }
   },
   happyJob: {
     plugins: ['Noop'],
-    pluginOptions: { Noop: {
-      logger: (error) => { loggedErrors.push(error) }
-    } },
+    pluginOptions: {
+      Noop: {
+        logger: (error) => { loggedErrors.push(error) }
+      }
+    },
     perform: function () {
       // nothing
     }

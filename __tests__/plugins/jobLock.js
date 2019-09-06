@@ -124,7 +124,7 @@ describe('plugins', () => {
         let dealyedJob = await specHelper.redis.lpop(specHelper.namespace + ':delayed:' + Math.round(timestamps[0] / 1000))
         expect(dealyedJob).toBeDefined()
         dealyedJob = JSON.parse(dealyedJob)
-        expect(dealyedJob['class']).toBe('slowAdd')
+        expect(dealyedJob.class).toBe('slowAdd')
         expect(dealyedJob.args).toEqual([1, 2])
 
         done()

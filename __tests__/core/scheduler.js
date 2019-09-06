@@ -89,7 +89,7 @@ describe('scheduler', () => {
         let obj = await specHelper.popFromQueue()
         expect(obj).toBeDefined()
         obj = JSON.parse(obj)
-        expect(obj['class']).toBe('someJob')
+        expect(obj.class).toBe('someJob')
         expect(obj.args).toEqual([1, 2, 3])
         await scheduler.end()
       })

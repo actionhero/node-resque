@@ -7,20 +7,24 @@ let scheduler
 const jobs = {
   brokenJob: {
     plugins: ['Retry'],
-    pluginOptions: { Retry: {
-      retryLimit: 3,
-      retryDelay: 100
-    } },
+    pluginOptions: {
+      Retry: {
+        retryLimit: 3,
+        retryDelay: 100
+      }
+    },
     perform: () => {
       throw new Error('BUSTED')
     }
   },
   happyJob: {
     plugins: ['Retry'],
-    pluginOptions: { Retry: {
-      retryLimit: 3,
-      retryDelay: 100
-    } },
+    pluginOptions: {
+      Retry: {
+        retryLimit: 3,
+        retryDelay: 100
+      }
+    },
     perform: () => {
       // no return
     }
@@ -109,10 +113,12 @@ describe('plugins', () => {
       const customJobs = {
         jobWithRetryCount: {
           plugins: ['Retry'],
-          pluginOptions: { Retry: {
-            retryLimit: 5,
-            retryDelay: 100
-          } },
+          pluginOptions: {
+            Retry: {
+              retryLimit: 5,
+              retryDelay: 100
+            }
+          },
           perform: () => {
             throw new Error('BUSTED')
           }
@@ -155,10 +161,12 @@ describe('plugins', () => {
       const customJobs = {
         jobWithBackoffStrategy: {
           plugins: ['Retry'],
-          pluginOptions: { Retry: {
-            retryLimit: 5,
-            backoffStrategy: [1, 2, 3, 4, 5]
-          } },
+          pluginOptions: {
+            Retry: {
+              retryLimit: 5,
+              backoffStrategy: [1, 2, 3, 4, 5]
+            }
+          },
           perform: function (a, b, callback) {
             callback(new Error('BUSTED'), null)
           }
