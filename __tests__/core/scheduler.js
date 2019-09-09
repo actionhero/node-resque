@@ -30,13 +30,13 @@ describe('scheduler', () => {
       scheduler.on('poll', () => { throw new Error('Should not emit poll') })
       scheduler.on('master', () => { throw new Error('Should not emit master') })
 
-      await scheduler.connect()
-
       scheduler.on('error', async (error) => {
         expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/)
         await scheduler.end()
         done()
       })
+
+      scheduler.connect()
     }, 30 * 1000)
 
     describe('locking', () => {
