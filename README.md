@@ -234,9 +234,8 @@ Additional methods provided on the `queue` object:
 **`let queues = await queue.queues()`**
   - queues is an Array with the names of all your queues
 
-**`let didDelete = await queue.delQueue()`**
+**`await queue.delQueue(queueName)`**
   - delete a queue, and all jobs in that queue.
-  - didDelete is a boolean indicating if the queue was deleted (false would indicate the queue didn't exist to delete)
 
 **`let jobs = await queue.queued(q, start, stop)`**
   - list all the jobs (with their payloads) in a queue between start index and stop index.
