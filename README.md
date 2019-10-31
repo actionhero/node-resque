@@ -234,7 +234,7 @@ Additional methods provided on the `queue` object:
 **`let queues = await queue.queues()`**
   - queues is an Array with the names of all your queues
 
-**`await queue.delQueue()`**
+**`await queue.delQueue(queueName)`**
   - delete a queue, and all jobs in that queue.
 
 **`let jobs = await queue.queued(q, start, stop)`**
