@@ -1,6 +1,6 @@
-const Ioredis = require('ioredis')
-const specHelper = require('../utils/specHelper.js')
-const NodeResque = require('../../index.js')
+import * as Ioredis from 'ioredis'
+import * as specHelper from '../utils/specHelper.js'
+import * as NodeResque from '../../index.js'
 
 describe('connection', () => {
   beforeAll(async () => {

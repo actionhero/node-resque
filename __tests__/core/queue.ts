@@ -1,5 +1,5 @@
-const specHelper = require('../utils/specHelper.js')
-const NodeResque = require('../../index.js')
+import * as specHelper from '../utils/specHelper.js'
+import * as NodeResque from '../../index.js'
 let queue
 
 describe('queue', () => {

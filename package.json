@@ -9,7 +9,7 @@
     "type": "git",
     "url": "git://github.com/taskrabbit/node-resque.git"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "keywords": [
     "delayed",
     "queue",
@@ -28,28 +28,24 @@
     "ioredis": "^4.14.1"
   },
   "devDependencies": {
+    "@types/ioredis": "^4.0.18",
+    "@types/jest": "^24.0.22",
+    "@types/node": "^12.12.7",
     "jest": "^24.9.0",
     "node-schedule": "^1.3.2",
-    "standard": "^14.3.0"
+    "ts-jest": "^24.1.0",
+    "typescript": "^3.7.2"
   },
   "jest": {
     "testPathIgnorePatterns": [
       "<rootDir>/__tests__/utils"
-    ]
-  },
-  "standard": {
-    "globals": [
-      "expect",
-      "test",
-      "afterAll",
-      "afterEach",
-      "beforeAll",
-      "beforeEach",
-      "describe"
-    ]
+    ],
+    "transform": {
+      "^.+\\.ts?$": "ts-jest"
+    }
   },
   "scripts": {
-    "pretest": "standard",
+    "pretest": "tsc",
     "test": "jest"
   }
 }
