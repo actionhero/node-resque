@@ -1,9 +1,11 @@
-const os = require('os')
-const EventEmitter = require('events').EventEmitter
-const Connection = require('./connection.js').Connection
-const PluginRunner = require('./pluginRunner.js')
+import * as os from 'os'
+import { EventEmitter } from 'events'
+import { Connection } from './connection'
+import { RunPlugins } from './pluginRunner'
+import { Options } from '../types/options'
+import { Jobs } from '../types/jobs'
 
-function arrayify (o) {
+function arrayify(o) {
   if (Array.isArray(o)) {
     return o
   } else {
@@ -11,8 +13,12 @@ function arrayify (o) {
   }
 }
 
-class Queue extends EventEmitter {
-  constructor (options, jobs) {
+export class Queue extends EventEmitter {
+  connection: Connection
+  options: Options
+  jobs: Jobs
+
+  constructor(options, jobs) {
     super()
     if (!jobs) { jobs = {} }
 
@@ -23,15 +29,15 @@ class Queue extends EventEmitter {
     this.connection.on('error', (error) => { this.emit('error', error) })
   }
 
-  async connect () {
+  async connect() {
     return this.connection.connect()
   }
 
-  async end () {
+  async end() {
     return this.connection.end()
   }
 
-  encode (q, func, args) {
+  encode(q, func, args) {
     return JSON.stringify({
       class: func,
       queue: q,
@@ -39,21 +45,21 @@ class Queue extends EventEmitter {
     })
   }
 
-  async enqueue (q, func, args) {
+  async enqueue(q, func, args) {
     if (!args) { args = [] }
     args = arrayify(args)
     const job = this.jobs[func]
 
-    const toRun = await PluginRunner.RunPlugins(this, 'beforeEnqueue', func, q, job, args)
+    const toRun = await RunPlugins(this, 'beforeEnqueue', func, q, job, args)
     if (toRun === false) { return toRun }
 
     await this.connection.redis.sadd(this.connection.key('queues'), q)
     await this.connection.redis.rpush(this.connection.key('queue', q), this.encode(q, func, args))
-    await PluginRunner.RunPlugins(this, 'afterEnqueue', func, q, job, args)
+    await RunPlugins(this, 'afterEnqueue', func, q, job, args)
     return toRun
   }
 
-  async enqueueAt (timestamp, q, func, args) {
+  async enqueueAt(timestamp, q, func, args) {
     // Don't run plugins here, they should be run by scheduler at the enqueue step
     if (!args) { args = [] }
     args = arrayify(args)
@@ -66,35 +72,35 @@ class Queue extends EventEmitter {
 
     await this.connection.redis.rpush(this.connection.key('delayed:' + rTimestamp), item)
     await this.connection.redis.sadd(this.connection.key('timestamps:' + item), ('delayed:' + rTimestamp))
-    await this.connection.redis.zadd(this.connection.key('delayed_queue_schedule'), rTimestamp, rTimestamp)
+    await this.connection.redis.zadd(this.connection.key('delayed_queue_schedule'), rTimestamp.toString(), rTimestamp.toString())
   }
 
-  async enqueueIn (time, q, func, args) {
+  async enqueueIn(time, q, func, args) {
     const timestamp = (new Date().getTime()) + parseInt(time, 10)
     return this.enqueueAt(timestamp, q, func, args)
   }
 
-  async queues () {
+  async queues() {
     return this.connection.redis.smembers(this.connection.key('queues'))
   }
 
-  async delQueue (q) {
+  async delQueue(q) {
     await this.connection.redis.del(this.connection.key('queue', q))
     await this.connection.redis.srem(this.connection.key('queues'), q)
   }
 
-  async length (q) {
+  async length(q) {
     return this.connection.redis.llen(this.connection.key('queue', q))
   }
 
-  async del (q, func, args, count) {
+  async del(q, func, args, count) {
     if (!args) { args = [] }
     if (!count) { count = 0 }
     args = arrayify(args)
     return this.connection.redis.lrem(this.connection.key('queue', q), count, this.encode(q, func, args))
   }
 
-  async delDelayed (q, func, args) {
+  async delDelayed(q, func, args) {
     const timestamps = []
     if (!args) { args = {} }
     args = arrayify(args)
@@ -114,7 +120,7 @@ class Queue extends EventEmitter {
     return timestamps
   }
 
-  async scheduledAt (q, func, args) {
+  async scheduledAt(q, func, args) {
     const timestamps = []
     if (!args) { args = [] }
     args = arrayify(args)
@@ -128,7 +134,7 @@ class Queue extends EventEmitter {
     return timestamps
   }
 
-  async timestamps () {
+  async timestamps() {
     const results = []
     const timestamps = await this.connection.getKeys(this.connection.key('delayed:*'))
     timestamps.forEach((timestamp) => {
@@ -140,20 +146,20 @@ class Queue extends EventEmitter {
     return results
   }
 
-  async delayedAt (timestamp) {
+  async delayedAt(timestamp) {
     const rTimestamp = Math.round(timestamp / 1000) // assume timestamp is in ms
     const items = await this.connection.redis.lrange(this.connection.key('delayed:' + rTimestamp), 0, -1)
     const tasks = items.map((i) => { return JSON.parse(i) })
     return { tasks, rTimestamp }
   }
 
-  async queued (q, start, stop) {
+  async queued(q, start, stop) {
     const items = await this.connection.redis.lrange(this.connection.key('queue', q), start, stop)
     const tasks = items.map(function (i) { return JSON.parse(i) })
     return tasks
   }
 
-  async allDelayed () {
+  async allDelayed() {
     const results = {}
 
     const timestamps = await this.timestamps()
@@ -166,10 +172,11 @@ class Queue extends EventEmitter {
     return results
   }
 
-  async locks () {
-    let keys = []
+  async locks() {
+    let keys: Array<string> = []
     const data = {}
-    let _keys
+    let _keys: Array<string>
+    let values = []
 
     _keys = await this.connection.getKeys(this.connection.key('lock:*'))
     keys = keys.concat(_keys)
@@ -179,7 +186,12 @@ class Queue extends EventEmitter {
 
     if (keys.length === 0) { return data }
 
-    const values = await this.connection.redis.mget(keys)
+    // const values = await this.connection.redis.mget(keys)
+    for (const i in keys) {
+      let value = await this.connection.redis.get(keys[i])
+      values.push(value)
+    }
+
     for (var i = 0; i < keys.length; i++) {
       var k = keys[i]
       k = k.replace(this.connection.key(''), '')
@@ -190,11 +202,11 @@ class Queue extends EventEmitter {
     return data
   }
 
-  async delLock (key) {
+  async delLock(key) {
     return this.connection.redis.del(this.connection.key(key))
   }
 
-  async workers () {
+  async workers() {
     const workers = {}
 
     const results = await this.connection.redis.smembers(this.connection.key('workers'))
@@ -219,12 +231,12 @@ class Queue extends EventEmitter {
     return workers
   }
 
-  async workingOn (workerName, queues) {
+  async workingOn(workerName, queues) {
     const fullWorkerName = workerName + ':' + queues
     return this.connection.redis.get(this.connection.key('worker', fullWorkerName))
   }
 
-  async allWorkingOn () {
+  async allWorkingOn() {
     const results = {}
 
     const workers = await this.workers()
@@ -233,15 +245,15 @@ class Queue extends EventEmitter {
       results[w] = 'started'
       let data = await this.workingOn(w, workers[w])
       if (data) {
-        data = JSON.parse(data)
-        results[data.worker] = data
+        let parsedData = JSON.parse(data)
+        results[parsedData.worker] = parsedData
       }
     }
 
     return results
   }
 
-  async forceCleanWorker (workerName) {
+  async forceCleanWorker(workerName) {
     let errorPayload
 
     const workers = await this.workers()
@@ -253,11 +265,11 @@ class Queue extends EventEmitter {
       let workingOn = await this.workingOn(workerName, queues)
       const message = 'Worker Timeout (killed manually)'
       if (workingOn) {
-        workingOn = JSON.parse(workingOn)
+        let parsedWorkingOn = JSON.parse(workingOn)
         errorPayload = {
           worker: workerName,
-          queue: workingOn.queue,
-          payload: workingOn.payload || [],
+          queue: parsedWorkingOn.queue,
+          payload: parsedWorkingOn.payload || [],
           exception: message,
           error: message,
           backtrace: [
@@ -286,7 +298,7 @@ class Queue extends EventEmitter {
     return errorPayload
   }
 
-  async cleanOldWorkers (age) {
+  async cleanOldWorkers(age) {
     // note: this method will remove the data created by a 'stuck' worker and move the payload to the error queue
     // however, it will not actually remove any processes which may be running.  A job *may* be running that you have removed
     var results = {}
@@ -303,27 +315,27 @@ class Queue extends EventEmitter {
     return results
   }
 
-  async failedCount () {
+  async failedCount() {
     return this.connection.redis.llen(this.connection.key('failed'))
   }
 
-  async failed (start, stop) {
+  async failed(start, stop) {
     const data = await this.connection.redis.lrange(this.connection.key('failed'), start, stop)
     const results = data.map((i) => { return JSON.parse(i) })
     return results
   }
 
-  async removeFailed (failedJob) {
+  async removeFailed(failedJob) {
     return this.connection.redis.lrem(this.connection.key('failed'), 1, JSON.stringify(failedJob))
   }
 
-  async retryAndRemoveFailed (failedJob) {
+  async retryAndRemoveFailed(failedJob) {
     const countFailed = await this.removeFailed(failedJob)
     if (countFailed < 1) { throw new Error('This job is not in failed queue') }
     return this.enqueue(failedJob.queue, failedJob.payload.class, failedJob.payload.args)
   }
 
-  async stats () {
+  async stats() {
     const data = {}
     const keys = await this.connection.getKeys(this.connection.key('stat:*'))
     if (keys.length === 0) { return data }
@@ -338,5 +350,3 @@ class Queue extends EventEmitter {
     return data
   }
 }
-
-exports.Queue = Queue

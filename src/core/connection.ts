@@ -1,8 +1,8 @@
-/// <reference path="./../node_modules/@types/ioredis/index.d.ts" />
+/// <reference path="./../../node_modules/@types/ioredis/index.d.ts" />
 
 import { EventEmitter } from 'events'
 import * as IORedis from 'ioredis'
-import { Options } from './types/options';
+import { Options } from '../types/options';
 
 interface EventListeners {
   [key: string]: Function

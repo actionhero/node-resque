@@ -1,12 +1,12 @@
-import * as specHelper from '../utils/specHelper.js'
-import * as NodeResque from '../../index.js'
+import specHelper from '../utils/specHelper'
+import { Queue, Worker } from '../../src/index'
 let queue
 
 describe('queue', () => {
   afterAll(async () => { await specHelper.disconnect() })
 
   test('can connect', async () => {
-    queue = new NodeResque.Queue({ connection: specHelper.connectionDetails, queue: specHelper.queue })
+    queue = new Queue({ connection: specHelper.connectionDetails, queue: specHelper.queue }, {})
     await queue.connect()
     await queue.end()
   })
@@ -21,7 +21,7 @@ describe('queue', () => {
       namespace: specHelper.connectionDetails.namespace
     }
 
-    queue = new NodeResque.Queue({ connection: connectionDetails, queue: specHelper.queue })
+    queue = new Queue({ connection: connectionDetails, queue: specHelper.queue }, {})
 
     await new Promise((resolve) => {
       queue.connect()
@@ -37,7 +37,7 @@ describe('queue', () => {
   describe('[with connection]', () => {
     beforeAll(async () => {
       await specHelper.connect()
-      queue = new NodeResque.Queue({ connection: specHelper.connectionDetails, queue: specHelper.queue })
+      queue = new Queue({ connection: specHelper.connectionDetails, queue: specHelper.queue }, {})
       await queue.connect()
     })
 
@@ -423,17 +423,17 @@ describe('queue', () => {
       }
 
       beforeEach(async () => {
-        workerA = new NodeResque.Worker({
+        workerA = new Worker({
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
-          queues: specHelper.queue,
+          queues: [specHelper.queue],
           name: 'workerA'
         }, jobs)
 
-        workerB = new NodeResque.Worker({
+        workerB = new Worker({
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
-          queues: specHelper.queue,
+          queues: [specHelper.queue],
           name: 'workerB'
         }, jobs)
 

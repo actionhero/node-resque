@@ -1,9 +1,13 @@
-const os = require('os')
-const EventEmitter = require('events').EventEmitter
-const Queue = require('./queue.js').Queue
-const PluginRunner = require('./pluginRunner.js')
+import * as os from 'os'
+import { EventEmitter } from 'events'
+import { Connection } from './connection'
+import { Queue } from './queue'
+import { RunPlugins } from './pluginRunner'
+import { Options } from '../types/options'
+import { Job } from '../types/job'
+import { Jobs } from '../types/jobs'
 
-function prepareJobs (jobs) {
+function prepareJobs(jobs) {
   return Object.keys(jobs).reduce(function (h, k) {
     var job = jobs[k]
     h[k] = typeof job === 'function' ? { perform: job } : job
@@ -11,8 +15,25 @@ function prepareJobs (jobs) {
   }, {})
 }
 
-class Worker extends EventEmitter {
-  constructor (options, jobs) {
+export class Worker extends EventEmitter {
+  options: Options
+  jobs: Jobs
+  started: boolean
+  name: string
+  queues: Array<string>
+  queue: string
+  originalQueue: string | null
+  error: Error | null
+  result: any
+  ready: boolean
+  running: boolean
+  working: boolean
+  pingTimer: NodeJS.Timeout
+  job: Job
+  connection: Connection
+  queueObject: Queue
+
+  constructor(options, jobs) {
     super()
     if (!jobs) { jobs = {} }
 
@@ -31,33 +52,37 @@ class Worker extends EventEmitter {
     this.jobs = prepareJobs(jobs)
     this.name = this.options.name
     this.queues = this.options.queues
+    this.queue = null
+    this.originalQueue = null
     this.error = null
     this.result = null
-    this.ready = false
+    this.ready = true
     this.running = false
     this.working = false
     this.job = null
     this.pingTimer = null
+    this.started = false
 
     this.queueObject = new Queue({ connection: options.connection }, this.jobs)
     this.queueObject.on('error', (error) => { this.emit('error', error) })
   }
 
-  async connect () {
+  async connect() {
     await this.queueObject.connect()
     this.connection = this.queueObject.connection
     await this.checkQueues()
   }
 
-  async start () {
+  async start() {
     if (this.ready) {
+      this.started = true
       this.emit('start', new Date())
       await this.init()
       this.poll()
     }
   }
 
-  async init () {
+  async init() {
     await this.track()
     await this.connection.redis.set(
       this.connection.key('worker', this.name, this.stringQueues(), 'started'),
@@ -67,7 +92,7 @@ class Worker extends EventEmitter {
     this.pingTimer = setInterval(this.ping.bind(this), this.options.timeout)
   }
 
-  async end () {
+  async end() {
     this.running = false
 
     if (this.working === true) {
@@ -86,8 +111,7 @@ class Worker extends EventEmitter {
     this.emit('end', new Date())
   }
 
-  async poll (nQueue) {
-    if (!nQueue) { nQueue = 0 }
+  async poll(nQueue = 0) {
     if (!this.running) { return }
 
     this.queue = this.queues[nQueue]
@@ -134,7 +158,7 @@ class Worker extends EventEmitter {
     }
   }
 
-  async perform (job) {
+  async perform(job) {
     this.job = job
     this.error = null
     let toRun
@@ -155,7 +179,7 @@ class Worker extends EventEmitter {
 
     let triedAfterPerform = false
     try {
-      toRun = await PluginRunner.RunPlugins(this, 'beforePerform', job.class, this.queue, this.jobs[job.class], job.args)
+      toRun = await RunPlugins(this, 'beforePerform', job.class, this.queue, this.jobs[job.class], job.args)
       if (toRun === false) { return this.completeJob(false) }
 
       let callableArgs = [job.args]
@@ -169,13 +193,13 @@ class Worker extends EventEmitter {
 
       this.result = await perform.apply(this, callableArgs)
       triedAfterPerform = true
-      toRun = await PluginRunner.RunPlugins(this, 'afterPerform', job.class, this.queue, this.jobs[job.class], job.args)
+      toRun = await RunPlugins(this, 'afterPerform', job.class, this.queue, this.jobs[job.class], job.args)
       return this.completeJob(true)
     } catch (error) {
       this.error = error
       if (!triedAfterPerform) {
         try {
-          await PluginRunner.RunPlugins(this, 'afterPerform', job.class, this.queue, this.jobs[job.class], job.args)
+          await RunPlugins(this, 'afterPerform', job.class, this.queue, this.jobs[job.class], job.args)
         } catch (error) {
           if (error && !this.error) { this.error = error }
         }
@@ -187,7 +211,7 @@ class Worker extends EventEmitter {
   // #performInline is used to run a job payload directly.
   // If you are planning on running a job via #performInline, this worker should also not be started, nor should be using event emitters to monitor this worker.
   // This method will also not write to redis at all, including logging errors, modify resque's stats, etc.
-  async performInline (func, args) {
+  async performInline(func, args) {
     const q = '_direct-queue-' + this.name
     let toRun
 
@@ -201,10 +225,10 @@ class Worker extends EventEmitter {
     if (!this.jobs[func].perform) { throw new Error(`Missing Job: "${func}"`) }
 
     try {
-      toRun = await PluginRunner.RunPlugins(this, 'beforePerform', func, q, this.jobs[func], args)
+      toRun = await RunPlugins(this, 'beforePerform', func, q, this.jobs[func], args)
       if (toRun === false) { return }
       this.result = await this.jobs[func].perform.apply(this, args)
-      toRun = await PluginRunner.RunPlugins(this, 'afterPerform', func, q, this.jobs[func], args)
+      toRun = await RunPlugins(this, 'afterPerform', func, q, this.jobs[func], args)
       return this.result
     } catch (error) {
       this.error = error
@@ -212,7 +236,7 @@ class Worker extends EventEmitter {
     }
   }
 
-  async completeJob (toRespond) {
+  async completeJob(toRespond) {
     if (this.error) {
       await this.fail(this.error)
     } else if (toRespond) {
@@ -228,20 +252,20 @@ class Worker extends EventEmitter {
     }
   }
 
-  async succeed (job) {
+  async succeed(job) {
     await this.connection.redis.incr(this.connection.key('stat', 'processed'))
     await this.connection.redis.incr(this.connection.key('stat', 'processed', this.name))
     this.emit('success', this.queue, job, this.result)
   }
 
-  async fail (err) {
+  async fail(err) {
     await this.connection.redis.incr(this.connection.key('stat', 'failed'))
     await this.connection.redis.incr(this.connection.key('stat', 'failed', this.name))
     await this.connection.redis.rpush(this.connection.key('failed'), JSON.stringify(this.failurePayload(err, this.job)))
     this.emit('failure', this.queue, this.job, err)
   }
 
-  async pause () {
+  async pause() {
     this.emit('pause')
     await new Promise((resolve) => {
       setTimeout(() => {
@@ -251,27 +275,27 @@ class Worker extends EventEmitter {
     })
   }
 
-  async workingOn (job) {
+  async workingOn(job) {
     return this.connection.redis.set(this.connection.key(
       'worker',
       this.name,
       this.stringQueues()
     ),
-    JSON.stringify({
-      run_at: (new Date()).toString(),
-      queue: this.queue,
-      payload: job,
-      worker: this.name
-    })
+      JSON.stringify({
+        run_at: (new Date()).toString(),
+        queue: this.queue,
+        payload: job,
+        worker: this.name
+      })
     )
   }
 
-  async track () {
+  async track() {
     this.running = true
     return this.connection.redis.sadd(this.connection.key('workers'), (this.name + ':' + this.stringQueues()))
   }
 
-  async ping () {
+  async ping() {
     const name = this.name
     const nowSeconds = Math.round(new Date().getTime() / 1000)
     this.emit('ping', nowSeconds)
@@ -283,7 +307,7 @@ class Worker extends EventEmitter {
     await this.connection.redis.set(this.connection.key('worker', 'ping', name), payload)
   }
 
-  async untrack () {
+  async untrack() {
     const name = this.name
     const queues = this.stringQueues()
     if (!this.connection || !this.connection.redis) { return }
@@ -296,12 +320,7 @@ class Worker extends EventEmitter {
     await this.connection.redis.del(this.connection.key('stat', 'processed', name))
   }
 
-  async checkQueues () {
-    if (typeof this.queues === 'string') {
-      this.queues = this.queues.split(',')
-      this.ready = true
-    }
-
+  async checkQueues() {
     if (Array.isArray(this.queues) && this.queues.length > 0) {
       this.ready = true
     }
@@ -315,7 +334,7 @@ class Worker extends EventEmitter {
     }
   }
 
-  failurePayload (err, job) {
+  failurePayload(err, job) {
     return {
       worker: this.name,
       queue: this.queue,
@@ -327,7 +346,7 @@ class Worker extends EventEmitter {
     }
   }
 
-  stringQueues () {
+  stringQueues() {
     if (this.queues.length === 0) {
       return ['*'].join(',')
     } else {

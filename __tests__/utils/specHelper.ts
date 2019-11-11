@@ -2,19 +2,20 @@ const Redis = require('ioredis')
 const namespace = `resque-test-${(process.env.JEST_WORKER_ID || 0)}`
 const queue = 'test_queue'
 const pkg = 'ioredis'
-const NodeResque = require('../../index.js')
+const NodeResque = require('../../src/index')
 
-module.exports = {
+const SpecHeloer = {
   pkg: pkg,
   namespace: namespace,
   queue: queue,
   timeout: 500,
+  redis: null,
   connectionDetails: {
     pkg: pkg,
     host: '127.0.0.1',
     password: '',
     port: 6379,
-    database: parseInt(process.env.JEST_WORKER_ID || 0),
+    database: parseInt(process.env.JEST_WORKER_ID || '0'),
     namespace: namespace
     // looping: true
   },
@@ -70,7 +71,16 @@ module.exports = {
   },
 
   cleanConnectionDetails: function () {
-    const out = {}
+    interface connectionDetails {
+      database: number,
+      namespace: string
+    }
+
+    const out: connectionDetails = {
+      database: parseInt(process.env.JEST_WORKER_ID || '0'),
+      namespace: namespace
+    }
+
     for (const i in this.connectionDetails) {
       if (i !== 'redis') { out[i] = this.connectionDetails[i] }
     }
@@ -78,3 +88,5 @@ module.exports = {
     return out
   }
 }
+
+export default SpecHeloer

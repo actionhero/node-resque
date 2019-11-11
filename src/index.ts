@@ -6,10 +6,6 @@
 // exports.PluginRunner = require('./lib/pluginRunner')
 // exports.Plugin = require('./lib/plugin').Plugin
 
-import { Connection } from './connection'
-import { Queue } from './queue'
-import { Worker } from './worker'
-
-exports.Connection = Connection
-exports.Queue = Queue
-exports.Worker = Worker
+export { Connection } from './core/connection'
+export { Queue } from './core/queue'
+export { Worker } from './core/worker'
