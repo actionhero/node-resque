@@ -416,7 +416,7 @@ export class Worker extends EventEmitter {
     );
   }
 
-  private async checkQueues() {
+  async checkQueues() {
     if (Array.isArray(this.queues) && this.queues.length > 0) {
       this.ready = true;
     }
