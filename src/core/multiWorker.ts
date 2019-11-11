@@ -63,7 +63,7 @@ export class MultiWorker extends EventEmitter {
     this.PollEventLoopDelay();
   }
 
-  PollEventLoopDelay() {
+  private PollEventLoopDelay() {
     EventLoopDelay(
       this.options.maxEventLoopDelay,
       this.options.checkTimeout,
@@ -75,7 +75,7 @@ export class MultiWorker extends EventEmitter {
     );
   }
 
-  async startWorker() {
+  private async startWorker() {
     const id = this.workers.length + 1;
 
     const worker = new Worker(
@@ -130,7 +130,7 @@ export class MultiWorker extends EventEmitter {
     await worker.start();
   }
 
-  async checkWorkers() {
+  private async checkWorkers() {
     let verb;
     let worker;
     let workingCount = 0;
@@ -219,7 +219,7 @@ export class MultiWorker extends EventEmitter {
     }
   }
 
-  async cleanupWorker(worker) {
+  private async cleanupWorker(worker) {
     [
       "start",
       "end",
@@ -239,7 +239,7 @@ export class MultiWorker extends EventEmitter {
     });
   }
 
-  async checkWraper() {
+  private async checkWraper() {
     clearTimeout(this.checkTimer);
     const { verb, eventLoopDelay } = await this.checkWorkers();
     this.emit("multiWorkerAction", verb, eventLoopDelay);
@@ -262,7 +262,7 @@ export class MultiWorker extends EventEmitter {
     return this.stop();
   }
 
-  async stopWait() {
+  private async stopWait() {
     if (
       this.workers.length === 0 &&
       this.working === false &&

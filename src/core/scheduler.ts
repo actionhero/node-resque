@@ -125,7 +125,7 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  async pollAgainLater() {
+  private async pollAgainLater() {
     if (this.running === true) {
       this.timer = setTimeout(() => {
         this.poll();
@@ -133,11 +133,11 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  masterKey() {
+  private masterKey() {
     return this.connection.key("resque_scheduler_master_lock");
   }
 
-  async tryForMaster() {
+  private async tryForMaster() {
     const masterKey = this.masterKey();
     if (!this.connection || !this.connection.redis) {
       return;
@@ -167,7 +167,7 @@ export class Scheduler extends EventEmitter {
     return false;
   }
 
-  async releaseMasterLock() {
+  private async releaseMasterLock() {
     if (!this.connection || !this.connection.redis) {
       return;
     }
@@ -182,7 +182,7 @@ export class Scheduler extends EventEmitter {
     return delted === 1 || delted.toString() === "true";
   }
 
-  async nextDelayedTimestamp() {
+  private async nextDelayedTimestamp() {
     const time = Math.round(new Date().getTime() / 1000);
     const items = await this.connection.redis.zrangebyscore(
       this.connection.key("delayed_queue_schedule"),
@@ -198,7 +198,7 @@ export class Scheduler extends EventEmitter {
     return items[0];
   }
 
-  async enqueueDelayedItemsForTimestamp(timestamp: number) {
+  private async enqueueDelayedItemsForTimestamp(timestamp: number) {
     const job = await this.nextItemForTimestamp(timestamp);
     if (job) {
       await this.transfer(timestamp, job);
@@ -208,7 +208,7 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  async nextItemForTimestamp(timestamp: number) {
+  private async nextItemForTimestamp(timestamp: number) {
     const key = this.connection.key("delayed:" + timestamp);
     const job = await this.connection.redis.lpop(key);
     await this.connection.redis.srem(
@@ -218,12 +218,12 @@ export class Scheduler extends EventEmitter {
     return JSON.parse(job);
   }
 
-  async transfer(timestamp: number, job: any) {
+  private async transfer(timestamp: number, job: any) {
     await this.queue.enqueue(job.queue, job.class, job.args);
     this.emit("transferredJob", timestamp, job);
   }
 
-  async cleanupTimestamp(timestamp: number) {
+  private async cleanupTimestamp(timestamp: number) {
     const key = this.connection.key("delayed:" + timestamp);
     const length = await this.connection.redis.llen(key);
     if (length === 0) {
@@ -235,7 +235,7 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  async checkStuckWorkers() {
+  private async checkStuckWorkers() {
     interface Payload {
       time: number;
       name: string;

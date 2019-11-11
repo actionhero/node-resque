@@ -87,7 +87,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  async init() {
+  private async init() {
     await this.track();
     await this.connection.redis.set(
       this.connection.key("worker", this.name, this.stringQueues(), "started"),
@@ -123,7 +123,7 @@ export class Worker extends EventEmitter {
     this.emit("end", new Date());
   }
 
-  async poll(nQueue = 0) {
+  private async poll(nQueue = 0) {
     if (!this.running) {
       return;
     }
@@ -174,7 +174,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  async perform(job) {
+  private async perform(job) {
     this.job = job;
     this.error = null;
     let toRun;
@@ -305,7 +305,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  async completeJob(toRespond) {
+  private async completeJob(toRespond) {
     if (this.error) {
       await this.fail(this.error);
     } else if (toRespond) {
@@ -323,7 +323,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  async succeed(job) {
+  private async succeed(job) {
     await this.connection.redis.incr(this.connection.key("stat", "processed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "processed", this.name)
@@ -331,7 +331,7 @@ export class Worker extends EventEmitter {
     this.emit("success", this.queue, job, this.result);
   }
 
-  async fail(err) {
+  private async fail(err) {
     await this.connection.redis.incr(this.connection.key("stat", "failed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "failed", this.name)
@@ -343,7 +343,7 @@ export class Worker extends EventEmitter {
     this.emit("failure", this.queue, this.job, err);
   }
 
-  async pause() {
+  private async pause() {
     this.emit("pause");
     await new Promise(resolve => {
       setTimeout(() => {
@@ -353,7 +353,7 @@ export class Worker extends EventEmitter {
     });
   }
 
-  async workingOn(job) {
+  private async workingOn(job) {
     return this.connection.redis.set(
       this.connection.key("worker", this.name, this.stringQueues()),
       JSON.stringify({
@@ -365,7 +365,7 @@ export class Worker extends EventEmitter {
     );
   }
 
-  async track() {
+  private async track() {
     this.running = true;
     return this.connection.redis.sadd(
       this.connection.key("workers"),
@@ -373,7 +373,7 @@ export class Worker extends EventEmitter {
     );
   }
 
-  async ping() {
+  private async ping() {
     const name = this.name;
     const nowSeconds = Math.round(new Date().getTime() / 1000);
     this.emit("ping", nowSeconds);
@@ -388,7 +388,7 @@ export class Worker extends EventEmitter {
     );
   }
 
-  async untrack() {
+  private async untrack() {
     const name = this.name;
     const queues = this.stringQueues();
     if (!this.connection || !this.connection.redis) {
@@ -416,7 +416,7 @@ export class Worker extends EventEmitter {
     );
   }
 
-  async checkQueues() {
+  private async checkQueues() {
     if (Array.isArray(this.queues) && this.queues.length > 0) {
       this.ready = true;
     }
@@ -435,7 +435,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  failurePayload(err, job) {
+  private failurePayload(err, job) {
     return {
       worker: this.name,
       queue: this.queue,
@@ -447,7 +447,7 @@ export class Worker extends EventEmitter {
     };
   }
 
-  stringQueues() {
+  private stringQueues() {
     if (this.queues.length === 0) {
       return ["*"].join(",");
     } else {
