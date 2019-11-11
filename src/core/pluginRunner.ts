@@ -63,6 +63,7 @@ export async function RunPlugin(
   }
 
   var pluginOptions = null;
+
   if (
     self.jobs[func].pluginOptions &&
     self.jobs[func].pluginOptions[pluginName]
