@@ -6,7 +6,6 @@ import * as os from "os";
 import { Queue } from "./queue";
 import { Connection } from "./connection";
 import { Options } from "../types/options";
-import { Job } from "../types/job";
 import { Jobs } from "../types/jobs";
 
 export class Scheduler extends EventEmitter {

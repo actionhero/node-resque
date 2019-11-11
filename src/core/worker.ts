@@ -32,6 +32,7 @@ export class Worker extends EventEmitter {
   job: Job;
   connection: Connection;
   queueObject: Queue;
+  id: number;
 
   constructor(options, jobs = {}) {
     super();
@@ -40,7 +41,8 @@ export class Worker extends EventEmitter {
       name: os.hostname() + ":" + process.pid, // assumes only one worker per node process
       queues: "*",
       timeout: 5000,
-      looping: true
+      looping: true,
+      id: 1
     };
 
     for (const i in defaults) {
