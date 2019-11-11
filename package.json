@@ -9,7 +9,8 @@
     "type": "git",
     "url": "git://github.com/taskrabbit/node-resque.git"
   },
-  "main": "dist/index.js",
+  "main": "dist/index",
+  "types": "dist/index",
   "keywords": [
     "delayed",
     "queue",
