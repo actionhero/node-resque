@@ -63,7 +63,6 @@ jobs:
     docker:
       - image: circleci/node:10
       - image: redis:4
-      - image: selenium/standalone-chrome:latest
     <<: *shared-test-steps
 
 # Run all the tests is parallel
