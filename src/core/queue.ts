@@ -19,11 +19,8 @@ export class Queue extends EventEmitter {
   options: Options;
   jobs: Jobs;
 
-  constructor(options, jobs) {
+  constructor(options, jobs = {}) {
     super();
-    if (!jobs) {
-      jobs = {};
-    }
 
     this.options = options;
     this.jobs = jobs;
