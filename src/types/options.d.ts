@@ -2,8 +2,8 @@
 import * as IORedis from "ioredis";
 import { Connection } from "../core/connection";
 
-export interface Options {
-  options: Options;
+export interface ConnectionOptions {
+  options: ConnectionOptions;
   pkg: string;
   db: number;
   database: number;
@@ -11,18 +11,26 @@ export interface Options {
   port: number;
   namespace: string;
   redis?: IORedis.Redis | null;
+}
 
-  // worker
+export interface WorkerOptions extends ConnectionOptions {
   name?: string | null;
   queues?: Array<string> | null;
   timeout?: number | null;
   looping?: boolean | null;
+}
 
-  // scheduler
+export interface SchedulerOptions extends ConnectionOptions {
+  name?: string | null;
+  timeout?: number | null;
   masterLockTimeout: number | null;
   stuckWorkerTimeout: number | null;
+}
 
-  // multiWorker
+export interface MultiWorkerOptions extends ConnectionOptions {
+  name?: string | null;
+  queues?: Array<string> | null;
+  timeout?: number | null;
   maxEventLoopDelay: number | null;
   checkTimeout: number | null;
   connection: Connection | null;

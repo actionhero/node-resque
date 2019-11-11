@@ -5,11 +5,11 @@ import { EventEmitter } from "events";
 import * as os from "os";
 import { Queue } from "./queue";
 import { Connection } from "./connection";
-import { Options } from "../types/options";
+import { SchedulerOptions } from "../types/options";
 import { Jobs } from "../types/jobs";
 
 export class Scheduler extends EventEmitter {
-  options: Options;
+  options: SchedulerOptions;
   jobs: Jobs;
   name: string;
   master: boolean;

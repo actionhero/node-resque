@@ -2,14 +2,14 @@
 
 import { EventEmitter } from "events";
 import * as IORedis from "ioredis";
-import { Options } from "../types/options";
+import { ConnectionOptions } from "../types/options";
 
 interface EventListeners {
   [key: string]: Function;
 }
 
 export class Connection extends EventEmitter {
-  options: Options | null;
+  options: ConnectionOptions | null;
   eventListeners: EventListeners;
   connected: boolean;
   redis: IORedis.Redis;

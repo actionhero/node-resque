@@ -1,8 +1,6 @@
 import { Worker } from "./worker";
 import { Connection } from "./connection";
 import { Queue } from "./queue";
-import { Options } from "./../types/options";
-import { Job } from "./../types/job";
 
 export abstract class Plugin {
   name: string;

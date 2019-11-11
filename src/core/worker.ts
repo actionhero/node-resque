@@ -3,7 +3,7 @@ import { EventEmitter } from "events";
 import { Connection } from "./connection";
 import { Queue } from "./queue";
 import { RunPlugins } from "./pluginRunner";
-import { Options } from "../types/options";
+import { WorkerOptions } from "../types/options";
 import { Job } from "../types/job";
 import { Jobs } from "../types/jobs";
 
@@ -16,7 +16,7 @@ function prepareJobs(jobs) {
 }
 
 export class Worker extends EventEmitter {
-  options: Options;
+  options: WorkerOptions;
   jobs: Jobs;
   started: boolean;
   name: string;

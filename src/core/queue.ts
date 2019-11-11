@@ -2,7 +2,7 @@ import * as os from "os";
 import { EventEmitter } from "events";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
-import { Options } from "../types/options";
+import { ConnectionOptions } from "../types/options";
 import { Jobs } from "../types/jobs";
 import { ErrorPayload } from "../types/errorPayload";
 
@@ -16,7 +16,7 @@ function arrayify(o) {
 
 export class Queue extends EventEmitter {
   connection: Connection;
-  options: Options;
+  options: ConnectionOptions;
   jobs: Jobs;
 
   constructor(options, jobs = {}) {

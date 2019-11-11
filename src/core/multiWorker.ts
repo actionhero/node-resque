@@ -3,11 +3,11 @@ import * as os from "os";
 import { Worker } from "./worker";
 import { Connection } from "./connection";
 import { EventLoopDelay } from "./../utils/eventLoopDelay";
-import { Options } from "../types/options";
+import { MultiWorkerOptions } from "../types/options";
 import { Jobs } from "../types/jobs";
 
 export class MultiWorker extends EventEmitter {
-  options: Options;
+  options: MultiWorkerOptions;
   jobs: Jobs;
   workers: Array<Worker>;
   name: string;
