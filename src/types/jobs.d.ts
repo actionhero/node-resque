@@ -1,4 +1,4 @@
-import { Job } from './job'
+import { Job } from "./job"
 
 export interface Jobs {
   [key: string]: Job

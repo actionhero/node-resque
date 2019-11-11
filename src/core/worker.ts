@@ -1,16 +1,16 @@
-import * as os from 'os'
-import { EventEmitter } from 'events'
-import { Connection } from './connection'
-import { Queue } from './queue'
-import { RunPlugins } from './pluginRunner'
-import { Options } from '../types/options'
-import { Job } from '../types/job'
-import { Jobs } from '../types/jobs'
+import * as os from "os"
+import { EventEmitter } from "events"
+import { Connection } from "./connection"
+import { Queue } from "./queue"
+import { RunPlugins } from "./pluginRunner"
+import { Options } from "../types/options"
+import { Job } from "../types/job"
+import { Jobs } from "../types/jobs"
 
 function prepareJobs(jobs) {
   return Object.keys(jobs).reduce(function (h, k) {
     var job = jobs[k]
-    h[k] = typeof job === 'function' ? { perform: job } : job
+    h[k] = typeof job === "function" ? { perform: job } : job
     return h
   }, {})
 }
@@ -35,17 +35,21 @@ export class Worker extends EventEmitter {
 
   constructor(options, jobs) {
     super()
-    if (!jobs) { jobs = {} }
+    if (!jobs) {
+      jobs = {}
+    }
 
     const defaults = {
-      name: os.hostname() + ':' + process.pid, // assumes only one worker per node process
-      queues: '*',
+      name: os.hostname() + ":" + process.pid, // assumes only one worker per node process
+      queues: "*",
       timeout: 5000,
       looping: true
     }
 
     for (const i in defaults) {
-      if (options[i] === undefined || options[i] === null) { options[i] = defaults[i] }
+      if (options[i] === undefined || options[i] === null) {
+        options[i] = defaults[i]
+      }
     }
 
     this.options = options
@@ -64,7 +68,9 @@ export class Worker extends EventEmitter {
     this.started = false
 
     this.queueObject = new Queue({ connection: options.connection }, this.jobs)
-    this.queueObject.on('error', (error) => { this.emit('error', error) })
+    this.queueObject.on("error", error => {
+      this.emit("error", error)
+    })
   }
 
   async connect() {
@@ -76,7 +82,7 @@ export class Worker extends EventEmitter {
   async start() {
     if (this.ready) {
       this.started = true
-      this.emit('start', new Date())
+      this.emit("start", new Date())
       await this.init()
       this.poll()
     }
@@ -85,8 +91,8 @@ export class Worker extends EventEmitter {
   async init() {
     await this.track()
     await this.connection.redis.set(
-      this.connection.key('worker', this.name, this.stringQueues(), 'started'),
-      Math.round((new Date()).getTime() / 1000)
+      this.connection.key("worker", this.name, this.stringQueues(), "started"),
+      Math.round(new Date().getTime() / 1000)
     )
     await this.ping()
     this.pingTimer = setInterval(this.ping.bind(this), this.options.timeout)
@@ -96,26 +102,35 @@ export class Worker extends EventEmitter {
     this.running = false
 
     if (this.working === true) {
-      await new Promise((resolve) => { setTimeout(() => { resolve() }, this.options.timeout) })
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolve()
+        }, this.options.timeout)
+      })
       return this.end()
     }
 
-    if (this.connection && (
-      this.connection.connected === true || this.connection.connected === undefined || this.connection.connected === null)
+    if (
+      this.connection &&
+      (this.connection.connected === true ||
+        this.connection.connected === undefined ||
+        this.connection.connected === null)
     ) {
       clearInterval(this.pingTimer)
       await this.untrack()
     }
 
     await this.queueObject.end()
-    this.emit('end', new Date())
+    this.emit("end", new Date())
   }
 
   async poll(nQueue = 0) {
-    if (!this.running) { return }
+    if (!this.running) {
+      return
+    }
 
     this.queue = this.queues[nQueue]
-    this.emit('poll', this.queue)
+    this.emit("poll", this.queue)
 
     if (this.queue === null || this.queue === undefined) {
       await this.checkQueues()
@@ -124,15 +139,17 @@ export class Worker extends EventEmitter {
     }
 
     if (this.working === true) {
-      const error = new Error('refusing to get new job, already working')
-      this.emit('error', error, this.queue)
+      const error = new Error("refusing to get new job, already working")
+      this.emit("error", error, this.queue)
       return null
     }
 
     this.working = true
 
     try {
-      const encodedJob = await this.connection.redis.lpop(this.connection.key('queue', this.queue))
+      const encodedJob = await this.connection.redis.lpop(
+        this.connection.key("queue", this.queue)
+      )
       if (encodedJob) {
         const currentJob = JSON.parse(encodedJob.toString())
         if (this.options.looping) {
@@ -151,7 +168,7 @@ export class Worker extends EventEmitter {
         }
       }
     } catch (error) {
-      this.emit('error', error, this.queue)
+      this.emit("error", error, this.queue)
       this.working = false
       await this.pause()
       return null
@@ -169,39 +186,66 @@ export class Worker extends EventEmitter {
     }
 
     const perform = this.jobs[job.class].perform
-    if (!perform || typeof perform !== 'function') {
+    if (!perform || typeof perform !== "function") {
       this.error = new Error(`Missing Job: "${job.class}"`)
       return this.completeJob(false)
     }
 
     await this.workingOn(this.job)
-    this.emit('job', this.queue, this.job)
+    this.emit("job", this.queue, this.job)
 
     let triedAfterPerform = false
     try {
-      toRun = await RunPlugins(this, 'beforePerform', job.class, this.queue, this.jobs[job.class], job.args)
-      if (toRun === false) { return this.completeJob(false) }
+      toRun = await RunPlugins(
+        this,
+        "beforePerform",
+        job.class,
+        this.queue,
+        this.jobs[job.class],
+        job.args
+      )
+      if (toRun === false) {
+        return this.completeJob(false)
+      }
 
       let callableArgs = [job.args]
-      if (job.args === undefined || (job.args instanceof Array) === true) {
+      if (job.args === undefined || job.args instanceof Array === true) {
         callableArgs = job.args
       }
 
       for (const i in callableArgs) {
-        if ((typeof callableArgs[i] === 'object') && (callableArgs[i] !== null)) { Object.freeze(callableArgs[i]) }
+        if (typeof callableArgs[i] === "object" && callableArgs[i] !== null) {
+          Object.freeze(callableArgs[i])
+        }
       }
 
       this.result = await perform.apply(this, callableArgs)
       triedAfterPerform = true
-      toRun = await RunPlugins(this, 'afterPerform', job.class, this.queue, this.jobs[job.class], job.args)
+      toRun = await RunPlugins(
+        this,
+        "afterPerform",
+        job.class,
+        this.queue,
+        this.jobs[job.class],
+        job.args
+      )
       return this.completeJob(true)
     } catch (error) {
       this.error = error
       if (!triedAfterPerform) {
         try {
-          await RunPlugins(this, 'afterPerform', job.class, this.queue, this.jobs[job.class], job.args)
+          await RunPlugins(
+            this,
+            "afterPerform",
+            job.class,
+            this.queue,
+            this.jobs[job.class],
+            job.args
+          )
         } catch (error) {
-          if (error && !this.error) { this.error = error }
+          if (error && !this.error) {
+            this.error = error
+          }
         }
       }
       return this.completeJob(!this.error)
@@ -212,23 +256,49 @@ export class Worker extends EventEmitter {
   // If you are planning on running a job via #performInline, this worker should also not be started, nor should be using event emitters to monitor this worker.
   // This method will also not write to redis at all, including logging errors, modify resque's stats, etc.
   async performInline(func, args) {
-    const q = '_direct-queue-' + this.name
+    const q = "_direct-queue-" + this.name
     let toRun
 
-    if (!args) { args = [] }
+    if (!args) {
+      args = []
+    }
     if (args !== undefined && args !== null && args instanceof Array !== true) {
       args = [args]
     }
 
-    if (this.started) { throw new Error('Worker#performInline can not be used on a started worker') }
-    if (!this.jobs[func]) { throw new Error(`No job defined for class "${func}"`) }
-    if (!this.jobs[func].perform) { throw new Error(`Missing Job: "${func}"`) }
+    if (this.started) {
+      throw new Error(
+        "Worker#performInline can not be used on a started worker"
+      )
+    }
+    if (!this.jobs[func]) {
+      throw new Error(`No job defined for class "${func}"`)
+    }
+    if (!this.jobs[func].perform) {
+      throw new Error(`Missing Job: "${func}"`)
+    }
 
     try {
-      toRun = await RunPlugins(this, 'beforePerform', func, q, this.jobs[func], args)
-      if (toRun === false) { return }
+      toRun = await RunPlugins(
+        this,
+        "beforePerform",
+        func,
+        q,
+        this.jobs[func],
+        args
+      )
+      if (toRun === false) {
+        return
+      }
       this.result = await this.jobs[func].perform.apply(this, args)
-      toRun = await RunPlugins(this, 'afterPerform', func, q, this.jobs[func], args)
+      toRun = await RunPlugins(
+        this,
+        "afterPerform",
+        func,
+        q,
+        this.jobs[func],
+        args
+      )
       return this.result
     } catch (error) {
       this.error = error
@@ -244,7 +314,9 @@ export class Worker extends EventEmitter {
     }
 
     this.working = false
-    await this.connection.redis.del(this.connection.key('worker', this.name, this.stringQueues()))
+    await this.connection.redis.del(
+      this.connection.key("worker", this.name, this.stringQueues())
+    )
     this.job = null
 
     if (this.options.looping) {
@@ -253,21 +325,28 @@ export class Worker extends EventEmitter {
   }
 
   async succeed(job) {
-    await this.connection.redis.incr(this.connection.key('stat', 'processed'))
-    await this.connection.redis.incr(this.connection.key('stat', 'processed', this.name))
-    this.emit('success', this.queue, job, this.result)
+    await this.connection.redis.incr(this.connection.key("stat", "processed"))
+    await this.connection.redis.incr(
+      this.connection.key("stat", "processed", this.name)
+    )
+    this.emit("success", this.queue, job, this.result)
   }
 
   async fail(err) {
-    await this.connection.redis.incr(this.connection.key('stat', 'failed'))
-    await this.connection.redis.incr(this.connection.key('stat', 'failed', this.name))
-    await this.connection.redis.rpush(this.connection.key('failed'), JSON.stringify(this.failurePayload(err, this.job)))
-    this.emit('failure', this.queue, this.job, err)
+    await this.connection.redis.incr(this.connection.key("stat", "failed"))
+    await this.connection.redis.incr(
+      this.connection.key("stat", "failed", this.name)
+    )
+    await this.connection.redis.rpush(
+      this.connection.key("failed"),
+      JSON.stringify(this.failurePayload(err, this.job))
+    )
+    this.emit("failure", this.queue, this.job, err)
   }
 
   async pause() {
-    this.emit('pause')
-    await new Promise((resolve) => {
+    this.emit("pause")
+    await new Promise(resolve => {
       setTimeout(() => {
         this.poll()
         resolve()
@@ -276,13 +355,10 @@ export class Worker extends EventEmitter {
   }
 
   async workingOn(job) {
-    return this.connection.redis.set(this.connection.key(
-      'worker',
-      this.name,
-      this.stringQueues()
-    ),
+    return this.connection.redis.set(
+      this.connection.key("worker", this.name, this.stringQueues()),
       JSON.stringify({
-        run_at: (new Date()).toString(),
+        run_at: new Date().toString(),
         queue: this.queue,
         payload: job,
         worker: this.name
@@ -292,32 +368,53 @@ export class Worker extends EventEmitter {
 
   async track() {
     this.running = true
-    return this.connection.redis.sadd(this.connection.key('workers'), (this.name + ':' + this.stringQueues()))
+    return this.connection.redis.sadd(
+      this.connection.key("workers"),
+      this.name + ":" + this.stringQueues()
+    )
   }
 
   async ping() {
     const name = this.name
     const nowSeconds = Math.round(new Date().getTime() / 1000)
-    this.emit('ping', nowSeconds)
+    this.emit("ping", nowSeconds)
     const payload = JSON.stringify({
       time: nowSeconds,
       name: name,
       queues: this.stringQueues()
     })
-    await this.connection.redis.set(this.connection.key('worker', 'ping', name), payload)
+    await this.connection.redis.set(
+      this.connection.key("worker", "ping", name),
+      payload
+    )
   }
 
   async untrack() {
     const name = this.name
     const queues = this.stringQueues()
-    if (!this.connection || !this.connection.redis) { return }
+    if (!this.connection || !this.connection.redis) {
+      return
+    }
 
-    await this.connection.redis.srem(this.connection.key('workers'), (name + ':' + queues))
-    await this.connection.redis.del(this.connection.key('worker', 'ping', name))
-    await this.connection.redis.del(this.connection.key('worker', name, queues))
-    await this.connection.redis.del(this.connection.key('worker', name, queues, 'started'))
-    await this.connection.redis.del(this.connection.key('stat', 'failed', name))
-    await this.connection.redis.del(this.connection.key('stat', 'processed', name))
+    await this.connection.redis.srem(
+      this.connection.key("workers"),
+      name + ":" + queues
+    )
+    await this.connection.redis.del(
+      this.connection.key("worker", "ping", name)
+    )
+    await this.connection.redis.del(
+      this.connection.key("worker", name, queues)
+    )
+    await this.connection.redis.del(
+      this.connection.key("worker", name, queues, "started")
+    )
+    await this.connection.redis.del(
+      this.connection.key("stat", "failed", name)
+    )
+    await this.connection.redis.del(
+      this.connection.key("stat", "processed", name)
+    )
   }
 
   async checkQueues() {
@@ -325,11 +422,16 @@ export class Worker extends EventEmitter {
       this.ready = true
     }
 
-    if ((this.queues[0] === '*' && this.queues.length === 1) || this.queues.length === 0) {
-      this.originalQueue = '*'
+    if (
+      (this.queues[0] === "*" && this.queues.length === 1) ||
+      this.queues.length === 0
+    ) {
+      this.originalQueue = "*"
       await this.untrack()
-      const response = await this.connection.redis.smembers(this.connection.key('queues'))
-      this.queues = (response ? response.sort() : [])
+      const response = await this.connection.redis.smembers(
+        this.connection.key("queues")
+      )
+      this.queues = response ? response.sort() : []
       await this.track()
     }
   }
@@ -341,19 +443,19 @@ export class Worker extends EventEmitter {
       payload: job,
       exception: err.name,
       error: err.message,
-      backtrace: err.stack ? err.stack.split('\n').slice(1) : null,
-      failed_at: (new Date()).toString()
+      backtrace: err.stack ? err.stack.split("\n").slice(1) : null,
+      failed_at: new Date().toString()
     }
   }
 
   stringQueues() {
     if (this.queues.length === 0) {
-      return ['*'].join(',')
+      return ["*"].join(",")
     } else {
       try {
-        return this.queues.join(',')
+        return this.queues.join(",")
       } catch (e) {
-        return ''
+        return ""
       }
     }
   }

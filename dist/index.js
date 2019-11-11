@@ -7,9 +7,9 @@
 // exports.PluginRunner = require('./lib/pluginRunner')
 // exports.Plugin = require('./lib/plugin').Plugin
 Object.defineProperty(exports, "__esModule", { value: true });
-const connection_1 = require("./connection");
-const queue_1 = require("./queue");
-const worker_1 = require("./worker");
+var connection_1 = require("./core/connection");
 exports.Connection = connection_1.Connection;
+var queue_1 = require("./core/queue");
 exports.Queue = queue_1.Queue;
+var worker_1 = require("./core/worker");
 exports.Worker = worker_1.Worker;

@@ -1,5 +1,5 @@
 /// <reference path="./../../node_modules/@types/ioredis/index.d.ts" />
-import * as IORedis from 'ioredis'
+import * as IORedis from "ioredis"
 
 export interface Options {
   options: Options
@@ -9,9 +9,9 @@ export interface Options {
   host: string
   port: number
   namespace: string
-  redis: IORedis.Redis | null
-  name: string | null
-  queues: Array<string> | null
-  timeout: number | null
-  looping: boolean | null
+  redis?: IORedis.Redis | null
+  name?: string | null
+  queues?: Array<string> | null
+  timeout?: number | null
+  looping?: boolean | null
 }
