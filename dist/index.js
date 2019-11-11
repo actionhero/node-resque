@@ -10,3 +10,5 @@ var worker_1 = require("./core/worker");
 exports.Worker = worker_1.Worker;
 var multiWorker_1 = require("./core/multiWorker");
 exports.MultiWorker = multiWorker_1.MultiWorker;
+var plugin_1 = require("./core/plugin");
+exports.Plugin = plugin_1.Plugin;
