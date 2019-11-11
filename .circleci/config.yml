@@ -57,7 +57,7 @@ jobs:
           <<: *cache-options
       - run:
           name: linter
-          command: ./node_modules/.bin/standard
+          command: npm run lint
 
   test-node-v10:
     docker:

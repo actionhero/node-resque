@@ -48,7 +48,9 @@
   },
   "scripts": {
     "prepare": "tsc",
-    "pretest": "prettier --write '/*/**.ts'",
+    "pretest": "npm run lint",
+    "lint": "prettier --check src/*/**.ts __test__/*/**.ts examples/*/**.ts",
+    "pretty": "prettier --write src/*/**.ts __test__/*/**.ts examples/*/**.ts",
     "test": "jest"
   }
 }

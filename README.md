@@ -489,9 +489,15 @@ schedule.scheduleJob("10,20,30,40,50 * * * * *", async () => {
 Just like ruby's resque, you can write worker plugins. They look like this. The 4 hooks you have are `beforeEnqueue`, `afterEnqueue`, `beforePerform`, and `afterPerform`. Plugins are `classes` which extend `NodeResque.Plugin`
 
 ```javascript
-const NodeResque = require("node-resque");
+const { Plugin } = require("node-resque");
 
-class MyPlugin extends NodeResque.Plugin {
+class MyPlugin extends Plugin {
+  constructor(...args) {
+    // @ts-ignore
+    super(...args);
+    this.name = "MyPlugin";
+  }
+
   beforeEnqueue() {
     // console.log("** beforeEnqueue")
     return true; // should the job be enqueued?

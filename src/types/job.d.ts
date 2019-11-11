@@ -1,3 +1,3 @@
 export interface Job {
-  perform: Function
+  perform: Function;
 }
