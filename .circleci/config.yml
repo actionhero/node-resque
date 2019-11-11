@@ -57,13 +57,12 @@ jobs:
           <<: *cache-options
       - run:
           name: linter
-          command: ./node_modules/.bin/standard
+          command: npm run lint
 
   test-node-v10:
     docker:
       - image: circleci/node:10
       - image: redis:4
-      - image: selenium/standalone-chrome:latest
     <<: *shared-test-steps
 
 # Run all the tests is parallel
