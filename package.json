@@ -48,7 +48,7 @@
   },
   "scripts": {
     "prepare": "tsc",
-    "pretest": "prettier --write src/*/**.ts __tests_/*/**.ts",
+    "pretest": "prettier --write '/*/**.ts'",
     "test": "jest"
   }
 }

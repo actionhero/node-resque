@@ -8,23 +8,23 @@ export async function RunPlugins(
   pluginCounter?
 ) {
   if (!pluginCounter) {
-    pluginCounter = 0
+    pluginCounter = 0;
   }
   if (!job) {
-    return true
+    return true;
   }
   if (
     job.plugins === null ||
     job.plugins === undefined ||
     job.plugins.length === 0
   ) {
-    return true
+    return true;
   }
   if (pluginCounter >= job.plugins.length) {
-    return true
+    return true;
   }
 
-  const pluginRefrence = job.plugins[pluginCounter]
+  const pluginRefrence = job.plugins[pluginCounter];
   const toRun = await RunPlugin(
     self,
     pluginRefrence,
@@ -33,13 +33,13 @@ export async function RunPlugins(
     queue,
     job,
     args
-  )
-  pluginCounter++
+  );
+  pluginCounter++;
   if (toRun === false) {
-    return false
+    return false;
   }
 
-  return RunPlugins(self, type, func, queue, job, args, pluginCounter)
+  return RunPlugins(self, type, func, queue, job, args, pluginCounter);
 }
 
 export async function RunPlugin(
@@ -52,36 +52,36 @@ export async function RunPlugin(
   args
 ) {
   if (!job) {
-    return true
+    return true;
   }
 
-  let pluginName = PluginRefrence
+  let pluginName = PluginRefrence;
   if (typeof PluginRefrence === "function") {
-    pluginName = new PluginRefrence(self, func, queue, job, args, {}).name
+    pluginName = new PluginRefrence(self, func, queue, job, args, {}).name;
   } else if (typeof pluginName === "function") {
-    pluginName = pluginName.name
+    pluginName = pluginName.name;
   }
 
-  var pluginOptions = null
+  var pluginOptions = null;
   if (
     self.jobs[func].pluginOptions &&
     self.jobs[func].pluginOptions[pluginName]
   ) {
-    pluginOptions = self.jobs[func].pluginOptions[pluginName]
+    pluginOptions = self.jobs[func].pluginOptions[pluginName];
   } else {
-    pluginOptions = {}
+    pluginOptions = {};
   }
 
-  let plugin = null
+  let plugin = null;
   if (typeof PluginRefrence === "string") {
-    const PluginConstructor = require(`./plugins/${PluginRefrence}.js`)[
+    const PluginConstructor = require(`./../plugins/${PluginRefrence}`)[
       PluginRefrence
-    ]
-    plugin = new PluginConstructor(self, func, queue, job, args, pluginOptions)
+    ];
+    plugin = new PluginConstructor(self, func, queue, job, args, pluginOptions);
   } else if (typeof PluginRefrence === "function") {
-    plugin = new PluginRefrence(self, func, queue, job, args, pluginOptions)
+    plugin = new PluginRefrence(self, func, queue, job, args, pluginOptions);
   } else {
-    throw new Error("Plugin must be the constructor name or an object")
+    throw new Error("Plugin must be the constructor name or an object");
   }
 
   if (
@@ -89,8 +89,8 @@ export async function RunPlugin(
     plugin[type] === undefined ||
     typeof plugin[type] !== "function"
   ) {
-    return true
+    return true;
   }
 
-  return plugin[type]()
+  return plugin[type]();
 }
