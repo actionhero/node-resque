@@ -43,8 +43,8 @@ npm run docs
 cp -a docs/. gh-pages-branch/
 touch gh-pages-branch/.nojekyll
 mkdir gh-pages-branch/.circleci && cp .circleci/config.yml gh-pages-branch/.circleci/config.yml
-cp public/favicon.ico gh-pages-branch/favicon.ico
-echo 'docs.actionherojs.com' >> gh-pages-branch/CNAME
+cp images/favicon.ico gh-pages-branch/favicon.ico
+cp CNAME gh-pages-branch/CNAME
 
 ## push it
 cd gh-pages-branch
