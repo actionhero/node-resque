@@ -10,7 +10,7 @@ interface EventListeners {
 
 export class Connection extends EventEmitter {
   options: ConnectionOptions | null;
-  eventListeners: EventListeners;
+  private eventListeners: EventListeners;
   connected: boolean;
   redis: IORedis.Redis;
 
