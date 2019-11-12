@@ -6,6 +6,10 @@
 
 [![CircleCI](https://circleci.com/gh/taskrabbit/node-resque.svg?style=svg)](https://circleci.com/gh/taskrabbit/node-resque)
 
+## API Docs
+
+You can read the API docs for Node Resque @ [node-resque.actionherojs.com](https://node-resque.actionherojs.com). These are generated automatically from the master branch via [TypeDoc](https://typedoc.org/)
+
 ## Version Notes
 
 - ‼️ Version 6+ of Node Resque uses Tyepscript. We will still include javascrtipt transpiled code in NPM releases, but they will be generated from the Typescript source. Functinality between node-resque v5 and v6 should be the same.
@@ -287,7 +291,7 @@ const queue = new NodeResque.Queue({ connection: connectionDetails, jobs });
 await queue.connect();
 ```
 
-The main methods you will be using to enqueue jobs to be worked can be found here `TODO`
+API documentation for the main methods you will be using to enqueue jobs to be worked can be found @ [node-resque.actionherojs.com](https://node-resque.actionherojs.com).
 
 ## Failed Job Management
 
