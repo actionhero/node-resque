@@ -8,6 +8,7 @@
 
 ## Version Notes
 
+- ‼️ Version 6+ of Node Resque uses Tyepscript. We will still include javascrtipt transpiled code in NPM releases, but they will be generated from the Typescript source. Functinality between node-resque v5 and v6 should be the same.
 - ‼️ Version 5+ of Node Resque uses async/await. There is no upgrade path from previous versions. Node v8.0.0+ is required.
 
 ## Usage
@@ -286,106 +287,7 @@ const queue = new NodeResque.Queue({ connection: connectionDetails, jobs });
 await queue.connect();
 ```
 
-The main methods you will be using to enqueue jobs to be worked:
-
-**`await queue.enqueue(queueName, jobName, [args])`**
-
-- Enqueue a named job (defined in `jobs` to be worked by a worker)
-- The job will be added to the `queueName` queue, and that queue will be worked down by available workers assigned to that queue
-- args is optional, but should be an array of arguments passed to the job. Order of arguments is maintained
-
-**`await queue.enqueueIn(delay, queueName, jobName, [args])`**
-
-- In ms, the number of ms to delay before this job is able to start being worked on.
-  - Depending on the number of other jobs in `queueName`, it is likely that this job will not be excecuted at exactly the delay specified, but shortly thereafter.
-- other options the same as `queue.enqueue`
-
-**`await queue.enqueueAt(delay, queueName, jobName, [args])`**
-
-- In ms, the unix timestamp at which this job is able to start being worked on.
-  - Depending on the number of other jobs in `queueName`, it is likely that this job will not be excecuted at exactly the time specified, but shortly thereafter.
-- other options the same as `queue.enqueue`
-
-Additional methods provided on the `queue` object:
-
-**`let stats = await queue.stats()`**
-
-- stats will be a hash containing details about all the queues in your redis, and how many jobs are in each
-
-**`let queues = await queue.queues()`**
-
-- queues is an Array with the names of all your queues
-
-**`await queue.delQueue(queueName)`**
-
-- delete a queue, and all jobs in that queue.
-
-**`let jobs = await queue.queued(q, start, stop)`**
-
-- list all the jobs (with their payloads) in a queue between start index and stop index.
-- jobs is an array containing the payload of the job enqueued
-
-**`let length = await queue.length(q)`**
-
-- length is an integer counting the length of the jobs in the queue
-- this does not include delayed jobs for this queue
-
-**`let locks = await queue.locks()`**
-
-- types of locks include queue and worker locks, as created by the plugins below
-- `locks` is a hash by type and timestamp
-
-**`let count = await queue.delLock(lockName)`**
-
-- `count` is an integer. You might delete more than one lock by the name.
-
-**`let numberOfJobsDeleted = await queue.del(q, func, args, count)`**
-
-- jobs are deleted by those matching a `func` and agument collection within a given queue.
-- You might match none, or you might match many.
-
-**`let timestamps = await queue.delDelayed(q, func, args)`**
-
-- same as the above, but for delayed jobs at any timestamp(s)
-- You might match none, or you might match many. `timestamps` is an array of integers.
-
-**`let timestampsForJob = await queue.scheduledAt(q, func, args)`**
-
-- learn the timestamps at which a job is scheduled to be run.
-- `timestampsForJob` is an array of integers
-
-**await queue.end()**
-
-## Delayed Status
-
-**`let timestamps = await queue.timestamps()`**
-
-- `timestamps` is an array of integers for all timestamps which have at least one job scheduled in the future
-
-**`let jobsEnqueuedForThisTimestamp = await queue.delayedAt(timestamp)`**
-
-- `jobsEnqueuedForThisTimestamp` is an array, matching the style of the response of `queue.queued`
-
-**`let jobs = queue.allDelayed()`**
-
-- jobsHash is an object with its keys being timestamps, and the vales are arrays of jobs at each time.
-- note that this operation can be very slow and very ram-heavy
-
-## Worker Status
-
-You can use the queue object to check on your workers:
-
-**`let workers = await queue.workers()`**
-
-- returns a hash of the form: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
-
-**`let workerStatus = await queue.workingOn(workerName, queues)`**
-
-- returns: `{"run_at":"Fri Dec 12 2014 14:01:16 GMT-0800 (PST)","queue":"test_queue","payload":{"class":"slowJob","queue":"test_queue","args":[null]},"worker":"workerA"}`
-
-**`let details = await queue.allWorkingOn()`**
-
-- returns a hash of the results of `queue.workingOn` with the worker names as keys.
+The main methods you will be using to enqueue jobs to be worked can be found here `TODO`
 
 ## Failed Job Management
 

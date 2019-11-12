@@ -15,6 +15,44 @@ function prepareJobs(jobs) {
   }, {});
 }
 
+/**
+ * ## Events
+ * ```
+ * worker.on("start", () => {
+ *   console.log("worker started");
+ * });
+ * worker.on("end", () => {
+ *   console.log("worker ended");
+ * });
+ * worker.on("cleaning_worker", (worker, pid) => {
+ *   console.log(`cleaning old worker ${worker}`);
+ * });
+ * worker.on("poll", queue => {
+ *   console.log(`worker polling ${queue}`);
+ * });
+ * worker.on("ping", time => {
+ *   console.log(`worker check in @ ${time}`);
+ * });
+ * worker.on("job", (queue, job) => {
+ *   console.log(`working job ${queue} ${JSON.stringify(job)}`);
+ * });
+ * worker.on("reEnqueue", (queue, job, plugin) => {
+ *   console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`);
+ * });
+ * worker.on("success", (queue, job, result) => {
+ *  console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`);
+ * });
+ * worker.on("failure", (queue, job, failure) => {
+ *   console.log(`job failure ${queue} ${JSON.stringify(job)} >> ${failure}`);
+ * });
+ * worker.on("error", (error, queue, job) => {
+ *   console.log(`error ${queue} ${JSON.stringify(job)}  >> ${error}`);
+ * });
+ * worker.on("pause", () => {
+ *   console.log("worker paused");
+ * });
+ * ```
+ */
 export class Worker extends EventEmitter {
   options: WorkerOptions;
   jobs: Jobs;
@@ -22,13 +60,13 @@ export class Worker extends EventEmitter {
   name: string;
   queues: Array<string>;
   queue: string;
-  originalQueue: string | null;
+  private originalQueue: string | null;
   error: Error | null;
   result: any;
   ready: boolean;
   running: boolean;
   working: boolean;
-  pingTimer: NodeJS.Timeout;
+  private pingTimer: NodeJS.Timeout;
   job: Job;
   connection: Connection;
   queueObject: Queue;

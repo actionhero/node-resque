@@ -37,6 +37,7 @@
     "prettier": "^1.19.1",
     "ts-jest": "^24.1.0",
     "ts-node": "^8.5.0",
+    "typedoc": "^0.15.0",
     "typescript": "^3.7.2"
   },
   "jest": {
@@ -48,10 +49,12 @@
     }
   },
   "scripts": {
-    "prepare": "tsc --declaration",
+    "prepare": "npm run declaration && npm run docs",
     "pretest": "npm run lint",
     "lint": "prettier --check src/*/**.ts __test__/*/**.ts examples/*/**.ts",
     "pretty": "prettier --write src/*/**.ts __test__/*/**.ts examples/*/**.ts",
-    "test": "jest"
+    "test": "jest",
+    "declaration": "tsc --declaration",
+    "docs": "typedoc --out docs --theme default"
   }
 }

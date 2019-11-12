@@ -6,6 +6,98 @@ import { EventLoopDelay } from "./../utils/eventLoopDelay";
 import { MultiWorkerOptions } from "../types/options";
 import { Jobs } from "../types/jobs";
 
+/**
+ * ## Events
+ * ```js
+ * // worker-class emitters
+ * multiWorker.on("start", workerId => {
+ *   console.log("worker[" + workerId + "] started");
+ * });
+ * multiWorker.on("end", workerId => {
+ *   console.log("worker[" + workerId + "] ended");
+ * });
+ * multiWorker.on("cleaning_worker", (workerId, worker, pid) => {
+ *   console.log("cleaning old worker " + worker);
+ * });
+ * multiWorker.on("poll", (workerId, queue) => {
+ *   console.log("worker[" + workerId + "] polling " + queue);
+ * });
+ * multiWorker.on("ping", (workerId, time) => {
+ *   console.log("worker[" + workerId + "] check in @ " + time);
+ * });
+ * multiWorker.on("job", (workerId, queue, job) => {
+ *   console.log(
+ *     "worker[" + workerId + "] working job " + queue + " " + JSON.stringify(job)
+ *   );
+ * });
+ * multiWorker.on("reEnqueue", (workerId, queue, job, plugin) => {
+ *   console.log(
+ *     "worker[" +
+ *       workerId +
+ *       "] reEnqueue job (" +
+ *       plugin +
+ *       ") " +
+ *       queue +
+ *       " " +
+ *       JSON.stringify(job)
+ *   );
+ * });
+ * multiWorker.on("success", (workerId, queue, job, result) => {
+ *   console.log(
+ *     "worker[" +
+ *       workerId +
+ *       "] job success " +
+ *       queue +
+ *       " " +
+ *       JSON.stringify(job) +
+ *       " >> " +
+ *       result
+ *   );
+ * });
+ * multiWorker.on("failure", (workerId, queue, job, failure) => {
+ *   console.log(
+ *     "worker[" +
+ *       workerId +
+ *       "] job failure " +
+ *       queue +
+ *       " " +
+ *       JSON.stringify(job) +
+ *       " >> " +
+ *       failure
+ *   );
+ * });
+ * multiWorker.on("error", (workerId, queue, job, error) => {
+ *   console.log(
+ *     "worker[" +
+ *       workerId +
+ *       "] error " +
+ *       queue +
+ *       " " +
+ *       JSON.stringify(job) +
+ *       " >> " +
+ *       error
+ *   );
+ * });
+ * multiWorker.on("pause", workerId => {
+ *   console.log("worker[" + workerId + "] paused");
+ * });
+ * ```
+ * ```js
+ * // multiWorker-specfic emitters
+ * multiWorker.on("internalError", error => {
+ *   console.log(error);
+ * });
+ * multiWorker.on("multiWorkerAction", (verb, delay) => {
+ *   console.log(
+ *     "*** checked for worker status: " +
+ *       verb +
+ *       " (event loop delay: " +
+ *       delay +
+ *       "ms)"
+ *   );
+ * });
+ * ```
+ */
 export class MultiWorker extends EventEmitter {
   options: MultiWorkerOptions;
   jobs: Jobs;
@@ -13,10 +105,10 @@ export class MultiWorker extends EventEmitter {
   name: string;
   running: boolean;
   working: boolean;
-  eventLoopBlocked: boolean;
-  eventLoopDelay: number;
-  eventLoopCheckCounter: number;
-  stopInProcess: boolean;
+  private eventLoopBlocked: boolean;
+  private eventLoopDelay: number;
+  private eventLoopCheckCounter: number;
+  private stopInProcess: boolean;
   connection: Connection;
   checkTimer: NodeJS.Timeout;
 

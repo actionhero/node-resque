@@ -47,6 +47,11 @@ export class Queue extends EventEmitter {
     });
   }
 
+  /**
+   * - Enqueue a named job (defined in `jobs` to be worked by a worker)
+   * - The job will be added to the `queueName` queue, and that queue will be worked down by available workers assigned to that queue
+   * - args is optional, but should be an array of arguments passed to the job. Order of arguments is maintained
+   */
   async enqueue(q: string, func: string, args: Array<any> = []) {
     args = arrayify(args);
     const job = this.jobs[func];
@@ -65,6 +70,11 @@ export class Queue extends EventEmitter {
     return toRun;
   }
 
+  /**
+   * - In ms, the unix timestamp at which this job is able to start being worked on.
+   * - Depending on the number of other jobs in `queueName`, it is likely that this job will not be excecuted at exactly the time specified, but shortly thereafter.
+   * - other options the same as `queue.enqueue`
+   */
   async enqueueAt(
     timestamp: number,
     q: string,
@@ -99,7 +109,11 @@ export class Queue extends EventEmitter {
       rTimestamp.toString()
     );
   }
-
+  /**
+   * - In ms, the number of ms to delay before this job is able to start being worked on.
+   *  - Depending on the number of other jobs in `queueName`, it is likely that this job will not be excecuted at exactly the delay specified, but shortly thereafter.
+   * - other options the same as `queue.enqueue`
+   */
   async enqueueIn(
     time: number,
     q: string,
@@ -110,19 +124,33 @@ export class Queue extends EventEmitter {
     return this.enqueueAt(timestamp, q, func, args);
   }
 
+  /**
+   * - queues is an Array with the names of all your queues
+   */
   async queues() {
     return this.connection.redis.smembers(this.connection.key("queues"));
   }
 
+  /**
+   * - delete a queue, and all jobs in that queue.
+   */
   async delQueue(q: string) {
     await this.connection.redis.del(this.connection.key("queue", q));
     await this.connection.redis.srem(this.connection.key("queues"), q);
   }
 
+  /**
+   * - length is an integer counting the length of the jobs in the queue
+   * - this does not include delayed jobs for this queue
+   */
   async length(q: string) {
     return this.connection.redis.llen(this.connection.key("queue", q));
   }
 
+  /**
+   * - jobs are deleted by those matching a `func` and agument collection within a given queue.
+   * - You might match none, or you might match many.
+   */
   async del(q: string, func: string, args: Array<any> = [], count: number = 0) {
     args = arrayify(args);
     return this.connection.redis.lrem(
@@ -160,6 +188,10 @@ export class Queue extends EventEmitter {
     return timestamps;
   }
 
+  /**
+   * - learn the timestamps at which a job is scheduled to be run.
+   * - `timestampsForJob` is an array of integers
+   */
   async scheduledAt(q: string, func: string, args: Array<any> = []) {
     const timestamps = [];
     args = arrayify(args);
@@ -175,6 +207,9 @@ export class Queue extends EventEmitter {
     return timestamps;
   }
 
+  /**
+   * - `timestamps` is an array of integers for all timestamps which have at least one job scheduled in the future
+   */
   async timestamps() {
     const results = [];
     const timestamps = await this.connection.getKeys(
@@ -189,6 +224,9 @@ export class Queue extends EventEmitter {
     return results;
   }
 
+  /**
+   * - `jobsEnqueuedForThisTimestamp` is an array, matching the style of the response of `queue.queued`
+   */
   async delayedAt(timestamp: number) {
     const rTimestamp = Math.round(timestamp / 1000); // assume timestamp is in ms
     const items = await this.connection.redis.lrange(
@@ -202,6 +240,10 @@ export class Queue extends EventEmitter {
     return { tasks, rTimestamp };
   }
 
+  /**
+   * - list all the jobs (with their payloads) in a queue between start index and stop index.
+   * - jobs is an array containing the payload of the job enqueued
+   */
   async queued(q: string, start: number, stop: number) {
     const items = await this.connection.redis.lrange(
       this.connection.key("queue", q),
@@ -214,6 +256,10 @@ export class Queue extends EventEmitter {
     return tasks;
   }
 
+  /**
+   * - jobsHash is an object with its keys being timestamps, and the vales are arrays of jobs at each time.
+   * - note that this operation can be very slow and very ram-heavy
+   */
   async allDelayed() {
     const results = {};
 
@@ -227,6 +273,10 @@ export class Queue extends EventEmitter {
     return results;
   }
 
+  /**
+   * - types of locks include queue and worker locks, as created by the plugins below
+   * - `locks` is a hash by type and timestamp
+   */
   async locks() {
     let keys: Array<string> = [];
     const data = {};
@@ -261,10 +311,16 @@ export class Queue extends EventEmitter {
     return data;
   }
 
+  /**
+   * - `count` is an integer. You might delete more than one lock by the name.
+   */
   async delLock(key) {
     return this.connection.redis.del(this.connection.key(key));
   }
 
+  /**
+   * - returns a hash of the form: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
+   */
   async workers() {
     const workers = {};
 
@@ -292,6 +348,9 @@ export class Queue extends EventEmitter {
     return workers;
   }
 
+  /**
+   * - returns: `{"run_at":"Fri Dec 12 2014 14:01:16 GMT-0800 (PST)","queue":"test_queue","payload":{"class":"slowJob","queue":"test_queue","args":[null]},"worker":"workerA"}`
+   */
   async workingOn(workerName, queues) {
     const fullWorkerName = workerName + ":" + queues;
     return this.connection.redis.get(
@@ -299,6 +358,9 @@ export class Queue extends EventEmitter {
     );
   }
 
+  /**
+   * - returns a hash of the results of `queue.workingOn` with the worker names as keys.
+   */
   async allWorkingOn() {
     const results = {};
 
@@ -402,10 +464,20 @@ export class Queue extends EventEmitter {
     return results;
   }
 
+  /**
+   * - `failedCount` is the number of jobs in the failed queue
+   */
   async failedCount() {
     return this.connection.redis.llen(this.connection.key("failed"));
   }
 
+  /**
+   * - `failedJobs` is an array listing the data of the failed jobs. Each element looks like:
+   * ```
+   * {"worker": "host:pid", "queue": "test_queue", "payload": {"class":"slowJob", "queue":"test_queue", "args":[null]}, "exception": "TypeError", "error": "MyImport is not a function", "backtrace": [' at Worker.perform (/path/to/worker:111:24)', ' at <anonymous>'], "failed_at": "Fri Dec 12 2014 14:01:16 GMT-0800 (PST)"}\
+   * ```
+   * - To retrieve all failed jobs, use arguments: `await queue.failed(0, -1)`
+   */
   async failed(start: number, stop: number) {
     const data = await this.connection.redis.lrange(
       this.connection.key("failed"),
@@ -438,6 +510,9 @@ export class Queue extends EventEmitter {
     );
   }
 
+  /**
+   * - stats will be a hash containing details about all the queues in your redis, and how many jobs are in each
+   */
   async stats() {
     const data = {};
     const keys = await this.connection.getKeys(this.connection.key("stat:*"));

@@ -8,16 +8,47 @@ import { Connection } from "./connection";
 import { SchedulerOptions } from "../types/options";
 import { Jobs } from "../types/jobs";
 
+/**
+ * ## Events
+ * ```
+ * scheduler.on("start", () => {
+ *   console.log("scheduler started");
+ * });
+ * scheduler.on("end", () => {
+ *   console.log("scheduler ended");
+ * });
+ *  scheduler.on("poll", () => {
+ *    console.log("scheduler polling");
+ *  });
+ *  scheduler.on("master", state => {
+ *    console.log("scheduler became master");
+ *  });
+ *  scheduler.on("error", error => {
+ *    console.log(`scheduler error >> ${error}`);
+ *  });
+ *  scheduler.on("cleanStuckWorker", (workerName, errorPayload, delta) => {
+ *    console.log(
+ *      `failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`
+ *    );
+ *  });
+ *  scheduler.on("workingTimestamp", timestamp => {
+ *    console.log(`scheduler working timestamp ${timestamp}`);
+ *  });
+ *  scheduler.on("transferredJob", (timestamp, job) => {
+ *    console.log(`scheduler enquing job ${timestamp} >> ${JSON.stringify(job)}`);
+ *  });
+ * ```
+ */
 export class Scheduler extends EventEmitter {
   options: SchedulerOptions;
   jobs: Jobs;
   name: string;
   master: boolean;
   running: boolean;
-  processing: boolean;
+  private processing: boolean;
   queue: Queue;
   connection: Connection;
-  timer: NodeJS.Timeout;
+  private timer: NodeJS.Timeout;
 
   constructor(options, jobs = {}) {
     super();
