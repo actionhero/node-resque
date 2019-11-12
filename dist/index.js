@@ -1,4 +1,11 @@
 "use strict";
+/**
+ * I export the following classes: Connection, Queue, Scheduler, Worker, MultiWorker, Plugin
+ *
+ * ```typescript
+ * import { Connection, Queue, Scheduler, Worker, MultiWorker, Plugin } from 'node-resque'
+ * ```
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 var connection_1 = require("./core/connection");
 exports.Connection = connection_1.Connection;
