@@ -109,9 +109,9 @@ workflows:
   version: 2
   test:
     jobs:
-      - build
+      - build:
           filters:
-              <<: *ignored-branches
+            <<: *ignored-branches
 
       - linter:
           requires:
