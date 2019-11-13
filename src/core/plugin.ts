@@ -32,8 +32,8 @@ export abstract class Plugin {
     }
   }
 
-  abstract beforeEnqueue(): void;
-  abstract afterEnqueue(): void;
-  abstract beforePerform(): void;
-  abstract afterPerform(): void;
+  abstract beforeEnqueue?(): void;
+  abstract afterEnqueue?(): void;
+  abstract beforePerform?(): void;
+  abstract afterPerform?(): void;
 }
