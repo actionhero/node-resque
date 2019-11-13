@@ -4,7 +4,7 @@
 
 [![Nodei stats](https://nodei.co/npm/node-resque.png?downloads=true)](https://npmjs.org/package/node-resque)
 
-[![CircleCI](https://circleci.com/gh/taskrabbit/node-resque.svg?style=svg)](https://circleci.com/gh/taskrabbit/node-resque)
+[![CircleCI](https://circleci.com/gh/actionhero/node-resque.svg?style=svg)](https://circleci.com/gh/actionhero/node-resque)
 
 ## API Docs
 
@@ -264,7 +264,7 @@ worker.start();
 - Be sure to call `await worker.end()`, `await queue.end()` and `await scheduler.end()` before shutting down your application if you want to properly clear your worker status from resque.
 - When ending your application, be sure to allow your workers time to finish what they are working on
 - This project implements the "scheduler" part of rescue-scheduler (the daemon which can promote enqueued delayed jobs into the work queues when it is time), but not the CRON scheduler proxy. To learn more about how to use a CRON-like scheduler, read the [Job Schedules](#job-schedules) section of this document.
-- "Namespace" is a string which is appended to the front of your keys in redis. Normally, it is "resque". This is helpful if you want to store multiple work queues in one redis database. Do not use `keyPrefix` if you are using the `ioredis` (default) redis driver in this project (see https://github.com/taskrabbit/node-resque/issues/245 for more information.)
+- "Namespace" is a string which is appended to the front of your keys in redis. Normally, it is "resque". This is helpful if you want to store multiple work queues in one redis database. Do not use `keyPrefix` if you are using the `ioredis` (default) redis driver in this project (see https://github.com/actionhero/node-resque/issues/245 for more information.)
 - If you are using any plugins which effect `beforeEnqueue` or `afterEnqueue`, be sure to pass the `jobs` argument to the `new NodeResque.Queue()` constructor
 - If a job fails, it will be added to a special `failed` queue. You can then inspect these jobs, write a plugin to manage them, move them back to the normal queues, etc. Failure behavior by default is just to enter the `failed` queue, but there are many options. Check out these examples from the ruby ecosystem for inspiration:
   - https://github.com/lantins/resque-retry
@@ -297,7 +297,7 @@ API documentation for the main methods you will be using to enqueue jobs to be w
 
 From time to time, your jobs/workers may fail. Resque workers will move failed jobs to a special `failed` queue which will store the original arguments of your job, the failing stack trace, and additional metadata.
 
-![error example](https://raw.githubusercontent.com/taskrabbit/node-resque/master/images/error_payload.png)
+![error example](https://raw.githubusercontent.com/actionhero/node-resque/master/images/error_payload.png)
 
 You can work with these failed jobs with the following methods:
 
@@ -369,7 +369,7 @@ If you know the name of a worker that should be removed, you can also call `awai
 
 You may want to use node-resque to schedule jobs every minute/hour/day, like a distributed CRON system. There are a number of excellent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and [node-cron](https://github.com/ncb000gt/node-cron). Node-resque makes it possible for you to use the package of your choice to schedule jobs with.
 
-Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduling the jobs. To help you with this, you can inspect which of the scheduler processes is currently acting as master, and flag only the master scheduler process to run the schedule. A full example can be found at [/examples/scheduledJobs.js](https://github.com/taskrabbit/node-resque/blob/master/examples/scheduledJobs.js), but the relevant section is:
+Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduling the jobs. To help you with this, you can inspect which of the scheduler processes is currently acting as master, and flag only the master scheduler process to run the schedule. A full example can be found at [/examples/scheduledJobs.js](https://github.com/actionhero/node-resque/blob/master/examples/scheduledJobs.js), but the relevant section is:
 
 ```javascript
 const NodeResque = require("node-resque");

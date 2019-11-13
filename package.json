@@ -4,10 +4,10 @@
   "description": "an opinionated implementation of resque in node",
   "license": "Apache-2.0",
   "version": "6.0.1",
-  "homepage": "http://github.com/taskrabbit/node-resque",
+  "homepage": "http://github.com/actionhero/node-resque",
   "repository": {
     "type": "git",
-    "url": "git://github.com/taskrabbit/node-resque.git"
+    "url": "git://github.com/actionhero/node-resque.git"
   },
   "main": "dist/index",
   "types": "dist/index",
