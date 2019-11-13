@@ -313,7 +313,7 @@ You can work with these failed jobs with the following methods:
 
 ### Failing a Job
 
-We use a try/catch pattern to catch errors in your jobs. If any job throws an uncaught exception, it will be caught, and the job's payload moved to the error queue for inspection. Do not use `domains`, `process.onExit`, or any other method of "catching" a process crash. The error paylaod looks like:
+We use a try/catch pattern to catch errors in your jobs. If any job throws an uncaught exception, it will be caught, and the job's payload moved to the error queue for inspection. Do not use `domains`, `process.onExit`, or any other method of "catching" a process crash. The error payload looks like:
 
 ```javascript
 { worker: 'busted-worker-3',
@@ -339,7 +339,7 @@ We use a try/catch pattern to catch errors in your jobs. If any job throws an un
 
 By default, the scheduler will check for workers which haven't pinged redis in 60 minutes. If this happens, we will assume the process crashed, and remove it from redis. If this worker was working on a job, we will place it in the failed queue for later inspection. Every worker has a timer running in which it then updates a key in redis every `timeout` (default: 5 seconds). If your job is slow, but async, there should be no problem. However, if your job consumes 100% of the CPU of the process, this timer might not fire.
 
-To modify the 60 minute check, change `stuckWorkerTimeout` when configuring your scheudler, ie:
+To modify the 60 minute check, change `stuckWorkerTimeout` when configuring your scheduler, ie:
 
 ```js
 const scheduler = new NodeResque.Scheduler({
@@ -384,7 +384,7 @@ schedule.scheduleJob("10,20,30,40,50 * * * * *", async () => {
   // we want to ensure that only one instance of this job is scheduled in our environment at once,
   // no matter how many schedulers we have running
   if (scheduler.master) {
-    console.log(">>> enquing a job");
+    console.log(">>> enqueuing a job");
     await queue.enqueue("time", "ticktock", new Date().toString());
   }
 });
@@ -606,5 +606,5 @@ This package was featured heavily in [this presentation I gave](https://blog.eva
 ## Acknowledgments
 
 - Most of this code was inspired by / stolen from [coffee-resque](https://npmjs.org/package/coffee-resque) and [coffee-resque-scheduler](https://github.com/leeadkins/coffee-resque-scheduler). Thanks!
-- This Resque package aims to be fully compatible with [Ruby's Resque](https://github.com/resque/resque) and implementations of [Resque Scheduler](https://github.com/resque/resque-scheduler). Other packages from other langauges may conflict.
+- This Resque package aims to be fully compatible with [Ruby's Resque](https://github.com/resque/resque) and implementations of [Resque Scheduler](https://github.com/resque/resque-scheduler). Other packages from other languages may conflict.
 - If you are looking for a UI to manage your Resque instances in nodejs, check out [ActionHero's Resque UI](https://github.com/evantahler/ah-resque-ui)
