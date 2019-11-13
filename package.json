@@ -26,10 +26,10 @@
     "node": ">= 8"
   },
   "dependencies": {
-    "ioredis": "^4.14.1",
-    "@types/ioredis": "^4.0.18",
-    "@types/jest": "^24.0.22",
-    "@types/node": "^12.12.7"
+    "@types/ioredis": "^4.0.19",
+    "@types/jest": "^24.0.23",
+    "@types/node": "^12.12.7",
+    "ioredis": "^4.14.1"
   },
   "devDependencies": {
     "jest": "^24.9.0",
@@ -37,7 +37,7 @@
     "prettier": "^1.19.1",
     "ts-jest": "^24.1.0",
     "ts-node": "^8.5.0",
-    "typedoc": "^0.15.0",
+    "typedoc": "^0.15.1",
     "typescript": "^3.7.2"
   },
   "jest": {
