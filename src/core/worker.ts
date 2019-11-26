@@ -35,7 +35,7 @@ export declare interface Worker {
   id: number;
 
   on(event: "start" | "end" | "pause", cb: () => void): this;
-  on(event: "cleaning_worker", cb: (worker: string, pid: string) => void): this;
+  on(event: "cleaning_worker", cb: (worker: Worker, pid: string) => void): this;
   on(event: "poll", cb: (queue: string) => void): this;
   on(event: "ping", cb: (time: number) => void): this;
   on(event: "job", cb: (queue: string, job: Job<any>) => void): this;
@@ -59,7 +59,7 @@ export declare interface Worker {
   once(event: "start" | "end" | "pause", cb: () => void): this;
   once(
     event: "cleaning_worker",
-    cb: (worker: string, pid: string) => void
+    cb: (worker: Worker, pid: string) => void
   ): this;
   once(event: "poll", cb: (queue: string) => void): this;
   once(event: "ping", cb: (time: number) => void): this;
