@@ -5,7 +5,7 @@ import { Connection } from "./connection";
 import { EventLoopDelay } from "./../utils/eventLoopDelay";
 import { MultiWorkerOptions } from "../types/options";
 import { Jobs } from "../types/jobs";
-import { Job } from "../types/Job";
+import { Job } from "../types/job";
 
 export declare interface MultiWorker {
   options: MultiWorkerOptions;

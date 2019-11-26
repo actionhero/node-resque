@@ -6,6 +6,6 @@ export { MultiWorker } from "./core/multiWorker";
 export { Plugin } from "./core/plugin";
 
 export { ConnectionOptions } from "./types/options";
-export { Job } from "./types/Job";
+export { Job } from "./types/job";
 export { Jobs } from "./types/Jobs";
 export { ErrorPayload } from "./types/errorPayload";

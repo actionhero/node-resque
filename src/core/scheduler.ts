@@ -6,7 +6,7 @@ import * as os from "os";
 import { Queue } from "./queue";
 import { Connection } from "./connection";
 import { SchedulerOptions } from "../types/options";
-import { Job } from "../types/Job";
+import { Job } from "../types/job";
 import { Jobs } from "../types/jobs";
 import { ErrorPayload } from "../types/errorPayload";
 
