@@ -4,7 +4,7 @@ import { Connection } from "./connection";
 import { Queue } from "./queue";
 import { RunPlugins } from "./pluginRunner";
 import { WorkerOptions } from "../types/options";
-import { Job } from "../types/job";
+import { Job, JobEmit } from "../types/job";
 import { Jobs } from "../types/jobs";
 
 function prepareJobs(jobs) {
@@ -38,22 +38,22 @@ export declare interface Worker {
   on(event: "cleaning_worker", cb: (worker: Worker, pid: string) => void): this;
   on(event: "poll", cb: (queue: string) => void): this;
   on(event: "ping", cb: (time: number) => void): this;
-  on(event: "job", cb: (queue: string, job: Job<any>) => void): this;
+  on(event: "job", cb: (queue: string, job: Job<any> | JobEmit) => void): this;
   on(
     event: "reEnqueue",
-    cb: (queue: string, job: Job<any>, plugin: string) => void
+    cb: (queue: string, job: JobEmit, plugin: string) => void
   ): this;
   on(
     event: "success",
-    cb: (queue: string, job: Job<any>, result: any) => void
+    cb: (queue: string, job: JobEmit, result: any) => void
   ): this;
   on(
     event: "failure",
-    cb: (queue: string, job: Job<any>, failure: any) => void
+    cb: (queue: string, job: JobEmit, failure: any) => void
   ): this;
   on(
     event: "error",
-    cb: (error: Error, queue: string, job: Job<any>) => void
+    cb: (error: Error, queue: string, job: Job<any> | JobEmit) => void
   ): this;
 
   once(event: "start" | "end" | "pause", cb: () => void): this;
@@ -63,22 +63,25 @@ export declare interface Worker {
   ): this;
   once(event: "poll", cb: (queue: string) => void): this;
   once(event: "ping", cb: (time: number) => void): this;
-  once(event: "job", cb: (queue: string, job: Job<any>) => void): this;
+  once(
+    event: "job",
+    cb: (queue: string, job: Job<any> | Job<any> | JobEmit) => void
+  ): this;
   once(
     event: "reEnqueue",
-    cb: (queue: string, job: Job<any>, plugin: string) => void
+    cb: (queue: string, job: Job<any> | JobEmit, plugin: string) => void
   ): this;
   once(
     event: "success",
-    cb: (queue: string, job: Job<any>, result: any) => void
+    cb: (queue: string, job: Job<any> | JobEmit, result: any) => void
   ): this;
   once(
     event: "failure",
-    cb: (queue: string, job: Job<any>, failure: any) => void
+    cb: (queue: string, job: Job<any> | JobEmit, failure: any) => void
   ): this;
   once(
     event: "error",
-    cb: (error: Error, queue: string, job: Job<any>) => void
+    cb: (error: Error, queue: string, job: Job<any> | JobEmit) => void
   ): this;
 
   removeAllListeners(event: WorkerEvent): this;

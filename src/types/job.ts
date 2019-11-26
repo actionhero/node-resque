@@ -7,3 +7,8 @@ export interface Job<TResult> {
   };
   perform: (...args: any[]) => Promise<TResult>;
 }
+
+export interface JobEmit {
+  queue?: string;
+  class?: string;
+}
