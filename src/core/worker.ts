@@ -15,63 +15,89 @@ function prepareJobs(jobs) {
   }, {});
 }
 
-/**
- * ## Events
- * ```
- * worker.on("start", () => {
- *   console.log("worker started");
- * });
- * worker.on("end", () => {
- *   console.log("worker ended");
- * });
- * worker.on("cleaning_worker", (worker, pid) => {
- *   console.log(`cleaning old worker ${worker}`);
- * });
- * worker.on("poll", queue => {
- *   console.log(`worker polling ${queue}`);
- * });
- * worker.on("ping", time => {
- *   console.log(`worker check in @ ${time}`);
- * });
- * worker.on("job", (queue, job) => {
- *   console.log(`working job ${queue} ${JSON.stringify(job)}`);
- * });
- * worker.on("reEnqueue", (queue, job, plugin) => {
- *   console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`);
- * });
- * worker.on("success", (queue, job, result) => {
- *  console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`);
- * });
- * worker.on("failure", (queue, job, failure) => {
- *   console.log(`job failure ${queue} ${JSON.stringify(job)} >> ${failure}`);
- * });
- * worker.on("error", (error, queue, job) => {
- *   console.log(`error ${queue} ${JSON.stringify(job)}  >> ${error}`);
- * });
- * worker.on("pause", () => {
- *   console.log("worker paused");
- * });
- * ```
- */
-export class Worker extends EventEmitter {
+export declare interface Worker {
   options: WorkerOptions;
   jobs: Jobs;
   started: boolean;
   name: string;
   queues: Array<string>;
   queue: string;
-  private originalQueue: string | null;
+  originalQueue: string | null;
   error: Error | null;
   result: any;
   ready: boolean;
   running: boolean;
   working: boolean;
-  private pingTimer: NodeJS.Timeout;
+  pingTimer: NodeJS.Timeout;
   job: Job<any>;
   connection: Connection;
   queueObject: Queue;
   id: number;
 
+  on(event: "start" | "end" | "pause", cb: () => void): this;
+  on(event: "cleaning_worker", cb: (worker: string, pid: string) => void): this;
+  on(event: "poll", cb: (queue: string) => void): this;
+  on(event: "ping", cb: (time: number) => void): this;
+  on(event: "job", cb: (queue: string, job: Job<any>) => void): this;
+  on(
+    event: "reEnqueue",
+    cb: (queue: string, job: Job<any>, plugin: string) => void
+  ): this;
+  on(
+    event: "success",
+    cb: (queue: string, job: Job<any>, result: any) => void
+  ): this;
+  on(
+    event: "failure",
+    cb: (queue: string, job: Job<any>, failure: any) => void
+  ): this;
+  on(
+    event: "error",
+    cb: (error: Error, queue: string, job: Job<any>) => void
+  ): this;
+
+  once(event: "start" | "end" | "pause", cb: () => void): this;
+  once(
+    event: "cleaning_worker",
+    cb: (worker: string, pid: string) => void
+  ): this;
+  once(event: "poll", cb: (queue: string) => void): this;
+  once(event: "ping", cb: (time: number) => void): this;
+  once(event: "job", cb: (queue: string, job: Job<any>) => void): this;
+  once(
+    event: "reEnqueue",
+    cb: (queue: string, job: Job<any>, plugin: string) => void
+  ): this;
+  once(
+    event: "success",
+    cb: (queue: string, job: Job<any>, result: any) => void
+  ): this;
+  once(
+    event: "failure",
+    cb: (queue: string, job: Job<any>, failure: any) => void
+  ): this;
+  once(
+    event: "error",
+    cb: (error: Error, queue: string, job: Job<any>) => void
+  ): this;
+
+  removeAllListeners(event: WorkerEvent): this;
+}
+
+export type WorkerEvent =
+  | "start"
+  | "end"
+  | "cleaning_worker"
+  | "poll"
+  | "ping"
+  | "job"
+  | "reEnqueue"
+  | "success"
+  | "failure"
+  | "error"
+  | "pause";
+
+export class Worker extends EventEmitter {
   constructor(options, jobs = {}) {
     super();
 
