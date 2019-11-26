@@ -139,9 +139,6 @@ async function boot() {
   });
 
   // multiWorker emitters
-  multiWorker.on("internalError", error => {
-    console.log(error);
-  });
   multiWorker.on("multiWorkerAction", (verb, delay) => {
     console.log(
       `*** checked for worker status: ${verb} (event loop delay: ${delay}ms)`

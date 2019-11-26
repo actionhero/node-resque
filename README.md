@@ -150,7 +150,7 @@ async function boot() {
   scheduler.on("poll", () => {
     console.log("scheduler polling");
   });
-  scheduler.on("master", state => {
+  scheduler.on("master", () => {
     console.log("scheduler became master");
   });
   scheduler.on("error", error => {
