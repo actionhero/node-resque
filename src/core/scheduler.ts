@@ -6,50 +6,59 @@ import * as os from "os";
 import { Queue } from "./queue";
 import { Connection } from "./connection";
 import { SchedulerOptions } from "../types/options";
+import { Job } from "../types/job";
 import { Jobs } from "../types/jobs";
+import { ErrorPayload } from "../types/errorPayload";
 
-/**
- * ## Events
- * ```
- * scheduler.on("start", () => {
- *   console.log("scheduler started");
- * });
- * scheduler.on("end", () => {
- *   console.log("scheduler ended");
- * });
- *  scheduler.on("poll", () => {
- *    console.log("scheduler polling");
- *  });
- *  scheduler.on("master", state => {
- *    console.log("scheduler became master");
- *  });
- *  scheduler.on("error", error => {
- *    console.log(`scheduler error >> ${error}`);
- *  });
- *  scheduler.on("cleanStuckWorker", (workerName, errorPayload, delta) => {
- *    console.log(
- *      `failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`
- *    );
- *  });
- *  scheduler.on("workingTimestamp", timestamp => {
- *    console.log(`scheduler working timestamp ${timestamp}`);
- *  });
- *  scheduler.on("transferredJob", (timestamp, job) => {
- *    console.log(`scheduler enquing job ${timestamp} >> ${JSON.stringify(job)}`);
- *  });
- * ```
- */
-export class Scheduler extends EventEmitter {
+export declare interface Scheduler {
   options: SchedulerOptions;
   jobs: Jobs;
   name: string;
   master: boolean;
   running: boolean;
-  private processing: boolean;
+  processing: boolean;
   queue: Queue;
   connection: Connection;
-  private timer: NodeJS.Timeout;
+  timer: NodeJS.Timeout;
 
+  on(event: "start" | "end" | "poll" | "master", cb: () => void): this;
+  on(
+    event: "cleanStuckWorker",
+    cb: (workerName: string, errorPayload: ErrorPayload, delta: number) => void
+  ): this;
+  on(event: "error", cb: (error: Error, queue: string) => void): this;
+  on(event: "workingTimestamp", cb: (timestamp: number) => void): this;
+  on(
+    event: "transferredJob",
+    cb: (timestamp: number, job: Job<any>) => void
+  ): this;
+
+  once(event: "start" | "end" | "poll" | "master", cb: () => void): this;
+  once(
+    event: "cleanStuckWorker",
+    cb: (workerName: string, errorPayload: ErrorPayload, delta: number) => void
+  ): this;
+  once(event: "error", cb: (error: Error, queue: string) => void): this;
+  once(event: "workingTimestamp", cb: (timestamp: number) => void): this;
+  once(
+    event: "transferredJob",
+    cb: (timestamp: number, job: Job<any>) => void
+  ): this;
+
+  removeAllListeners(event: SchedulerEvent): this;
+}
+
+export type SchedulerEvent =
+  | "start"
+  | "end"
+  | "poll"
+  | "master"
+  | "cleanStuckWorker"
+  | "error"
+  | "workingTimestamp"
+  | "transferredJob";
+
+export class Scheduler extends EventEmitter {
   constructor(options, jobs = {}) {
     super();
 

@@ -1,9 +1,9 @@
-export interface Job {
-  plugins: Array<any> | null;
+export interface Job<TResult> {
+  plugins: Array<any>;
   pluginOptions: {
-    [key: string]: {
+    [pluginName: string]: {
       [key: string]: any;
     };
   };
-  perform: Function;
+  perform: (...args: any[]) => Promise<TResult>;
 }

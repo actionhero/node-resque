@@ -14,12 +14,8 @@ export class Connection extends EventEmitter {
   connected: boolean;
   redis: IORedis.Redis;
 
-  constructor(options) {
+  constructor(options: ConnectionOptions = {}) {
     super();
-
-    if (!options) {
-      options = {};
-    }
 
     const defaults = {
       pkg: "ioredis",

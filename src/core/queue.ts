@@ -14,11 +14,15 @@ function arrayify(o) {
   }
 }
 
-export class Queue extends EventEmitter {
+export declare interface Queue {
   connection: Connection;
   options: ConnectionOptions;
   jobs: Jobs;
 
+  on(event: "error", cb: (error: Error, queue: string) => void): this;
+  once(event: "error", cb: (error: Error, queue: string) => void): this;
+}
+export class Queue extends EventEmitter {
   constructor(options, jobs = {}) {
     super();
 
