@@ -7,5 +7,5 @@ export { Plugin } from "./core/plugin";
 
 export { ConnectionOptions } from "./types/options";
 export { Job } from "./types/job";
-export { Jobs } from "./types/Jobs";
+export { Jobs } from "./types/jobs";
 export { ErrorPayload } from "./types/errorPayload";
