@@ -3,37 +3,43 @@ import * as IORedis from "ioredis";
 import { Connection } from "../core/connection";
 
 export interface ConnectionOptions {
-  options: ConnectionOptions;
-  pkg: string;
-  db: number;
-  database: number;
-  host: string;
-  port: number;
-  namespace: string;
-  redis?: IORedis.Redis | null;
+  pkg?: string;
+  host?: string;
+  port?: number;
+  database?: number;
+  namespace?: string;
+  looping?: boolean;
+  options?: any;
+  redis?: IORedis.Redis;
 }
 
 export interface WorkerOptions extends ConnectionOptions {
-  name?: string | null;
-  queues?: Array<string> | null;
-  timeout?: number | null;
-  looping?: boolean | null;
+  name?: string;
+  queues?: Array<string>;
+  timeout?: number;
+  looping?: boolean;
 }
 
 export interface SchedulerOptions extends ConnectionOptions {
-  name?: string | null;
-  timeout?: number | null;
-  masterLockTimeout: number | null;
-  stuckWorkerTimeout: number | null;
+  name?: string;
+  timeout?: number;
+  masterLockTimeout: number;
+  stuckWorkerTimeout: number;
 }
 
 export interface MultiWorkerOptions extends ConnectionOptions {
-  name?: string | null;
-  queues?: Array<string> | null;
-  timeout?: number | null;
-  maxEventLoopDelay: number | null;
-  checkTimeout: number | null;
-  connection: Connection | null;
-  minTaskProcessors: number | null;
-  maxTaskProcessors: number | null;
+  name?: string;
+  queues?: Array<string>;
+  timeout?: number;
+  maxEventLoopDelay?: number;
+  checkTimeout?: number;
+  connection?: Connection;
+  minTaskProcessors?: number;
+  maxTaskProcessors?: number;
+}
+
+export interface Job<TResult> {
+  plugins?: string[];
+  pluginOptions?: { [pluginName: string]: any };
+  perform: (...args: any[]) => Promise<TResult>;
 }

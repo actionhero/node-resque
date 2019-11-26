@@ -67,7 +67,7 @@ export class Worker extends EventEmitter {
   running: boolean;
   working: boolean;
   private pingTimer: NodeJS.Timeout;
-  job: Job;
+  job: Job<any>;
   connection: Connection;
   queueObject: Queue;
   id: number;
