@@ -156,7 +156,7 @@ export class Scheduler extends EventEmitter {
     const timestamp = await this.nextDelayedTimestamp();
     if (timestamp) {
       this.emit("workingTimestamp", timestamp);
-      await this.enqueueDelayedItemsForTimestamp(timestamp);
+      await this.enqueueDelayedItemsForTimestamp(parseInt(timestamp));
       return this.poll();
     } else {
       await this.checkStuckWorkers();
@@ -217,20 +217,20 @@ export class Scheduler extends EventEmitter {
       return false;
     }
 
-    const delted = await this.connection.redis.del(this.masterKey());
+    const deleted = await this.connection.redis.del(this.masterKey());
     this.master = false;
-    return delted === 1 || delted.toString() === "true";
+    return deleted === 1 || deleted.toString() === "true";
   }
 
   private async nextDelayedTimestamp() {
     const time = Math.round(new Date().getTime() / 1000);
     const items = await this.connection.redis.zrangebyscore(
       this.connection.key("delayed_queue_schedule"),
-      "-inf",
+      0,
       time,
-      "limit",
-      "0",
-      "1"
+      "LIMIT",
+      0,
+      1
     );
     if (items.length === 0) {
       return;

@@ -8,6 +8,8 @@ export class QueueLock extends Plugin {
     const now = Math.round(new Date().getTime() / 1000);
     const timeout = now + this.lockTimeout() + 1;
     const set = await this.queueObject.connection.redis.setnx(key, timeout);
+
+    //@ts-ignore
     if (set === true || set === 1) {
       return true;
     }
