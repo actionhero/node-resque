@@ -106,7 +106,7 @@ async function boot() {
   scheduler.start();
 
   // //////////////////////
-  // REGESTER FOR EVENTS //
+  // REGISTER FOR EVENTS //
   // //////////////////////
 
   worker.on("start", () => {
