@@ -11,4 +11,5 @@ export interface Job<TResult> {
 export interface JobEmit {
   queue?: string;
   class?: string;
+  args?: Array<any>;
 }
