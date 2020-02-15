@@ -99,19 +99,16 @@ export class Queue extends EventEmitter {
       throw new Error("Job already enqueued at this time with same arguments");
     }
 
-    await this.connection.redis.rpush(
-      this.connection.key("delayed:" + rTimestamp),
-      item
-    );
-    await this.connection.redis.sadd(
-      this.connection.key("timestamps:" + item),
-      "delayed:" + rTimestamp
-    );
-    await this.connection.redis.zadd(
-      this.connection.key("delayed_queue_schedule"),
-      rTimestamp.toString(),
-      rTimestamp.toString()
-    );
+    await this.connection.redis
+      .multi()
+      .rpush(this.connection.key("delayed:" + rTimestamp), item)
+      .sadd(this.connection.key("timestamps:" + item), "delayed:" + rTimestamp)
+      .zadd(
+        this.connection.key("delayed_queue_schedule"),
+        rTimestamp.toString(),
+        rTimestamp.toString()
+      )
+      .exec();
   }
   /**
    * - In ms, the number of ms to delay before this job is able to start being worked on.
@@ -139,8 +136,12 @@ export class Queue extends EventEmitter {
    * - delete a queue, and all jobs in that queue.
    */
   async delQueue(q: string) {
-    await this.connection.redis.del(this.connection.key("queue", q));
-    await this.connection.redis.srem(this.connection.key("queues"), q);
+    const { redis } = this.connection;
+    await redis
+      .multi()
+      .del(this.connection.key("queue", q))
+      .srem(this.connection.key("queues"), q)
+      .exec();
   }
 
   /**
