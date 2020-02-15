@@ -212,7 +212,7 @@ describe("worker", () => {
         });
       });
 
-      // TODO: Typescript seems to have troble with frozen objects
+      // TODO: Typescript seems to have trouble with frozen objects
       // test('job arguments are immutable', async (done) => {
       //   await queue.enqueue(specHelper.queue, 'messWithData', { a: 'starting value' })
 

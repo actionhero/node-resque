@@ -265,14 +265,16 @@ export class Scheduler extends EventEmitter {
 
   private async cleanupTimestamp(timestamp: number) {
     const key = this.connection.key("delayed:" + timestamp);
+    await this.connection.redis.watch(key);
     const length = await this.connection.redis.llen(key);
     if (length === 0) {
-      await this.connection.redis.del(key);
-      await this.connection.redis.zrem(
-        this.connection.key("delayed_queue_schedule"),
-        timestamp
-      );
+      await this.connection.redis
+        .multi()
+        .del(key)
+        .zrem(this.connection.key("delayed_queue_schedule"), timestamp)
+        .exec();
     }
+    await this.connection.redis.unwatch();
   }
 
   private async checkStuckWorkers() {
