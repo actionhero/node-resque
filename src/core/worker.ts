@@ -45,11 +45,11 @@ export declare interface Worker {
   ): this;
   on(
     event: "success",
-    cb: (queue: string, job: JobEmit, result: any) => void
+    cb: (queue: string, job: JobEmit, result: any, duration: number) => void
   ): this;
   on(
     event: "failure",
-    cb: (queue: string, job: JobEmit, failure: any) => void
+    cb: (queue: string, job: JobEmit, failure: any, duration: number) => void
   ): this;
   on(
     event: "error",
@@ -245,16 +245,17 @@ export class Worker extends EventEmitter {
     this.job = job;
     this.error = null;
     let toRun;
+    const startedAt = new Date().getTime();
 
     if (!this.jobs[job.class]) {
       this.error = new Error(`No job defined for class "${job.class}"`);
-      return this.completeJob(false);
+      return this.completeJob(false, startedAt);
     }
 
     const perform = this.jobs[job.class].perform;
     if (!perform || typeof perform !== "function") {
       this.error = new Error(`Missing Job: "${job.class}"`);
-      return this.completeJob(false);
+      return this.completeJob(false, startedAt);
     }
 
     await this.workingOn(this.job);
@@ -271,7 +272,7 @@ export class Worker extends EventEmitter {
         job.args
       );
       if (toRun === false) {
-        return this.completeJob(false);
+        return this.completeJob(false, startedAt);
       }
 
       let callableArgs = [job.args];
@@ -295,7 +296,7 @@ export class Worker extends EventEmitter {
         this.jobs[job.class],
         job.args
       );
-      return this.completeJob(true);
+      return this.completeJob(true, startedAt);
     } catch (error) {
       this.error = error;
       if (!triedAfterPerform) {
@@ -314,7 +315,7 @@ export class Worker extends EventEmitter {
           }
         }
       }
-      return this.completeJob(!this.error);
+      return this.completeJob(!this.error, startedAt);
     }
   }
 
@@ -372,11 +373,12 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async completeJob(toRespond) {
+  private async completeJob(toRespond: boolean, startedAt: number) {
+    const duration = new Date().getTime() - startedAt;
     if (this.error) {
-      await this.fail(this.error);
+      await this.fail(this.error, duration);
     } else if (toRespond) {
-      await this.succeed(this.job);
+      await this.succeed(this.job, duration);
     }
 
     this.working = false;
@@ -390,15 +392,15 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async succeed(job) {
+  private async succeed(job, duration: number) {
     await this.connection.redis.incr(this.connection.key("stat", "processed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "processed", this.name)
     );
-    this.emit("success", this.queue, job, this.result);
+    this.emit("success", this.queue, job, this.result, duration);
   }
 
-  private async fail(err) {
+  private async fail(err, duration: number) {
     await this.connection.redis.incr(this.connection.key("stat", "failed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "failed", this.name)
@@ -407,7 +409,7 @@ export class Worker extends EventEmitter {
       this.connection.key("failed"),
       JSON.stringify(this.failurePayload(err, this.job))
     );
-    this.emit("failure", this.queue, this.job, err);
+    this.emit("failure", this.queue, this.job, err, duration);
   }
 
   private async pause() {

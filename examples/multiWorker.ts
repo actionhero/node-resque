@@ -1,3 +1,5 @@
+#!/usr/bin/env ts-node
+
 import { MultiWorker, Queue } from "./../src/index";
 // In your projects: import { Worker, Scheduler, Queue } from "node-resque";
 
@@ -115,18 +117,18 @@ async function boot() {
       )}`
     );
   });
-  multiWorker.on("success", (workerId, queue, job, result) => {
+  multiWorker.on("success", (workerId, queue, job, result, duration) => {
     console.log(
       `worker[${workerId}] job success ${queue} ${JSON.stringify(
         job
-      )} >> ${result}`
+      )} >> ${result} (${duration}ms)`
     );
   });
-  multiWorker.on("failure", (workerId, queue, job, failure) => {
+  multiWorker.on("failure", (workerId, queue, job, failure, duration) => {
     console.log(
       `worker[${workerId}] job failure ${queue} ${JSON.stringify(
         job
-      )} >> ${failure}`
+      )} >> ${failure} (${duration}ms)`
     );
   });
   multiWorker.on("error", (error, workerId, queue, job) => {
