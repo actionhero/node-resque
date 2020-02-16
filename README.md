@@ -130,11 +130,17 @@ async function boot() {
   worker.on("reEnqueue", (queue, job, plugin) => {
     console.log(`reEnqueue job (${plugin}) ${queue} ${JSON.stringify(job)}`);
   });
-  worker.on("success", (queue, job, result) => {
-    console.log(`job success ${queue} ${JSON.stringify(job)} >> ${result}`);
+  worker.on("success", (queue, job, result, duration) => {
+    console.log(
+      `job success ${queue} ${JSON.stringify(job)} >> ${result} (${duration}ms)`
+    );
   });
-  worker.on("failure", (queue, job, failure) => {
-    console.log(`job failure ${queue} ${JSON.stringify(job)} >> ${failure}`);
+  worker.on("failure", (queue, job, failure, duration) => {
+    console.log(
+      `job failure ${queue} ${JSON.stringify(
+        job
+      )} >> ${failure} (${duration}ms)`
+    );
   });
   worker.on("error", (error, queue, job) => {
     console.log(`error ${queue} ${JSON.stringify(job)}  >> ${error}`);

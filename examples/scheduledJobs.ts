@@ -1,3 +1,5 @@
+#!/usr/bin/env ts-node
+
 import { Scheduler, Queue, Worker } from "./../src/index";
 // In your projects: import { Worker, Scheduler, Queue } from "node-resque";
 

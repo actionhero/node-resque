@@ -135,14 +135,18 @@ describe("multiWorker", () => {
     await new Promise((resolve, reject) => {
       multiWorker.start();
 
-      multiWorker.on("failure", async (workerId, queue, job, error) => {
-        expect(String(error)).toBe(
-          'Error: No job defined for class "missingJob"'
-        );
-        multiWorker.removeAllListeners("error");
-        await multiWorker.end();
-        resolve();
-      });
+      multiWorker.on(
+        "failure",
+        async (workerId, queue, job, error, duration) => {
+          expect(String(error)).toBe(
+            'Error: No job defined for class "missingJob"'
+          );
+          expect(duration).toBeGreaterThanOrEqual(0);
+          multiWorker.removeAllListeners("error");
+          await multiWorker.end();
+          resolve();
+        }
+      );
     });
   });
 });

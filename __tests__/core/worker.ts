@@ -196,16 +196,17 @@ describe("worker", () => {
         });
       });
 
-      test("can work a job and return succesful things", async done => {
+      test("can work a job and return successful things", async done => {
         await queue.enqueue(specHelper.queue, "add", [1, 2]);
 
         worker.start();
 
-        worker.on("success", (q, job, result) => {
+        worker.on("success", (q, job, result, duration) => {
           expect(q).toBe(specHelper.queue);
           expect(job.class).toBe("add");
           expect(result).toBe(3);
           expect(worker.result).toBe(result);
+          expect(duration).toBeGreaterThanOrEqual(0);
 
           worker.removeAllListeners("success");
           done();
@@ -232,8 +233,9 @@ describe("worker", () => {
 
         worker.start();
 
-        worker.on("success", (q, job, result) => {
+        worker.on("success", (q, job, result, duration) => {
           expect(result).toBe("ok");
+          expect(duration).toBeGreaterThanOrEqual(0);
           worker.removeAllListeners("success");
           done();
         });
@@ -244,11 +246,12 @@ describe("worker", () => {
 
         worker.start();
 
-        worker.on("failure", (q, job, failure) => {
+        worker.on("failure", (q, job, failure, duration) => {
           expect(q).toBe(specHelper.queue);
           expect(String(failure)).toBe(
             'Error: No job defined for class "somethingFake"'
           );
+          expect(duration).toBeGreaterThanOrEqual(0);
 
           worker.removeAllListeners("failure");
           done();

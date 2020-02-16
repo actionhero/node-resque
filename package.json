@@ -49,12 +49,12 @@
     }
   },
   "scripts": {
-    "prepare": "npm run declaration && npm run docs",
+    "prepare": "npm run build && npm run docs",
     "pretest": "npm run lint",
     "lint": "prettier --check src/*/**.ts __test__/*/**.ts examples/*/**.ts",
     "pretty": "prettier --write src/*/**.ts __test__/*/**.ts examples/*/**.ts",
     "test": "jest",
-    "declaration": "tsc --declaration",
+    "build": "tsc --declaration",
     "docs": "typedoc --out docs --theme default"
   }
 }

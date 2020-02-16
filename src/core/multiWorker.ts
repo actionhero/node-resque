@@ -47,7 +47,8 @@ export declare interface MultiWorker {
       workerId: number,
       queue: string,
       job: Job<any> | JobEmit,
-      result: any
+      result: any,
+      duration: number
     ) => void
   ): this;
   on(
@@ -56,7 +57,8 @@ export declare interface MultiWorker {
       workerId: number,
       queue: string,
       job: Job<any> | JobEmit,
-      failure: any
+      failure: any,
+      duration: number
     ) => void
   ): this;
   on(
@@ -167,11 +169,11 @@ export class MultiWorker extends EventEmitter {
     worker.on("reEnqueue", (queue, job, plugin) => {
       this.emit("reEnqueue", worker.id, queue, job, plugin);
     });
-    worker.on("success", (queue, job, result) => {
-      this.emit("success", worker.id, queue, job, result);
+    worker.on("success", (queue, job, result, duration) => {
+      this.emit("success", worker.id, queue, job, result, duration);
     });
-    worker.on("failure", (queue, job, failure) => {
-      this.emit("failure", worker.id, queue, job, failure);
+    worker.on("failure", (queue, job, failure, duration) => {
+      this.emit("failure", worker.id, queue, job, failure, duration);
     });
     worker.on("error", (error, queue, job) => {
       this.emit("error", error, worker.id, queue, job);
