@@ -246,11 +246,12 @@ describe("worker", () => {
 
         worker.start();
 
-        worker.on("failure", (q, job, failure) => {
+        worker.on("failure", (q, job, failure, duration) => {
           expect(q).toBe(specHelper.queue);
           expect(String(failure)).toBe(
             'Error: No job defined for class "somethingFake"'
           );
+          expect(duration).toBeGreaterThanOrEqual(0);
 
           worker.removeAllListeners("failure");
           done();
