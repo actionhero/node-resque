@@ -1,0 +1,14 @@
+{
+  "name": "node-resque-docker-example-worker",
+  "version": "1.0.0",
+  "description": "An example node-resque docker project",
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/actionhero/node-resque.git"
+  },
+  "dependencies": {
+    "node-resque": "latest"
+  }
+}
