@@ -1,0 +1,29 @@
+version: "3.1"
+
+services:
+  redis:
+    image: redis
+    networks:
+      - resque_network
+
+  node-resque-worker:
+    build: ./worker
+    environment:
+      REDIS_HOST: redis
+    depends_on:
+      - redis
+    networks:
+      - resque_network
+
+  node-resque-producer:
+    build: ./producer
+    environment:
+      REDIS_HOST: redis
+    depends_on:
+      - redis
+    networks:
+      - resque_network
+
+networks:
+  resque_network:
+    driver: overlay
