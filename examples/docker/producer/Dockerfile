@@ -4,7 +4,6 @@ MAINTAINER admin@actionherojs.com
 
 WORKDIR /node-resque
 
-COPY package*.json ./
 RUN apk add --update nodejs nodejs-npm
 COPY package.json .
 COPY producer.js .
