@@ -158,8 +158,8 @@ async function boot() {
   scheduler.on("poll", () => {
     console.log("scheduler polling");
   });
-  scheduler.on("master", () => {
-    console.log("scheduler became master");
+  scheduler.on("leader", () => {
+    console.log("scheduler became leader");
   });
   scheduler.on("error", error => {
     console.log(`scheduler error >> ${error}`);
@@ -379,7 +379,7 @@ If you know the name of a worker that should be removed, you can also call `awai
 
 You may want to use node-resque to schedule jobs every minute/hour/day, like a distributed CRON system. There are a number of excellent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and [node-cron](https://github.com/ncb000gt/node-cron). Node-resque makes it possible for you to use the package of your choice to schedule jobs with.
 
-Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduling the jobs. To help you with this, you can inspect which of the scheduler processes is currently acting as master, and flag only the master scheduler process to run the schedule. A full example can be found at [/examples/scheduledJobs.js](https://github.com/actionhero/node-resque/blob/master/examples/scheduledJobs.js), but the relevant section is:
+Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduling the jobs. To help you with this, you can inspect which of the scheduler processes is currently acting as leader, and flag only the leader scheduler process to run the schedule. A full example can be found at [/examples/scheduledJobs.js](https://github.com/actionhero/node-resque/blob/master/examples/scheduledJobs.js), but the relevant section is:
 
 ```javascript
 const NodeResque = require("node-resque");
@@ -393,7 +393,7 @@ schedule.scheduleJob("10,20,30,40,50 * * * * *", async () => {
   // do this job every 10 seconds, CRON style
   // we want to ensure that only one instance of this job is scheduled in our environment at once,
   // no matter how many schedulers we have running
-  if (scheduler.master) {
+  if (scheduler.leader) {
     console.log(">>> enqueuing a job");
     await queue.enqueue("time", "ticktock", new Date().toString());
   }

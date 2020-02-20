@@ -1,5 +1,5 @@
+import { Queue, Scheduler, Worker } from "../../src/index";
 import specHelper from "../utils/specHelper";
-import { Scheduler, Queue, Worker } from "../../src/index";
 
 let scheduler;
 let queue;
@@ -42,8 +42,8 @@ describe("scheduler", () => {
         brokenScheduler.on("poll", () => {
           throw new Error("Should not emit poll");
         });
-        brokenScheduler.on("master", () => {
-          throw new Error("Should not emit master");
+        brokenScheduler.on("leader", () => {
+          throw new Error("Should not emit leader");
         });
 
         brokenScheduler.on("error", async error => {
@@ -65,7 +65,7 @@ describe("scheduler", () => {
         await specHelper.cleanup();
       });
 
-      test("should only have one master, and can failover", async () => {
+      test("should only have one leader, and can failover", async () => {
         const shedulerOne = new Scheduler({
           connection: specHelper.connectionDetails,
           name: "scheduler_1",
@@ -85,15 +85,15 @@ describe("scheduler", () => {
         await new Promise(resolve => {
           setTimeout(resolve, specHelper.timeout * 2);
         });
-        expect(shedulerOne.master).toBe(true);
-        expect(shedulerTwo.master).toBe(false);
+        expect(shedulerOne.leader).toBe(true);
+        expect(shedulerTwo.leader).toBe(false);
         await shedulerOne.end();
 
         await new Promise(resolve => {
           setTimeout(resolve, specHelper.timeout * 2);
         });
-        expect(shedulerOne.master).toBe(false);
-        expect(shedulerTwo.master).toBe(true);
+        expect(shedulerOne.leader).toBe(false);
+        expect(shedulerTwo.leader).toBe(true);
         await shedulerTwo.end();
       });
     });

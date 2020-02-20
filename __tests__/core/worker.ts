@@ -1,5 +1,5 @@
+import { Queue, Worker } from "../../src/index";
 import specHelper from "../utils/specHelper";
-import { Worker, Queue } from "../../src/index";
 
 const jobs = {
   add: {

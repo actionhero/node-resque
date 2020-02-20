@@ -23,7 +23,7 @@ export interface WorkerOptions extends ConnectionOptions {
 export interface SchedulerOptions extends ConnectionOptions {
   name?: string;
   timeout?: number;
-  masterLockTimeout: number;
+  leaderLockTimeout: number;
   stuckWorkerTimeout: number;
 }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { Worker, Scheduler, Queue } from "./../src/index";
+import { Queue, Scheduler, Worker } from "./../src/index";
 // In your projects: import { Worker, Scheduler, Queue } from "node-resque";
 
 async function boot() {
@@ -137,8 +137,8 @@ async function boot() {
   scheduler.on("poll", () => {
     console.log("scheduler polling");
   });
-  scheduler.on("master", () => {
-    console.log("scheduler became master");
+  scheduler.on("leader", () => {
+    console.log("scheduler became leader");
   });
   scheduler.on("error", error => {
     console.log(`scheduler error >> ${error}`);

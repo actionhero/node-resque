@@ -1,27 +1,27 @@
-// To read notes about the master locking scheme, check out:
+// To read notes about the leader locking scheme, check out:
 //   https://github.com/resque/resque-scheduler/blob/master/lib/resque/scheduler/locking.rb
 
 import { EventEmitter } from "events";
 import * as os from "os";
-import { Queue } from "./queue";
-import { Connection } from "./connection";
-import { SchedulerOptions } from "../types/options";
+import { ErrorPayload } from "../types/errorPayload";
 import { Job } from "../types/job";
 import { Jobs } from "../types/jobs";
-import { ErrorPayload } from "../types/errorPayload";
+import { SchedulerOptions } from "../types/options";
+import { Connection } from "./connection";
+import { Queue } from "./queue";
 
 export declare interface Scheduler {
   options: SchedulerOptions;
   jobs: Jobs;
   name: string;
-  master: boolean;
+  leader: boolean;
   running: boolean;
   processing: boolean;
   queue: Queue;
   connection: Connection;
   timer: NodeJS.Timeout;
 
-  on(event: "start" | "end" | "poll" | "master", cb: () => void): this;
+  on(event: "start" | "end" | "poll" | "leader", cb: () => void): this;
   on(
     event: "cleanStuckWorker",
     cb: (workerName: string, errorPayload: ErrorPayload, delta: number) => void
@@ -33,7 +33,7 @@ export declare interface Scheduler {
     cb: (timestamp: number, job: Job<any>) => void
   ): this;
 
-  once(event: "start" | "end" | "poll" | "master", cb: () => void): this;
+  once(event: "start" | "end" | "poll" | "leader", cb: () => void): this;
   once(
     event: "cleanStuckWorker",
     cb: (workerName: string, errorPayload: ErrorPayload, delta: number) => void
@@ -52,7 +52,7 @@ export type SchedulerEvent =
   | "start"
   | "end"
   | "poll"
-  | "master"
+  | "leader"
   | "cleanStuckWorker"
   | "error"
   | "workingTimestamp"
@@ -65,7 +65,7 @@ export class Scheduler extends EventEmitter {
     const defaults = {
       timeout: 5000, // in ms
       stuckWorkerTimeout: 60 * 60 * 1000, // 60 minutes in ms
-      masterLockTimeout: 60 * 3, // in seconds
+      leaderLockTimeout: 60 * 3, // in seconds
       name: os.hostname() + ":" + process.pid // assumes only one worker per node process
     };
 
@@ -77,7 +77,7 @@ export class Scheduler extends EventEmitter {
 
     this.options = options;
     this.name = this.options.name;
-    this.master = false;
+    this.leader = false;
     this.running = false;
     this.processing = false;
 
@@ -114,7 +114,7 @@ export class Scheduler extends EventEmitter {
           this.connection.connected === null)
       ) {
         try {
-          await this.releaseMasterLock();
+          await this.releaseLeaderLock();
         } catch (error) {
           this.emit("error", error);
         }
@@ -139,17 +139,17 @@ export class Scheduler extends EventEmitter {
   async poll() {
     this.processing = true;
     clearTimeout(this.timer);
-    const isMaster = await this.tryForMaster();
+    const isLeader = await this.tryForLeader();
 
-    if (!isMaster) {
-      this.master = false;
+    if (!isLeader) {
+      this.leader = false;
       this.processing = false;
       return this.pollAgainLater();
     }
 
-    if (!this.master) {
-      this.master = true;
-      this.emit("master");
+    if (!this.leader) {
+      this.leader = true;
+      this.emit("leader");
     }
 
     this.emit("poll");
@@ -173,33 +173,35 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  private masterKey() {
-    return this.connection.key("resque_scheduler_master_lock");
+  private leaderKey() {
+    // TODO: Figure out if more work is needed
+    // return this.connection.key("resque_scheduler_master_lock");
+    return this.connection.key("resque_scheduler_leader_lock");
   }
 
-  private async tryForMaster() {
-    const masterKey = this.masterKey();
+  private async tryForLeader() {
+    const leaderKey = this.leaderKey();
     if (!this.connection || !this.connection.redis) {
       return;
     }
 
     const lockedByMe = await this.connection.redis.set(
-      masterKey,
+      leaderKey,
       this.options.name,
       "NX",
       "EX",
-      this.options.masterLockTimeout
+      this.options.leaderLockTimeout
     );
 
     if (lockedByMe && lockedByMe.toLowerCase() === "ok") {
       return true;
     }
 
-    const currentMasterName = await this.connection.redis.get(masterKey);
-    if (currentMasterName === this.options.name) {
+    const currentLeaderName = await this.connection.redis.get(leaderKey);
+    if (currentLeaderName === this.options.name) {
       await this.connection.redis.expire(
-        masterKey,
-        this.options.masterLockTimeout
+        leaderKey,
+        this.options.leaderLockTimeout
       );
       return true;
     }
@@ -207,18 +209,18 @@ export class Scheduler extends EventEmitter {
     return false;
   }
 
-  private async releaseMasterLock() {
+  private async releaseLeaderLock() {
     if (!this.connection || !this.connection.redis) {
       return;
     }
 
-    const isMaster = await this.tryForMaster();
-    if (!isMaster) {
+    const isLeader = await this.tryForLeader();
+    if (!isLeader) {
       return false;
     }
 
-    const deleted = await this.connection.redis.del(this.masterKey());
-    this.master = false;
+    const deleted = await this.connection.redis.del(this.leaderKey());
+    this.leader = false;
     return deleted === 1 || deleted.toString() === "true";
   }
 

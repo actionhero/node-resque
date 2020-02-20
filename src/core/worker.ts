@@ -1,11 +1,11 @@
-import * as os from "os";
 import { EventEmitter } from "events";
-import { Connection } from "./connection";
-import { Queue } from "./queue";
-import { RunPlugins } from "./pluginRunner";
-import { WorkerOptions } from "../types/options";
+import * as os from "os";
 import { Job, JobEmit } from "../types/job";
 import { Jobs } from "../types/jobs";
+import { WorkerOptions } from "../types/options";
+import { Connection } from "./connection";
+import { RunPlugins } from "./pluginRunner";
+import { Queue } from "./queue";
 
 function prepareJobs(jobs) {
   return Object.keys(jobs).reduce(function(h, k) {
