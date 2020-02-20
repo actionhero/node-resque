@@ -1,6 +1,6 @@
 import * as Ioredis from "ioredis";
-import specHelper from "../utils/specHelper";
 import { Connection } from "../../src/index";
+import specHelper from "../utils/specHelper";
 
 describe("connection", () => {
   beforeAll(async () => {
@@ -31,7 +31,7 @@ describe("connection", () => {
         connection.connect();
 
         connection.on("error", error => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/);
+          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
           connection.end();
           resolve();
         });

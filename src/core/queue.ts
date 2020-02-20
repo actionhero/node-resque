@@ -1,10 +1,10 @@
-import * as os from "os";
 import { EventEmitter } from "events";
+import * as os from "os";
+import { ErrorPayload } from "../types/errorPayload";
+import { Jobs } from "../types/jobs";
+import { ConnectionOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
-import { ConnectionOptions } from "../types/options";
-import { Jobs } from "../types/jobs";
-import { ErrorPayload } from "../types/errorPayload";
 
 function arrayify(o) {
   if (Array.isArray(o)) {

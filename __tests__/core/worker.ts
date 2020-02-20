@@ -79,7 +79,7 @@ describe("worker", () => {
       );
 
       worker.on("error", async error => {
-        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/);
+        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
         await worker.end();
         done();
       });
