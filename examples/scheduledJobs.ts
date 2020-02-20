@@ -1,11 +1,10 @@
 #!/usr/bin/env ts-node
 
-import { Scheduler, Queue, Worker } from "./../src/index";
 // In your projects: import { Worker, Scheduler, Queue } from "node-resque";
-
 // We'll use https://github.com/tejasmanohar/node-schedule for this example,
 // but there are many other excelent node scheduling projects
 import * as schedule from "node-schedule";
+import { Queue, Scheduler, Worker } from "./../src/index";
 
 // ////////////////////////
 // SET UP THE CONNECTION //
@@ -97,8 +96,8 @@ async function boot() {
   scheduler.on("poll", () => {
     console.log("scheduler polling");
   });
-  scheduler.on("master", () => {
-    console.log("scheduler became master");
+  scheduler.on("leader", () => {
+    console.log("scheduler became leader");
   });
   scheduler.on("error", error => {
     console.log(`scheduler error >> ${error}`);
@@ -123,7 +122,7 @@ async function boot() {
     // do this job every 10 seconds, cron style
     // we want to ensure that only one instance of this job is scheduled in our enviornment at once,
     // no matter how many schedulers we have running
-    if (scheduler.master) {
+    if (scheduler.leader) {
       console.log(">>> enquing a job");
       await queue.enqueue("time", "ticktock", [new Date().toString()]);
     }

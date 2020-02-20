@@ -1,5 +1,5 @@
+import { Queue, Worker } from "../../src/index";
 import specHelper from "../utils/specHelper";
-import { Worker, Queue } from "../../src/index";
 
 const jobs = {
   add: {
@@ -79,7 +79,7 @@ describe("worker", () => {
       );
 
       worker.on("error", async error => {
-        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/);
+        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
         await worker.end();
         done();
       });

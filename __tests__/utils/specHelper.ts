@@ -4,7 +4,7 @@ const queue = 'test_queue'
 const pkg = 'ioredis'
 const NodeResque = require('../../src/index')
 
-const SpecHeloer = {
+const SpecHelper = {
   pkg: pkg,
   namespace: namespace,
   queue: queue,
@@ -89,4 +89,4 @@ const SpecHeloer = {
   }
 }
 
-export default SpecHeloer
+export default SpecHelper

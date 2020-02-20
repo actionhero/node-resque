@@ -1,5 +1,5 @@
-import specHelper from "../utils/specHelper";
 import { Queue, Worker } from "../../src/index";
+import specHelper from "../utils/specHelper";
 let queue;
 
 describe("queue", () => {
@@ -37,7 +37,7 @@ describe("queue", () => {
         queue.connect();
 
         queue.on("error", error => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT/);
+          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
           queue.end();
           resolve();
         });

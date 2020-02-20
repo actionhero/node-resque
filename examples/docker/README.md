@@ -25,7 +25,7 @@ node-resque-producer_1  | adding jobs @ Mon Feb 17 2020 04:12:44 GMT+0000 (Coord
 node-resque-producer_1  | adding jobs @ Mon Feb 17 2020 04:12:45 GMT+0000 (Coordinated Universal Time)
 node-resque-producer_1  | adding jobs @ Mon Feb 17 2020 04:12:46 GMT+0000 (Coordinated Universal Time)
 node-resque-worker_1    | worker check in @ 1581912766
-node-resque-worker_1    | scheduler became master
+node-resque-worker_1    | scheduler became leader
 node-resque-worker_1    | scheduler polling
 node-resque-worker_1    | scheduler working timestamp 1581912700
 node-resque-worker_1    | scheduler enqueuing job 1581912700 >> {"class":"subtract","queue":"math","args":[2,1]}
