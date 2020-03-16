@@ -37,7 +37,7 @@
     "prettier": "^1.19.1",
     "ts-jest": "^25.2.1",
     "ts-node": "^8.6.2",
-    "typedoc": "^0.16.11",
+    "typedoc": "^0.17.0",
     "typescript": "^3.8.3"
   },
   "jest": {
