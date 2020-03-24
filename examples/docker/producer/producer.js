@@ -4,7 +4,7 @@ let queue;
 async function boot() {
   const connectionDetails = {
     pkg: "ioredis",
-    host: process.env.REDIS_HOST
+    host: process.env.REDIS_HOST,
   };
 
   const jobs = {
@@ -12,18 +12,18 @@ async function boot() {
       perform: async (a, b) => {
         const answer = a + b;
         return answer;
-      }
+      },
     },
     subtract: {
       perform: (a, b) => {
         const answer = a - b;
         return answer;
-      }
-    }
+      },
+    },
   };
 
   queue = new Queue({ connection: connectionDetails }, jobs);
-  queue.on("error", function(error) {
+  queue.on("error", function (error) {
     console.log(error);
   });
 
@@ -56,12 +56,12 @@ function awaitHardStop() {
 }
 
 // handle errors & rejections
-process.on("uncaughtException", error => {
+process.on("uncaughtException", (error) => {
   console.error(error.stack);
   process.nextTick(process.exit(1));
 });
 
-process.on("unhandledRejection", rejection => {
+process.on("unhandledRejection", (rejection) => {
   console.error(rejection.stack);
   process.nextTick(process.exit(1));
 });

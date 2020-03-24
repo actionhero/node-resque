@@ -8,7 +8,7 @@ import { RunPlugins } from "./pluginRunner";
 import { Queue } from "./queue";
 
 function prepareJobs(jobs) {
-  return Object.keys(jobs).reduce(function(h, k) {
+  return Object.keys(jobs).reduce(function (h, k) {
     var job = jobs[k];
     h[k] = typeof job === "function" ? { perform: job } : job;
     return h;
@@ -109,7 +109,7 @@ export class Worker extends EventEmitter {
       queues: "*",
       timeout: 5000,
       looping: true,
-      id: 1
+      id: 1,
     };
 
     for (const i in defaults) {
@@ -134,7 +134,7 @@ export class Worker extends EventEmitter {
     this.started = false;
 
     this.queueObject = new Queue({ connection: options.connection }, this.jobs);
-    this.queueObject.on("error", error => {
+    this.queueObject.on("error", (error) => {
       this.emit("error", error);
     });
   }
@@ -168,7 +168,7 @@ export class Worker extends EventEmitter {
     this.running = false;
 
     if (this.working === true) {
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(() => {
           resolve();
         }, this.options.timeout);
@@ -414,7 +414,7 @@ export class Worker extends EventEmitter {
 
   private async pause() {
     this.emit("pause");
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       setTimeout(() => {
         this.poll();
         resolve();
@@ -429,7 +429,7 @@ export class Worker extends EventEmitter {
         run_at: new Date().toString(),
         queue: this.queue,
         payload: job,
-        worker: this.name
+        worker: this.name,
       })
     );
   }
@@ -449,7 +449,7 @@ export class Worker extends EventEmitter {
     const payload = JSON.stringify({
       time: nowSeconds,
       name: name,
-      queues: this.stringQueues()
+      queues: this.stringQueues(),
     });
     await this.connection.redis.set(
       this.connection.key("worker", "ping", name),
@@ -512,7 +512,7 @@ export class Worker extends EventEmitter {
       exception: err.name,
       error: err.message,
       backtrace: err.stack ? err.stack.split("\n").slice(1) : null,
-      failed_at: new Date().toString()
+      failed_at: new Date().toString(),
     };
   }
 

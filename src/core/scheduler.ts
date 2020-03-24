@@ -66,7 +66,7 @@ export class Scheduler extends EventEmitter {
       timeout: 5000, // in ms
       stuckWorkerTimeout: 60 * 60 * 1000, // 60 minutes in ms
       leaderLockTimeout: 60 * 3, // in seconds
-      name: os.hostname() + ":" + process.pid // assumes only one worker per node process
+      name: os.hostname() + ":" + process.pid, // assumes only one worker per node process
     };
 
     for (const i in defaults) {
@@ -82,7 +82,7 @@ export class Scheduler extends EventEmitter {
     this.processing = false;
 
     this.queue = new Queue({ connection: options.connection }, jobs);
-    this.queue.on("error", error => {
+    this.queue.on("error", (error) => {
       this.emit("error", error);
     });
   }
@@ -127,7 +127,7 @@ export class Scheduler extends EventEmitter {
         this.emit("error", error);
       }
     } else {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         setTimeout(async () => {
           await this.end();
           resolve();
@@ -296,7 +296,7 @@ export class Scheduler extends EventEmitter {
       this.connection.key("worker", "ping", "*")
     );
     const payloads: Array<Payload> = await Promise.all(
-      keys.map(async k => {
+      keys.map(async (k) => {
         return JSON.parse(await this.connection.redis.get(k));
       })
     );

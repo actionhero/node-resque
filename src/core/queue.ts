@@ -30,7 +30,7 @@ export class Queue extends EventEmitter {
     this.jobs = jobs;
 
     this.connection = new Connection(options.connection);
-    this.connection.on("error", error => {
+    this.connection.on("error", (error) => {
       this.emit("error", error);
     });
   }
@@ -47,7 +47,7 @@ export class Queue extends EventEmitter {
     return JSON.stringify({
       class: func,
       queue: q,
-      args: args
+      args: args,
     });
   }
 
@@ -205,7 +205,7 @@ export class Queue extends EventEmitter {
     const members = await this.connection.redis.smembers(
       this.connection.key("timestamps:" + search)
     );
-    members.forEach(key => {
+    members.forEach((key) => {
       timestamps.push(key.split(":")[key.split(":").length - 1]);
     });
 
@@ -220,7 +220,7 @@ export class Queue extends EventEmitter {
     const timestamps = await this.connection.getKeys(
       this.connection.key("delayed:*")
     );
-    timestamps.forEach(timestamp => {
+    timestamps.forEach((timestamp) => {
       const parts = timestamp.split(":");
       results.push(parseInt(parts[parts.length - 1]) * 1000);
     });
@@ -239,7 +239,7 @@ export class Queue extends EventEmitter {
       0,
       -1
     );
-    const tasks = items.map(i => {
+    const tasks = items.map((i) => {
       return JSON.parse(i);
     });
     return { tasks, rTimestamp };
@@ -255,7 +255,7 @@ export class Queue extends EventEmitter {
       start,
       stop
     );
-    const tasks = items.map(function(i) {
+    const tasks = items.map(function (i) {
       return JSON.parse(i);
     });
     return tasks;
@@ -332,7 +332,7 @@ export class Queue extends EventEmitter {
     const results = await this.connection.redis.smembers(
       this.connection.key("workers")
     );
-    results.forEach(function(r) {
+    results.forEach(function (r) {
       const parts = r.split(":");
       let name;
       let queues;
@@ -408,9 +408,9 @@ export class Queue extends EventEmitter {
           backtrace: [
             `killed by ${os.hostname} at ${new Date()}`,
             "queue#forceCleanWorker",
-            "node-resque"
+            "node-resque",
           ],
-          failed_at: new Date().toString()
+          failed_at: new Date().toString(),
         };
       }
 
@@ -489,7 +489,7 @@ export class Queue extends EventEmitter {
       start,
       stop
     );
-    const results = data.map(i => {
+    const results = data.map((i) => {
       return JSON.parse(i);
     });
     return results;

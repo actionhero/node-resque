@@ -10,25 +10,25 @@ const jobs = {
     pluginOptions: {
       Retry: {
         retryLimit: 3,
-        retryDelay: 100
-      }
+        retryDelay: 100,
+      },
     },
     perform: () => {
       throw new Error("BUSTED");
-    }
+    },
   },
   happyJob: {
     plugins: ["Retry"],
     pluginOptions: {
       Retry: {
         retryLimit: 3,
-        retryDelay: 100
-      }
+        retryDelay: 100,
+      },
     },
     perform: () => {
       // no return
-    }
-  }
+    },
+  },
 };
 
 describe("plugins", () => {
@@ -39,13 +39,13 @@ describe("plugins", () => {
       queue = new Queue(
         {
           connection: specHelper.cleanConnectionDetails(),
-          queue: [specHelper.queue]
+          queue: [specHelper.queue],
         },
         jobs
       );
       scheduler = new Scheduler({
         connection: specHelper.cleanConnectionDetails(),
-        timeout: specHelper.timeout
+        timeout: specHelper.timeout,
       });
       await scheduler.connect();
       scheduler.start();
@@ -62,7 +62,7 @@ describe("plugins", () => {
       await specHelper.cleanup();
     });
 
-    test("will work fine with non-crashing jobs", async done => {
+    test("will work fine with non-crashing jobs", async (done) => {
       await queue.enqueue(specHelper.queue, "happyJob", [1, 2]);
       const length = await queue.length(specHelper.queue);
       expect(length).toBe(1);
@@ -71,7 +71,7 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -94,7 +94,7 @@ describe("plugins", () => {
       worker.start();
     });
 
-    test("will retry the job n times before finally failing", async done => {
+    test("will retry the job n times before finally failing", async (done) => {
       await queue.enqueue(specHelper.queue, "brokenJob");
       const length = await queue.length(specHelper.queue);
       expect(length).toBe(1);
@@ -106,7 +106,7 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -134,20 +134,20 @@ describe("plugins", () => {
       worker.start();
     });
 
-    test("can have a retry count set", async done => {
+    test("can have a retry count set", async (done) => {
       const customJobs = {
         jobWithRetryCount: {
           plugins: ["Retry"],
           pluginOptions: {
             Retry: {
               retryLimit: 5,
-              retryDelay: 100
-            }
+              retryDelay: 100,
+            },
           },
           perform: () => {
             throw new Error("BUSTED");
-          }
-        }
+          },
+        },
       };
 
       await queue.enqueue(specHelper.queue, "jobWithRetryCount", [1, 2]);
@@ -161,7 +161,7 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         customJobs
       );
@@ -189,20 +189,20 @@ describe("plugins", () => {
       worker.start();
     });
 
-    test("can have custom retry times set", async done => {
+    test("can have custom retry times set", async (done) => {
       const customJobs = {
         jobWithBackoffStrategy: {
           plugins: ["Retry"],
           pluginOptions: {
             Retry: {
               retryLimit: 5,
-              backoffStrategy: [1, 2, 3, 4, 5]
-            }
+              backoffStrategy: [1, 2, 3, 4, 5],
+            },
           },
-          perform: function(a, b, callback) {
+          perform: function (a, b, callback) {
             callback(new Error("BUSTED"), null);
-          }
-        }
+          },
+        },
       };
 
       await queue.enqueue(specHelper.queue, "jobWithBackoffStrategy", [1, 2]);
@@ -216,7 +216,7 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         customJobs
       );
@@ -244,14 +244,14 @@ describe("plugins", () => {
       worker.start();
     });
 
-    test("when a job fails it should be re-enqueued (and not go to the failure queue)", async done => {
+    test("when a job fails it should be re-enqueued (and not go to the failure queue)", async (done) => {
       await queue.enqueue(specHelper.queue, "brokenJob", [1, 2]);
 
       const worker = new Worker(
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -275,14 +275,14 @@ describe("plugins", () => {
       worker.start();
     });
 
-    test("will handle the stats properly for failing jobs", async done => {
+    test("will handle the stats properly for failing jobs", async (done) => {
       await queue.enqueue(specHelper.queue, "brokenJob", [1, 2]);
 
       const worker = new Worker(
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -313,14 +313,14 @@ describe("plugins", () => {
       worker.start();
     });
 
-    test("will set the retry counter & retry data", async done => {
+    test("will set the retry counter & retry data", async (done) => {
       await queue.enqueue(specHelper.queue, "brokenJob", [1, 2]);
 
       const worker = new Worker(
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );

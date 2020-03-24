@@ -8,16 +8,16 @@ describe("plugins", () => {
       const jobs = {
         myJob: {
           plugins: [CustomPlugin],
-          perform: function(a, b, callback) {
+          perform: function (a, b, callback) {
             throw new Error("should not get here");
-          }
-        }
+          },
+        },
       };
 
       const queue = new Queue(
         {
           connection: specHelper.cleanConnectionDetails(),
-          queue: specHelper.queue
+          queue: specHelper.queue,
         },
         jobs
       );
@@ -25,7 +25,7 @@ describe("plugins", () => {
       await queue.connect();
       const enqueueResponse = await queue.enqueue(specHelper.queue, "myJob", [
         1,
-        2
+        2,
       ]);
       expect(enqueueResponse).toBe(false);
       const length = await queue.length(specHelper.queue);

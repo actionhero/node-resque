@@ -7,7 +7,7 @@ const checkTimeout = specHelper.timeout / 10;
 const minTaskProcessors = 1;
 const maxTaskProcessors = 5;
 
-const blockingSleep = naptime => {
+const blockingSleep = (naptime) => {
   let sleeping = true;
   const now = new Date();
   let alarm;
@@ -26,12 +26,12 @@ const jobs = {
     plugins: [],
     pluginOptions: {},
     perform: async () => {
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(() => {
           resolve(new Date().getTime());
         }, 1000);
       });
-    }
+    },
   },
   slowCPUJob: {
     plugins: [],
@@ -39,8 +39,8 @@ const jobs = {
     perform: async () => {
       blockingSleep(1000);
       return new Date().getTime();
-    }
-  }
+    },
+  },
 };
 
 describe("multiWorker", () => {
@@ -48,7 +48,7 @@ describe("multiWorker", () => {
     await specHelper.connect();
     queue = new Queue({
       connection: specHelper.cleanConnectionDetails(),
-      queue: specHelper.queue
+      queue: specHelper.queue,
     });
     await queue.connect();
 
@@ -59,14 +59,14 @@ describe("multiWorker", () => {
         checkTimeout: checkTimeout,
         minTaskProcessors: minTaskProcessors,
         maxTaskProcessors: maxTaskProcessors,
-        queues: [specHelper.queue]
+        queues: [specHelper.queue],
       },
       jobs
     );
 
     await multiWorker.end();
 
-    multiWorker.on("error", error => {
+    multiWorker.on("error", (error) => {
       throw error;
     });
   }, 30 * 1000);
@@ -83,7 +83,7 @@ describe("multiWorker", () => {
   test("should never have less than one worker", async () => {
     expect(multiWorker.workers.length).toBe(0);
     await multiWorker.start();
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       setTimeout(resolve, checkTimeout * 3 + 500);
     });
 
@@ -101,7 +101,7 @@ describe("multiWorker", () => {
       }
 
       await multiWorker.start();
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, checkTimeout * 30);
       });
       expect(multiWorker.workers.length).toBe(maxTaskProcessors);
@@ -120,7 +120,7 @@ describe("multiWorker", () => {
       }
 
       await multiWorker.start();
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, checkTimeout * 30);
       });
       expect(multiWorker.workers.length).toBe(minTaskProcessors);

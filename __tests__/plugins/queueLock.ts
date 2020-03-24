@@ -25,12 +25,12 @@ const jobs = {
   uniqueJob: {
     plugins: ["QueueLock"],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
-    perform: (a, b) => a + b
+    perform: (a, b) => a + b,
   },
   blockingJob: {
     plugins: ["QueueLock", NeverRunPlugin],
-    perform: (a, b) => a + b
-  }
+    perform: (a, b) => a + b,
+  },
 };
 
 describe("plugins", () => {
@@ -41,7 +41,7 @@ describe("plugins", () => {
       queue = new Queue(
         {
           connection: specHelper.cleanConnectionDetails(),
-          queue: [specHelper.queue]
+          queue: [specHelper.queue],
         },
         jobs
       );
@@ -86,12 +86,12 @@ describe("plugins", () => {
           {
             connection: specHelper.cleanConnectionDetails(),
             timeout: specHelper.timeout,
-            queues: [specHelper.queue]
+            queues: [specHelper.queue],
           },
           jobs
         );
 
-        worker.on("error", error => {
+        worker.on("error", (error) => {
           throw error;
         });
         await worker.connect();
@@ -100,7 +100,7 @@ describe("plugins", () => {
       test("will remove a lock on a job when the job has been worked", async () => {
         const enqueue = await queue.enqueue(specHelper.queue, "uniqueJob", [
           1,
-          2
+          2,
         ]);
         expect(enqueue).toBe(true);
 
@@ -116,7 +116,7 @@ describe("plugins", () => {
       test("will remove a lock on a job if a plugin does not run the job", async () => {
         const enqueue = await queue.enqueue(specHelper.queue, "blockingJob", [
           1,
-          2
+          2,
         ]);
         expect(enqueue).toBe(true);
 
