@@ -12,12 +12,12 @@ const jobs = {
     pluginOptions: { jobLock: {} },
     perform: async (a, b) => {
       const answer = a + b;
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, jobDelay);
       });
       return answer;
-    }
-  }
+    },
+  },
 };
 
 describe("plugins", () => {
@@ -27,7 +27,7 @@ describe("plugins", () => {
     queue = new Queue(
       {
         connection: specHelper.cleanConnectionDetails(),
-        queues: [specHelper.queue]
+        queues: [specHelper.queue],
       },
       jobs
     );
@@ -49,7 +49,7 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -57,26 +57,26 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
 
-      worker1.on("error", error => {
+      worker1.on("error", (error) => {
         throw error;
       });
-      worker2.on("error", error => {
+      worker2.on("error", (error) => {
         throw error;
       });
 
       await worker1.connect();
       await worker2.connect();
 
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         const startTime = new Date().getTime();
         let completed = 0;
 
-        const onComplete = function(q, job, result) {
+        const onComplete = function (q, job, result) {
           completed++;
           if (completed === 2) {
             worker1.end();
@@ -91,11 +91,11 @@ describe("plugins", () => {
 
         queue.enqueue(specHelper.queue, "slowAdd", [
           { name: "Walter White" },
-          2
+          2,
         ]);
         queue.enqueue(specHelper.queue, "slowAdd", [
           { name: "Jesse Pinkman" },
-          2
+          2,
         ]);
 
         worker1.start();
@@ -103,7 +103,7 @@ describe("plugins", () => {
       });
     });
 
-    test("allows the key to be specified as a function", async done => {
+    test("allows the key to be specified as a function", async (done) => {
       let calls = 0;
 
       const functionJobs = {
@@ -111,7 +111,7 @@ describe("plugins", () => {
           plugins: ["JobLock"],
           pluginOptions: {
             JobLock: {
-              key: function() {
+              key: function () {
                 // Once to create, once to delete
                 if (++calls === 2) {
                   worker1.end();
@@ -122,24 +122,24 @@ describe("plugins", () => {
                   Math.max.apply(Math.max, this.args)
                 );
                 return key;
-              }
-            }
+              },
+            },
           },
           perform: (a, b) => {
             return a + b;
-          }
-        }
+          },
+        },
       };
 
       worker1 = new Worker(
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         functionJobs
       );
-      worker1.on("error", error => {
+      worker1.on("error", (error) => {
         throw error;
       });
       await worker1.connect();
@@ -147,13 +147,13 @@ describe("plugins", () => {
       worker1.start();
     });
 
-    test("will not run 2 jobs with the same args at the same time", async done => {
+    test("will not run 2 jobs with the same args at the same time", async (done) => {
       let count = 0;
       worker1 = new Worker(
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -161,15 +161,15 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
 
-      worker1.on("error", error => {
+      worker1.on("error", (error) => {
         throw error;
       });
-      worker2.on("error", error => {
+      worker2.on("error", (error) => {
         throw error;
       });
 
@@ -204,12 +204,12 @@ describe("plugins", () => {
       worker2.start();
     });
 
-    test("will run 2 jobs with the different args at the same time", async done => {
+    test("will run 2 jobs with the different args at the same time", async (done) => {
       worker1 = new Worker(
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -217,15 +217,15 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
 
-      worker1.on("error", error => {
+      worker1.on("error", (error) => {
         throw error;
       });
-      worker2.on("error", error => {
+      worker2.on("error", (error) => {
         throw error;
       });
 
@@ -235,7 +235,7 @@ describe("plugins", () => {
       const startTime = new Date().getTime();
       let completed = 0;
 
-      const onComplete = async function(q, job, result) {
+      const onComplete = async function (q, job, result) {
         completed++;
         if (completed === 2) {
           await worker1.end();

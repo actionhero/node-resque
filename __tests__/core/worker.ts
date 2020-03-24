@@ -6,38 +6,38 @@ const jobs = {
     perform: (a, b) => {
       var answer = a + b;
       return answer;
-    }
+    },
   },
   badAdd: {
     perform: () => {
       throw new Error("Blue Smoke");
-    }
+    },
   },
   messWithData: {
-    perform: a => {
+    perform: (a) => {
       a.data = "new thing";
       return a;
-    }
+    },
   },
   async: {
     perform: async () => {
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, 100);
       });
       return "yay";
-    }
+    },
   },
   twoSeconds: {
     perform: async () => {
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, 1000 * 2);
       });
       return "slow";
-    }
+    },
   },
   quickDefine: async () => {
     return "ok";
-  }
+  },
 };
 
 let worker;
@@ -59,26 +59,26 @@ describe("worker", () => {
 
   test(
     "can provide an error if connection failed",
-    async done => {
+    async (done) => {
       const connectionDetails = {
         pkg: specHelper.connectionDetails.pkg,
         host: "wronghostname",
         password: specHelper.connectionDetails.password,
         port: specHelper.connectionDetails.port,
         database: specHelper.connectionDetails.database,
-        namespace: specHelper.connectionDetails.namespace
+        namespace: specHelper.connectionDetails.namespace,
       };
 
       const worker = new Worker(
         {
           connection: connectionDetails,
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         {}
       );
 
-      worker.on("error", async error => {
+      worker.on("error", async (error) => {
         expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
         await worker.end();
         done();
@@ -95,7 +95,7 @@ describe("worker", () => {
         {
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -137,7 +137,7 @@ describe("worker", () => {
         {
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -150,7 +150,7 @@ describe("worker", () => {
       const worker = new Worker(
         {
           connection: specHelper.connectionDetails,
-          timeout: specHelper.timeout
+          timeout: specHelper.timeout,
         },
         jobs
       );
@@ -170,7 +170,7 @@ describe("worker", () => {
           {
             connection: specHelper.connectionDetails,
             timeout: specHelper.timeout,
-            queues: [specHelper.queue]
+            queues: [specHelper.queue],
           },
           jobs
         );
@@ -181,7 +181,7 @@ describe("worker", () => {
         await worker.end();
       });
 
-      test("will mark a job as failed", async done => {
+      test("will mark a job as failed", async (done) => {
         await queue.enqueue(specHelper.queue, "badAdd", [1, 2]);
 
         await worker.start();
@@ -196,7 +196,7 @@ describe("worker", () => {
         });
       });
 
-      test("can work a job and return successful things", async done => {
+      test("can work a job and return successful things", async (done) => {
         await queue.enqueue(specHelper.queue, "add", [1, 2]);
 
         worker.start();
@@ -228,7 +228,7 @@ describe("worker", () => {
       //   })
       // })
 
-      test("can accept jobs that are simple functions", async done => {
+      test("can accept jobs that are simple functions", async (done) => {
         await queue.enqueue(specHelper.queue, "quickDefine");
 
         worker.start();
@@ -241,7 +241,7 @@ describe("worker", () => {
         });
       });
 
-      test("will not work jobs that are not defined", async done => {
+      test("will not work jobs that are not defined", async (done) => {
         await queue.enqueue(specHelper.queue, "somethingFake");
 
         worker.start();
@@ -268,10 +268,10 @@ describe("worker", () => {
         expect(data.error).toBe('No job defined for class "somethingFake"');
       });
 
-      test("will ping with status even when working a slow job", async done => {
+      test("will ping with status even when working a slow job", async (done) => {
         const nowInSeconds = Math.round(new Date().getTime() / 1000);
         await worker.start();
-        await new Promise(resolve =>
+        await new Promise((resolve) =>
           setTimeout(resolve, worker.options.timeout * 2)
         );
         const pingKey = worker.connection.key("worker", "ping", worker.name);

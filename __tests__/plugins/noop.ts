@@ -10,28 +10,28 @@ const jobs = {
     plugins: ["Noop"],
     pluginOptions: {
       Noop: {
-        logger: error => {
+        logger: (error) => {
           loggedErrors.push(error);
-        }
-      }
+        },
+      },
     },
     perform: () => {
       throw new Error("BUSTED");
-    }
+    },
   },
   happyJob: {
     plugins: ["Noop"],
     pluginOptions: {
       Noop: {
-        logger: error => {
+        logger: (error) => {
           loggedErrors.push(error);
-        }
-      }
+        },
+      },
     },
-    perform: function() {
+    perform: function () {
       // nothing
-    }
-  }
+    },
+  },
 };
 
 describe("plugins", () => {
@@ -42,13 +42,13 @@ describe("plugins", () => {
       queue = new Queue(
         {
           connection: specHelper.cleanConnectionDetails(),
-          queue: specHelper.queue
+          queue: specHelper.queue,
         },
         jobs
       );
       scheduler = new Scheduler({
         connection: specHelper.cleanConnectionDetails(),
-        timeout: specHelper.timeout
+        timeout: specHelper.timeout,
       });
       await scheduler.connect();
       scheduler.start();
@@ -69,7 +69,7 @@ describe("plugins", () => {
       await specHelper.cleanup();
     });
 
-    test("will work fine with non-crashing jobs", async done => {
+    test("will work fine with non-crashing jobs", async (done) => {
       await queue.enqueue(specHelper.queue, "happyJob", [1, 2]);
       const length = await queue.length(specHelper.queue);
       expect(length).toBe(1);
@@ -78,7 +78,7 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );
@@ -99,7 +99,7 @@ describe("plugins", () => {
       await worker.start();
     });
 
-    test("will prevent any failed jobs from ending in the failed queue", async done => {
+    test("will prevent any failed jobs from ending in the failed queue", async (done) => {
       await queue.enqueue(specHelper.queue, "brokenJob", [1, 2]);
       const length = await queue.length(specHelper.queue);
       expect(length).toBe(1);
@@ -108,7 +108,7 @@ describe("plugins", () => {
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
-          queues: [specHelper.queue]
+          queues: [specHelper.queue],
         },
         jobs
       );

@@ -8,7 +8,7 @@ describe("scheduler", () => {
   test("can connect", async () => {
     scheduler = new Scheduler({
       connection: specHelper.connectionDetails,
-      timeout: specHelper.timeout
+      timeout: specHelper.timeout,
     });
     await scheduler.connect();
     await scheduler.end();
@@ -24,19 +24,19 @@ describe("scheduler", () => {
 
     test(
       "can provide an error if connection failed",
-      async done => {
+      async (done) => {
         const connectionDetails = {
           pkg: specHelper.connectionDetails.pkg,
           host: "wronghostname",
           password: specHelper.connectionDetails.password,
           port: specHelper.connectionDetails.port,
           database: specHelper.connectionDetails.database,
-          namespace: specHelper.connectionDetails.namespace
+          namespace: specHelper.connectionDetails.namespace,
         };
 
         const brokenScheduler = new Scheduler({
           connection: connectionDetails,
-          timeout: specHelper.timeout
+          timeout: specHelper.timeout,
         });
 
         brokenScheduler.on("poll", () => {
@@ -46,7 +46,7 @@ describe("scheduler", () => {
           throw new Error("Should not emit leader");
         });
 
-        brokenScheduler.on("error", async error => {
+        brokenScheduler.on("error", async (error) => {
           expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
           await brokenScheduler.end();
           done();
@@ -69,12 +69,12 @@ describe("scheduler", () => {
         const shedulerOne = new Scheduler({
           connection: specHelper.connectionDetails,
           name: "scheduler_1",
-          timeout: specHelper.timeout
+          timeout: specHelper.timeout,
         });
         const shedulerTwo = new Scheduler({
           connection: specHelper.connectionDetails,
           name: "scheduler_2",
-          timeout: specHelper.timeout
+          timeout: specHelper.timeout,
         });
 
         await shedulerOne.connect();
@@ -82,14 +82,14 @@ describe("scheduler", () => {
         await shedulerOne.start();
         await shedulerTwo.start();
 
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           setTimeout(resolve, specHelper.timeout * 2);
         });
         expect(shedulerOne.leader).toBe(true);
         expect(shedulerTwo.leader).toBe(false);
         await shedulerOne.end();
 
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           setTimeout(resolve, specHelper.timeout * 2);
         });
         expect(shedulerOne.leader).toBe(false);
@@ -104,11 +104,11 @@ describe("scheduler", () => {
         scheduler = new Scheduler({
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
-          stuckWorkerTimeout: 1000
+          stuckWorkerTimeout: 1000,
         });
         queue = new Queue({
           connection: specHelper.connectionDetails,
-          queue: specHelper.queue
+          queue: specHelper.queue,
         });
         await scheduler.connect();
         await queue.connect();
@@ -124,7 +124,7 @@ describe("scheduler", () => {
         await queue.enqueueAt(1000 * 10, specHelper.queue, "someJob", [
           1,
           2,
-          3
+          3,
         ]);
         await scheduler.poll();
         let obj = await specHelper.popFromQueue();
@@ -152,14 +152,14 @@ describe("scheduler", () => {
         let worker;
         const jobs = {
           stuck: {
-            perform: async function() {
-              await new Promise(resolve => {
+            perform: async function () {
+              await new Promise((resolve) => {
                 // stop the worker from checking in, like the process crashed
                 // don't resolve
                 clearTimeout(this.pingTimer);
               });
-            }
-          }
+            },
+          },
         };
 
         beforeAll(async () => {
@@ -167,7 +167,7 @@ describe("scheduler", () => {
             {
               connection: specHelper.connectionDetails,
               timeout: specHelper.timeout,
-              queues: ["stuckJobs"]
+              queues: ["stuckJobs"],
             },
             jobs
           );
@@ -179,7 +179,7 @@ describe("scheduler", () => {
           await worker.end();
         });
 
-        test("will remove stuck workers and fail thier jobs", async done => {
+        test("will remove stuck workers and fail thier jobs", async (done) => {
           await scheduler.connect();
           await scheduler.start();
           await worker.start();

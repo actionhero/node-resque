@@ -13,7 +13,7 @@ async function boot() {
     host: "127.0.0.1",
     password: null,
     port: 6379,
-    database: 0
+    database: 0,
     // namespace: 'resque',
     // looping: true,
     // options: {password: 'abc'},
@@ -29,10 +29,10 @@ async function boot() {
     add: {
       plugins: ["JobLock"],
       pluginOptions: {
-        JobLock: {}
+        JobLock: {},
       },
       perform: async (a, b) => {
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           setTimeout(resolve, 1000);
         });
         jobsToComplete--;
@@ -40,7 +40,7 @@ async function boot() {
 
         const answer = a + b;
         return answer;
-      }
+      },
     },
     subtract: {
       perform: (a, b) => {
@@ -49,14 +49,14 @@ async function boot() {
 
         const answer = a - b;
         return answer;
-      }
-    }
+      },
+    },
   };
 
   // just a helper for this demo
   async function tryShutdown() {
     if (jobsToComplete === 0) {
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, 500);
       });
       await scheduler.end();
@@ -97,10 +97,10 @@ async function boot() {
   worker.on("cleaning_worker", (worker, pid) => {
     console.log(`cleaning old worker ${worker}`);
   });
-  worker.on("poll", queue => {
+  worker.on("poll", (queue) => {
     console.log(`worker polling ${queue}`);
   });
-  worker.on("ping", time => {
+  worker.on("ping", (time) => {
     console.log(`worker check in @ ${time}`);
   });
   worker.on("job", (queue, job) => {
@@ -140,7 +140,7 @@ async function boot() {
   scheduler.on("leader", () => {
     console.log("scheduler became leader");
   });
-  scheduler.on("error", error => {
+  scheduler.on("error", (error) => {
     console.log(`scheduler error >> ${error}`);
   });
   scheduler.on("cleanStuckWorker", (workerName, errorPayload, delta) => {
@@ -148,7 +148,7 @@ async function boot() {
       `failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`
     );
   });
-  scheduler.on("workingTimestamp", timestamp => {
+  scheduler.on("workingTimestamp", (timestamp) => {
     console.log(`scheduler working timestamp ${timestamp}`);
   });
   scheduler.on("transferredJob", (timestamp, job) => {
@@ -160,7 +160,7 @@ async function boot() {
   // //////////////////////
 
   const queue = new Queue({ connection: connectionDetails }, jobs);
-  queue.on("error", function(error) {
+  queue.on("error", function (error) {
     console.log(error);
   });
   await queue.connect();

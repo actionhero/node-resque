@@ -8,7 +8,7 @@ const connectionDetails = {
   host: "127.0.0.1",
   password: null,
   port: 6379,
-  database: 0
+  database: 0,
   // namespace: 'resque',
   // looping: true,
   // options: {password: 'abc'},
@@ -24,7 +24,7 @@ async function boot() {
   // DEFINE JOBS //
   // //////////////
 
-  const blockingSleep = function(naptime) {
+  const blockingSleep = function (naptime) {
     var sleeping = true;
     var now = new Date();
     var alarm;
@@ -44,11 +44,11 @@ async function boot() {
       pluginOptions: {},
       perform: async () => {
         const start = new Date().getTime();
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           setTimeout(resolve, 1000);
         });
         return new Date().getTime() - start;
-      }
+      },
     },
     slowCPUJob: {
       plugins: [],
@@ -57,8 +57,8 @@ async function boot() {
         const start = new Date().getTime();
         blockingSleep(1000);
         return new Date().getTime() - start;
-      }
-    }
+      },
+    },
   };
 
   // ////////////////
@@ -87,16 +87,16 @@ async function boot() {
   const multiWorker = new MultiWorker(
     {
       connection: connectionDetails,
-      queues: ["slowQueue"]
+      queues: ["slowQueue"],
     },
     jobs
   );
 
   // normal worker emitters
-  multiWorker.on("start", workerId => {
+  multiWorker.on("start", (workerId) => {
     console.log(`worker[${workerId}] started`);
   });
-  multiWorker.on("end", workerId => {
+  multiWorker.on("end", (workerId) => {
     console.log(`worker[${workerId}] ended`);
   });
   multiWorker.on("cleaning_worker", (workerId, worker, pid) => {
@@ -136,7 +136,7 @@ async function boot() {
       `worker[${workerId}] error #{queue} ${JSON.stringify(job)} >> ${error}`
     );
   });
-  multiWorker.on("pause", workerId => {
+  multiWorker.on("pause", (workerId) => {
     console.log(`worker[${workerId}] paused`);
   });
 

@@ -15,7 +15,7 @@ const connectionDetails = {
   host: "127.0.0.1",
   password: null,
   port: 6379,
-  database: 0
+  database: 0,
   // namespace: 'resque',
   // looping: true,
   // options: {password: 'abc'},
@@ -30,7 +30,7 @@ async function boot() {
     ticktock: (time, callback) => {
       console.log(`*** THE TIME IS ${time} ***`);
       return true;
-    }
+    },
   };
 
   // /////////////////
@@ -65,7 +65,7 @@ async function boot() {
   worker.on("cleaning_worker", (worker, pid) => {
     console.log(`cleaning old worker ${worker}`);
   });
-  worker.on("poll", queue => {
+  worker.on("poll", (queue) => {
     console.log(`worker polling ${queue}`);
   });
   worker.on("job", (queue, job) => {
@@ -99,10 +99,10 @@ async function boot() {
   scheduler.on("leader", () => {
     console.log("scheduler became leader");
   });
-  scheduler.on("error", error => {
+  scheduler.on("error", (error) => {
     console.log(`scheduler error >> ${error}`);
   });
-  scheduler.on("workingTimestamp", timestamp => {
+  scheduler.on("workingTimestamp", (timestamp) => {
     console.log(`scheduler working timestamp ${timestamp}`);
   });
   scheduler.on("transferredJob", (timestamp, job) => {
@@ -114,7 +114,7 @@ async function boot() {
   // //////////////
 
   const queue = new Queue({ connection: connectionDetails }, jobs);
-  queue.on("error", function(error) {
+  queue.on("error", function (error) {
     console.log(error);
   });
   await queue.connect();

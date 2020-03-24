@@ -6,7 +6,7 @@ let scheduler;
 async function boot() {
   const connectionDetails = {
     pkg: "ioredis",
-    host: process.env.REDIS_HOST
+    host: process.env.REDIS_HOST,
   };
 
   const jobs = {
@@ -14,14 +14,14 @@ async function boot() {
       perform: async (a, b) => {
         const answer = a + b;
         return answer;
-      }
+      },
     },
     subtract: {
       perform: (a, b) => {
         const answer = a - b;
         return answer;
-      }
-    }
+      },
+    },
   };
 
   worker = new Worker(
@@ -40,10 +40,10 @@ async function boot() {
   worker.on("cleaning_worker", (worker, pid) => {
     console.log(`cleaning old worker ${worker}`);
   });
-  worker.on("poll", queue => {
+  worker.on("poll", (queue) => {
     console.log(`worker polling ${queue}`);
   });
-  worker.on("ping", time => {
+  worker.on("ping", (time) => {
     console.log(`worker check in @ ${time}`);
   });
   worker.on("job", (queue, job) => {
@@ -87,7 +87,7 @@ async function boot() {
   scheduler.on("leader", () => {
     console.log("scheduler became leader");
   });
-  scheduler.on("error", error => {
+  scheduler.on("error", (error) => {
     console.log(`scheduler error >> ${error}`);
   });
   scheduler.on("cleanStuckWorker", (workerName, errorPayload, delta) => {
@@ -95,7 +95,7 @@ async function boot() {
       `failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`
     );
   });
-  scheduler.on("workingTimestamp", timestamp => {
+  scheduler.on("workingTimestamp", (timestamp) => {
     console.log(`scheduler working timestamp ${timestamp}`);
   });
   scheduler.on("transferredJob", (timestamp, job) => {
@@ -124,12 +124,12 @@ function awaitHardStop() {
 }
 
 // handle errors & rejections
-process.on("uncaughtException", error => {
+process.on("uncaughtException", (error) => {
   console.error(error.stack);
   process.nextTick(process.exit(1));
 });
 
-process.on("unhandledRejection", rejection => {
+process.on("unhandledRejection", (rejection) => {
   console.error(rejection.stack);
   process.nextTick(process.exit(1));
 });

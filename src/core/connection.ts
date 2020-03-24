@@ -23,7 +23,7 @@ export class Connection extends EventEmitter {
       port: 6379,
       database: 0,
       namespace: "resque",
-      options: {}
+      options: {},
     };
 
     for (const i in defaults) {
@@ -74,13 +74,13 @@ export class Connection extends EventEmitter {
       }
     }
 
-    this.eventListeners.error = error => {
+    this.eventListeners.error = (error) => {
       this.emit("error", error);
     };
     this.eventListeners.end = () => {
       this.connected = false;
     };
-    this.redis.on("error", err => this.eventListeners.error(err));
+    this.redis.on("error", (err) => this.eventListeners.error(err));
     this.redis.on("end", () => this.eventListeners.end());
 
     if (!this.options.redis) {
@@ -116,7 +116,7 @@ export class Connection extends EventEmitter {
   }
 
   end() {
-    Object.keys(this.listeners).forEach(eventName => {
+    Object.keys(this.listeners).forEach((eventName) => {
       this.redis.removeListener(eventName, this.listeners[eventName]);
     });
 
@@ -141,7 +141,7 @@ export class Connection extends EventEmitter {
     } else {
       args.unshift(this.options.namespace);
     }
-    args = args.filter(e => {
+    args = args.filter((e) => {
       return String(e).trim();
     });
     return args.join(":");

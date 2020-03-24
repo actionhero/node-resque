@@ -25,7 +25,7 @@ describe("queue", () => {
         password: specHelper.connectionDetails.password,
         port: specHelper.connectionDetails.port,
         database: specHelper.connectionDetails.database,
-        namespace: specHelper.connectionDetails.namespace
+        namespace: specHelper.connectionDetails.namespace,
       };
 
       queue = new Queue(
@@ -33,10 +33,10 @@ describe("queue", () => {
         {}
       );
 
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         queue.connect();
 
-        queue.on("error", error => {
+        queue.on("error", (error) => {
           expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
           queue.end();
           resolve();
@@ -143,7 +143,7 @@ describe("queue", () => {
       await queue.enqueueIn(time.toString(), specHelper.queue, "someJob", [
         1,
         2,
-        3
+        3,
       ]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
@@ -181,7 +181,7 @@ describe("queue", () => {
       const timestamps = await queue.scheduledAt(specHelper.queue, "someJob", [
         1,
         2,
-        3
+        3,
       ]);
       expect(timestamps.length).toBe(1);
       expect(timestamps[0]).toBe("10");
@@ -192,7 +192,7 @@ describe("queue", () => {
       const timestamps = await queue.scheduledAt(specHelper.queue, "someJob", [
         3,
         2,
-        1
+        1,
       ]);
       expect(timestamps.length).toBe(0);
     });
@@ -212,7 +212,7 @@ describe("queue", () => {
       const timestamps = await queue.delDelayed(specHelper.queue, "someJob", [
         1,
         2,
-        3
+        3,
       ]);
       expect(timestamps.length).toBe(1);
       expect(timestamps[0]).toBe("10");
@@ -223,7 +223,7 @@ describe("queue", () => {
       const timestamps = await queue.delDelayed(specHelper.queue, "someJob", [
         1,
         2,
-        3
+        3,
       ]);
       const hash = await queue.allDelayed();
       expect(Object.keys(hash)).toHaveLength(0);
@@ -357,18 +357,18 @@ describe("queue", () => {
 
     describe("failed job managment", () => {
       beforeEach(async () => {
-        const errorPayload = function(id) {
+        const errorPayload = function (id) {
           return JSON.stringify({
             worker: "busted-worker-" + id,
             queue: "busted-queue",
             payload: {
               class: "busted_job",
               queue: "busted-queue",
-              args: [1, 2, 3]
+              args: [1, 2, 3],
             },
             exception: "ERROR_NAME",
             error: "I broke",
-            failed_at: new Date().toString()
+            failed_at: new Date().toString(),
           });
         };
 
@@ -491,11 +491,11 @@ describe("queue", () => {
       const jobs = {
         slowJob: {
           perform: async () => {
-            await new Promise(resolve => {
+            await new Promise((resolve) => {
               setTimeout(resolve, timeout);
             });
-          }
-        }
+          },
+        },
       };
 
       beforeEach(async () => {
@@ -504,7 +504,7 @@ describe("queue", () => {
             connection: specHelper.connectionDetails,
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
-            name: "workerA"
+            name: "workerA",
           },
           jobs
         );
@@ -514,7 +514,7 @@ describe("queue", () => {
             connection: specHelper.connectionDetails,
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
-            name: "workerB"
+            name: "workerB",
           },
           jobs
         );
@@ -546,7 +546,7 @@ describe("queue", () => {
         queue.enqueue(specHelper.queue, "slowJob");
         workerA.start();
 
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           workerA.on("job", async () => {
             workerA.removeAllListeners("job");
 
@@ -566,7 +566,7 @@ describe("queue", () => {
         await queue.enqueue(specHelper.queue, "slowJob", { a: 1 });
         await workerA.start();
 
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           // hijack a worker in the middle of working on a job
           workerA.on("job", async () => {
             workerA.removeAllListeners("job");
@@ -615,7 +615,7 @@ describe("queue", () => {
         queue.enqueue(specHelper.queue, "slowJob");
         workerA.start();
 
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           // hijack a worker in the middle of working on a job
           workerA.on("job", async () => {
             workerA.removeAllListeners("job");
@@ -637,7 +637,7 @@ describe("queue", () => {
         queue.enqueue(specHelper.queue, "slowJob");
         workerA.start();
 
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           // hijack a worker in the middle of working on a job
           workerA.on("job", async () => {
             workerA.removeAllListeners("job");
@@ -665,7 +665,7 @@ describe("queue", () => {
         workerA.start();
 
         // wait for the job to complete
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           setTimeout(resolve, 501 + 100);
         });
 
@@ -673,7 +673,7 @@ describe("queue", () => {
         expect(errorPayload).toBeFalsy(); // no job should have been running after the wait
 
         const keys = await specHelper.redis.keys(specHelper.namespace + "*");
-        keys.map(key => {
+        keys.map((key) => {
           expect(key).not.toMatch(/workerA/);
         });
       });
