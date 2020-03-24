@@ -11,6 +11,7 @@ export interface ConnectionOptions {
   looping?: boolean;
   options?: any;
   redis?: IORedis.Redis;
+  scanCount?: number;
 }
 
 export interface WorkerOptions extends ConnectionOptions {
