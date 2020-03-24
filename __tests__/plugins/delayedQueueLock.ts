@@ -10,11 +10,11 @@ const jobs = {
     pluginOptions: { jobLock: {} },
     perform: async (a, b) => {
       const answer = a + b;
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, jobDelay);
       });
       return answer;
-    }
+    },
   },
   uniqueJob: {
     plugins: ["DelayQueueLock"],
@@ -22,8 +22,8 @@ const jobs = {
     perform: async (a, b) => {
       const answer = a + b;
       return answer;
-    }
-  }
+    },
+  },
 };
 
 describe("plugins", () => {
@@ -33,7 +33,7 @@ describe("plugins", () => {
     queue = new Queue(
       {
         connection: specHelper.cleanConnectionDetails(),
-        queues: [specHelper.queue]
+        queues: [specHelper.queue],
       },
       jobs
     );

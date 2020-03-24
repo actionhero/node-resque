@@ -12,7 +12,7 @@ const connectionDetails = {
   host: "127.0.0.1",
   password: null,
   port: 6379,
-  database: 0
+  database: 0,
   // namespace: 'resque',
   // looping: true,
   // options: {password: 'abc'},
@@ -56,19 +56,19 @@ async function boot() {
     jobby: {
       plugins: [MyPlugin],
       pluginOptions: {
-        MyPlugin: { messagePrefix: "[🤡🤡🤡]" }
+        MyPlugin: { messagePrefix: "[🤡🤡🤡]" },
       },
       perform: (a, b) => {
         jobsToComplete--;
         tryShutdown();
-      }
-    }
+      },
+    },
   };
 
   // just a helper for this demo
   async function tryShutdown() {
     if (jobsToComplete === 0) {
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, 500);
       });
       await worker.end();
@@ -100,7 +100,7 @@ async function boot() {
   worker.on("cleaning_worker", (worker, pid) => {
     console.log(`cleaning old worker ${worker}`);
   });
-  worker.on("poll", queue => {
+  worker.on("poll", (queue) => {
     console.log(`worker polling ${queue}`);
   });
   worker.on("job", (queue, job) => {
@@ -127,7 +127,7 @@ async function boot() {
   // /////////////////////
 
   const queue = new Queue({ connection: connectionDetails }, jobs);
-  queue.on("error", function(error) {
+  queue.on("error", function (error) {
     console.log(error);
   });
   await queue.connect();

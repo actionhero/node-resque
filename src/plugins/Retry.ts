@@ -65,7 +65,7 @@ export class Retry extends Plugin {
     this.worker.emit("reEnqueue", this.queue, this.job, {
       delay: nextTryDelay,
       remaningAttempts: remaning,
-      err: this.worker.error
+      err: this.worker.error,
     });
 
     await this.redis().decr(
@@ -89,7 +89,7 @@ export class Retry extends Plugin {
       return "";
     }
     return this.args
-      .map(function(elem) {
+      .map(function (elem) {
         return typeof elem === "object" ? JSON.stringify(elem) : elem;
       })
       .join("-");
@@ -110,7 +110,7 @@ export class Retry extends Plugin {
   maxDelay() {
     let maxDelay = this.options.retryDelay || 1;
     if (Array.isArray(this.options.backoffStrategy)) {
-      this.options.backoffStrategy.forEach(function(d) {
+      this.options.backoffStrategy.forEach(function (d) {
         if (d > maxDelay) {
           maxDelay = d;
         }
@@ -159,7 +159,7 @@ export class Retry extends Plugin {
       error: String(this.worker.error),
       backtrace: backtrace,
       worker: this.func,
-      queue: this.queue
+      queue: this.queue,
     };
 
     await this.redis().setex(

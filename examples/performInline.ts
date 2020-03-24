@@ -12,7 +12,7 @@ const connectionDetails = {
   host: "127.0.0.1",
   password: null,
   port: 6379,
-  database: 0
+  database: 0,
   // namespace: 'resque',
   // looping: true,
   // options: {password: 'abc'},
@@ -27,16 +27,16 @@ async function boot() {
     add: {
       plugins: [],
       pluginOptions: {
-        JobLock: {}
+        JobLock: {},
       },
       perform: async (a, b) => {
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           setTimeout(resolve, 1000);
         });
         const answer = a + b;
         return answer;
-      }
-    }
+      },
+    },
   };
 
   // //////////////////////////////

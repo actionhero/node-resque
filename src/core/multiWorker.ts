@@ -88,7 +88,7 @@ export class MultiWorker extends EventEmitter {
       timeout: 5000,
       checkTimeout: 500,
       maxEventLoopDelay: 10,
-      name: os.hostname()
+      name: os.hostname(),
     };
 
     for (const i in defaults) {
@@ -141,7 +141,7 @@ export class MultiWorker extends EventEmitter {
         connection: this.options.connection,
         queues: this.options.queues,
         timeout: this.options.timeout,
-        name: this.options.name + ":" + process.pid + "+" + id
+        name: this.options.name + ":" + process.pid + "+" + id,
       },
       this.jobs
     );
@@ -157,10 +157,10 @@ export class MultiWorker extends EventEmitter {
     worker.on("cleaning_worker", (worker, pid) => {
       this.emit("cleaning_worker", worker.id, worker, pid);
     });
-    worker.on("poll", queue => {
+    worker.on("poll", (queue) => {
       this.emit("poll", worker.id, queue);
     });
-    worker.on("ping", time => {
+    worker.on("ping", (time) => {
       this.emit("ping", worker.id, time);
     });
     worker.on("job", (queue, job) => {
@@ -193,7 +193,7 @@ export class MultiWorker extends EventEmitter {
     let worker;
     let workingCount = 0;
 
-    this.workers.forEach(worker => {
+    this.workers.forEach((worker) => {
       if (worker.working === true) {
         workingCount++;
       }
@@ -254,9 +254,9 @@ export class MultiWorker extends EventEmitter {
       this.stopInProcess = true;
 
       const promises = [];
-      this.workers.forEach(worker => {
+      this.workers.forEach((worker) => {
         promises.push(
-          new Promise(async resolve => {
+          new Promise(async (resolve) => {
             await worker.end();
             await this.cleanupWorker(worker);
             return resolve();
@@ -291,8 +291,8 @@ export class MultiWorker extends EventEmitter {
       "error",
       "pause",
       "internalError",
-      "multiWorkerAction"
-    ].forEach(function(e) {
+      "multiWorkerAction",
+    ].forEach(function (e) {
       worker.removeAllListeners(e);
     });
   }
@@ -330,7 +330,7 @@ export class MultiWorker extends EventEmitter {
       return;
     }
 
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       setTimeout(resolve, this.options.checkTimeout);
     });
     return this.stopWait();

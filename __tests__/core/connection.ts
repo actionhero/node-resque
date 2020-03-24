@@ -22,15 +22,15 @@ describe("connection", () => {
         password: specHelper.connectionDetails.password,
         port: specHelper.connectionDetails.port,
         database: specHelper.connectionDetails.database,
-        namespace: specHelper.connectionDetails.namespace
+        namespace: specHelper.connectionDetails.namespace,
       };
 
       const connection = new Connection(connectionDetails);
 
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         connection.connect();
 
-        connection.on("error", error => {
+        connection.on("error", (error) => {
           expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
           connection.end();
           resolve();
@@ -58,11 +58,11 @@ describe("connection", () => {
     beforeAll(async () => {
       prefixedRedis = new Ioredis(null, null, {
         keyPrefix: "customNamespace:",
-        db: db
+        db: db,
       });
       prefixedConnection = new Connection({
         redis: prefixedRedis,
-        namespace: specHelper.namespace
+        namespace: specHelper.namespace,
       });
       await prefixedConnection.connect();
     });
@@ -79,7 +79,7 @@ describe("connection", () => {
         new Array(25)
           .fill(0)
           .map((v, i) => i + 1)
-          .map(async v => {
+          .map(async (v) => {
             await connection.redis.set(`test-key${v}`, v.toString());
             if (v <= 5) {
               await connection.redis.set(`test-not-key${v}`, v.toString());
