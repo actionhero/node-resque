@@ -23,21 +23,8 @@ references:
           name: display-npm-version
           command: npm --version
       - run:
-          name: test-log-setup
-          command: mkdir -p ./log
-      - run:
-          name: test-reporter-setup
-          command: mkdir ./junit
-      - run:
           name: test
-          command: ./node_modules/.bin/jest --ci --reporters=jest-junit --reporters=default
-          environment:
-            JEST_JUNIT_OUTPUT: reports/junit/jest.xml
-          when: always
-      - store_test_results:
-          path: ./reports/junit/
-      - store_artifacts:
-          path: ./reports/junit/
+          command: ./node_modules/.bin/jest --ci
 
 # Test the common workflow on multiple versions of node
 jobs:
@@ -51,9 +38,6 @@ jobs:
       - run:
           name: npm-install
           command: npm install
-      - run:
-          name: test-reporter-setup
-          command: npm install jest-junit --no-save
       - save_cache:
           <<: *cache-options
           paths:
@@ -73,13 +57,19 @@ jobs:
   test-node-v10:
     docker:
       - image: circleci/node:10
-      - image: redis:4
+      - image: redis:5
     <<: *shared-test-steps
 
   test-node-v12:
     docker:
       - image: circleci/node:12
-      - image: redis:4
+      - image: redis:5
+    <<: *shared-test-steps
+
+  test-node-v13:
+    docker:
+      - image: circleci/node:13
+      - image: redis:5
     <<: *shared-test-steps
 
   tests-complete:
@@ -131,12 +121,19 @@ workflows:
           filters:
             <<: *ignored-branches
 
+      - test-node-v13:
+          requires:
+            - linter
+          filters:
+            <<: *ignored-branches
+
       - tests-complete:
           filters:
             <<: *ignored-branches
           requires:
             - test-node-v10
             - test-node-v12
+            - test-node-v13
 
       - deploy-docs-website:
           filters:
