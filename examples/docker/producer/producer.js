@@ -7,22 +7,7 @@ async function boot() {
     host: process.env.REDIS_HOST,
   };
 
-  const jobs = {
-    add: {
-      perform: async (a, b) => {
-        const answer = a + b;
-        return answer;
-      },
-    },
-    subtract: {
-      perform: (a, b) => {
-        const answer = a - b;
-        return answer;
-      },
-    },
-  };
-
-  queue = new Queue({ connection: connectionDetails }, jobs);
+  queue = new Queue({ connection: connectionDetails });
   queue.on("error", function (error) {
     console.log(error);
   });
