@@ -262,7 +262,7 @@ export class Queue extends EventEmitter {
   }
 
   /**
-   * - jobsHash is an object with its keys being timestamps, and the vales are arrays of jobs at each time.
+   * - jobsHash is an object with its keys being timestamps, and the values are arrays of jobs at each time.
    * - note that this operation can be very slow and very ram-heavy
    */
   async allDelayed() {
