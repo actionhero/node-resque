@@ -119,19 +119,19 @@ function awaitHardStop() {
     console.error(
       `Process did not terminate within ${timeout}ms. Stopping now!`
     );
-    process.nextTick(process.exit(1));
+    process.nextTick(() => process.exit(1));
   }, timeout);
 }
 
 // handle errors & rejections
 process.on("uncaughtException", (error) => {
   console.error(error.stack);
-  process.nextTick(process.exit(1));
+  process.nextTick(() => process.exit(1));
 });
 
 process.on("unhandledRejection", (rejection) => {
   console.error(rejection.stack);
-  process.nextTick(process.exit(1));
+  process.nextTick(() => process.exit(1));
 });
 
 // handle signals
