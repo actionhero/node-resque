@@ -1,5 +1,5 @@
 import specHelper from "../utils/specHelper";
-import { Queue, Worker } from "../../src/index";
+import { Queue, Worker } from "../../src";
 
 let queue;
 const jobDelay = 1000;

@@ -1,5 +1,5 @@
 import specHelper from "../utils/specHelper";
-import { Plugin, Queue, Worker } from "../../src/index";
+import { Plugin, Queue, Worker } from "../../src";
 
 let queue;
 

@@ -1,4 +1,4 @@
-import { Queue, Worker } from "../../src/index";
+import { Queue, Worker } from "../../src";
 import specHelper from "../utils/specHelper";
 let queue;
 

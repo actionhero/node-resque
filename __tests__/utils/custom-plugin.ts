@@ -1,5 +1,5 @@
 // Simple plugin to prevent all jobs
-import { Plugin } from "./../../src/index";
+import { Plugin } from "../../src";
 
 export class CustomPlugin extends Plugin {
   async beforeEnqueue() {
