@@ -1,4 +1,7 @@
+import { Worker, Scheduler } from "../../../src";
+/* In your projects:
 const { Worker, Scheduler } = require("node-resque");
+*/
 
 let worker;
 let scheduler;

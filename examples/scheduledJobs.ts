@@ -1,10 +1,12 @@
 #!/usr/bin/env ts-node
 
-// In your projects: import { Worker, Scheduler, Queue } from "node-resque";
 // We'll use https://github.com/tejasmanohar/node-schedule for this example,
-// but there are many other excelent node scheduling projects
+// but there are many other excellent node scheduling projects
 import * as schedule from "node-schedule";
-import { Queue, Scheduler, Worker } from "./../src/index";
+import { Queue, Scheduler, Worker } from "../src";
+/* In your projects:
+import { Queue, Scheduler, Worker } from "node-resque";
+*/
 
 // ////////////////////////
 // SET UP THE CONNECTION //

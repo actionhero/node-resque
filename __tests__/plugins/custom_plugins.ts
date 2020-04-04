@@ -1,5 +1,5 @@
 import specHelper from "../utils/specHelper";
-import { Queue } from "../../src/index";
+import { Queue } from "../../src";
 import { CustomPlugin } from "../utils/custom-plugin";
 
 describe("plugins", () => {

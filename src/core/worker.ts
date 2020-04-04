@@ -65,7 +65,7 @@ export declare interface Worker {
   once(event: "ping", cb: (time: number) => void): this;
   once(
     event: "job",
-    cb: (queue: string, job: Job<any> | Job<any> | JobEmit) => void
+    cb: (queue: string, job: Job<any> | JobEmit) => void
   ): this;
   once(
     event: "reEnqueue",
@@ -276,7 +276,7 @@ export class Worker extends EventEmitter {
       }
 
       let callableArgs = [job.args];
-      if (job.args === undefined || job.args instanceof Array === true) {
+      if (job.args === undefined || job.args instanceof Array) {
         callableArgs = job.args;
       }
 
@@ -329,7 +329,7 @@ export class Worker extends EventEmitter {
     if (!args) {
       args = [];
     }
-    if (args !== undefined && args !== null && args instanceof Array !== true) {
+    if (!(args instanceof Array)) {
       args = [args];
     }
 

@@ -1,5 +1,5 @@
 import specHelper from "../utils/specHelper";
-import { MultiWorker, Queue } from "../../src/index";
+import { MultiWorker, Queue } from "../../src";
 
 let queue;
 let multiWorker;

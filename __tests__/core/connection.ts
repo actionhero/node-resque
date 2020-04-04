@@ -1,5 +1,5 @@
 import * as Ioredis from "ioredis";
-import { Connection } from "../../src/index";
+import { Connection } from "../../src";
 import specHelper from "../utils/specHelper";
 
 describe("connection", () => {
