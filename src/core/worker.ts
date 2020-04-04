@@ -65,7 +65,7 @@ export declare interface Worker {
   once(event: "ping", cb: (time: number) => void): this;
   once(
     event: "job",
-    cb: (queue: string, job: Job<any> | Job<any> | JobEmit) => void
+    cb: (queue: string, job: Job<any> | JobEmit) => void
   ): this;
   once(
     event: "reEnqueue",
