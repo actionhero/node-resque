@@ -1,7 +1,9 @@
 #!/usr/bin/env ts-node
 
-import { MultiWorker, Queue } from "./../src/index";
-// In your projects: import { Worker, Scheduler, Queue } from "node-resque";
+import { MultiWorker, Queue } from "../src";
+/* In your projects:
+import { MultiWorker, Queue } from "node-resque";
+*/
 
 const connectionDetails = {
   pkg: "ioredis",

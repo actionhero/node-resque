@@ -1,4 +1,8 @@
-const { Queue } = require("node-resque");
+import { Queue } from "../../../src";
+/* In your projects:
+import { Queue } from require("node-resque");
+*/
+
 let queue;
 
 async function boot() {

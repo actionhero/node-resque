@@ -1,7 +1,9 @@
 #!/usr/bin/env ts-node
 
-import { Plugin, Worker, Queue } from "./../src/index";
-// In your projects: import { Worker, Scheduler, Queue } from "node-resque";
+import { Plugin, Worker, Queue } from "../src";
+/* In your projects:
+import { Worker, Scheduler, Queue } from "node-resque";
+*/
 
 // ////////////////////////
 // SET UP THE CONNECTION //
