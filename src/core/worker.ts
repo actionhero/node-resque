@@ -6,6 +6,7 @@ import { WorkerOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
 import { Queue } from "./queue";
+import { SubscribingEventEmitter } from "../utils/SubscribingEventEmitter";
 
 function prepareJobs(jobs) {
   return Object.keys(jobs).reduce(function (h, k) {
@@ -100,7 +101,7 @@ export type WorkerEvent =
   | "error"
   | "pause";
 
-export class Worker extends EventEmitter {
+export class Worker extends SubscribingEventEmitter {
   constructor(options, jobs = {}) {
     super();
 

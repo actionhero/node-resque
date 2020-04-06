@@ -5,6 +5,7 @@ import { Jobs } from "../types/jobs";
 import { ConnectionOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
+import { SubscribingEventEmitter } from "../utils/SubscribingEventEmitter";
 
 function arrayify(o) {
   if (Array.isArray(o)) {
@@ -22,7 +23,7 @@ export declare interface Queue {
   on(event: "error", cb: (error: Error, queue: string) => void): this;
   once(event: "error", cb: (error: Error, queue: string) => void): this;
 }
-export class Queue extends EventEmitter {
+export class Queue extends SubscribingEventEmitter {
   constructor(options, jobs = {}) {
     super();
 

@@ -9,6 +9,7 @@ import { Jobs } from "../types/jobs";
 import { SchedulerOptions } from "../types/options";
 import { Connection } from "./connection";
 import { Queue } from "./queue";
+import { SubscribingEventEmitter } from "../utils/SubscribingEventEmitter";
 
 export declare interface Scheduler {
   options: SchedulerOptions;
@@ -58,7 +59,7 @@ export type SchedulerEvent =
   | "workingTimestamp"
   | "transferredJob";
 
-export class Scheduler extends EventEmitter {
+export class Scheduler extends SubscribingEventEmitter {
   constructor(options, jobs = {}) {
     super();
 
