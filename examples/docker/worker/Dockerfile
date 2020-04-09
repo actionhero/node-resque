@@ -1,12 +1,16 @@
 
 FROM alpine:latest
-MAINTAINER admin@actionherojs.com
 
-WORKDIR /node-resque
+WORKDIR /node-resque-demo
 
 RUN apk add --update nodejs nodejs-npm
-COPY package.json .
-COPY worker.js .
-RUN npm install
 
-CMD ["node", "worker.js"]
+COPY package.json .
+COPY tsconfig.json .
+COPY src src
+
+# npm install will also run npm prepare, compiling the typescript
+RUN npm install --unsafe-perm
+RUN npm prune
+
+CMD ["node", "dist/worker.js"]

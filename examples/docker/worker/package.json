@@ -8,7 +8,14 @@
     "type": "git",
     "url": "git://github.com/actionhero/node-resque.git"
   },
+  "scripts": {
+    "prepare": "tsc"
+  },
   "dependencies": {
     "node-resque": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "typescript": "latest"
   }
 }

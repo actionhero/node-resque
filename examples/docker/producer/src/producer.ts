@@ -1,4 +1,5 @@
-import { Queue } from "../../../src";
+import { Queue } from "node-resque";
+
 /* In your projects:
 import { Queue } from require("node-resque");
 */
@@ -51,7 +52,7 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (rejection) => {
-  console.error(rejection.stack);
+  console.error(rejection["stack"]);
   process.nextTick(() => process.exit(1));
 });
 
