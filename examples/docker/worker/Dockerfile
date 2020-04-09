@@ -11,5 +11,6 @@ COPY src src
 
 # npm install will also run npm prepare, compiling the typescript
 RUN npm install --unsafe-perm
+RUN npm prune
 
 CMD ["node", "dist/worker.js"]
