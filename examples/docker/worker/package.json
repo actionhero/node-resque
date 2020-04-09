@@ -10,5 +10,10 @@
   },
   "dependencies": {
     "node-resque": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "ts-node": "latest",
+    "typescript": "latest"
   }
 }

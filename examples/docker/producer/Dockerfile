@@ -9,4 +9,4 @@ COPY package.json .
 COPY producer.ts .
 RUN npm install
 
-CMD ["node", "producer.ts"]
+CMD ["node", "-r", "ts-node/register", "producer.ts"]

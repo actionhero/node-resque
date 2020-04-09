@@ -9,4 +9,4 @@ COPY package.json .
 COPY worker.ts .
 RUN npm install
 
-CMD ["node", "worker.ts"]
+CMD ["node", "-r", "ts-node/register", "worker.ts"]
