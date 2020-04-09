@@ -6,7 +6,7 @@ WORKDIR /node-resque
 
 RUN apk add --update nodejs nodejs-npm
 COPY package.json .
-COPY producer.js .
+COPY producer.ts .
 RUN npm install
 
-CMD ["node", "producer.js"]
+CMD ["node", "producer.ts"]

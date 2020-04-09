@@ -51,6 +51,7 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (rejection) => {
+  // @ts-ignore
   console.error(rejection.stack);
   process.nextTick(() => process.exit(1));
 });

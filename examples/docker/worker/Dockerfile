@@ -6,7 +6,7 @@ WORKDIR /node-resque
 
 RUN apk add --update nodejs nodejs-npm
 COPY package.json .
-COPY worker.js .
+COPY worker.ts .
 RUN npm install
 
-CMD ["node", "worker.js"]
+CMD ["node", "worker.ts"]
