@@ -1,4 +1,5 @@
-import { Worker, Scheduler } from "../../../src";
+import { Worker, Scheduler } from "node-resque";
+
 /* In your projects:
 const { Worker, Scheduler } = require("node-resque");
 */
@@ -133,7 +134,7 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (rejection) => {
-  console.error(rejection.stack);
+  console.error(rejection["stack"]);
   process.nextTick(() => process.exit(1));
 });
 

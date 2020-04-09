@@ -5,3 +5,4 @@ dump.rdb
 .idea/
 dist
 docs
+examples/docker/*/package-lock.json
