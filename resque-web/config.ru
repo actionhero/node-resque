@@ -9,7 +9,7 @@ require 'resque-retry/server'
 require 'yaml'
 
 Resque.redis = Redis.new({
-  :host => ENV['RAILS_RESQUE_REDIS'].present? ? ENV['RAILS_RESQUE_REDIS'] : '127.0.0.1',
+  :host => !ENV['RAILS_RESQUE_REDIS'].nil? ? ENV['RAILS_RESQUE_REDIS'] : '127.0.0.1',
   :port => 6379,
 #  :db => 1,
 })
