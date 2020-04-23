@@ -24,6 +24,7 @@ export class Connection extends EventEmitter {
       database: 0,
       namespace: "resque",
       options: {},
+      scanCount: 10,
     };
 
     for (const i in defaults) {
@@ -89,12 +90,18 @@ export class Connection extends EventEmitter {
     await connectionTest();
   }
 
-  async getKeys(match, keysAry = [], cursor = 0) {
+  async getKeys(match: string, count: number = null, keysAry = [], cursor = 0) {
+    if (count === null || count === undefined) {
+      count = this.options.scanCount || 10;
+    }
+
     if (this.redis && typeof this.redis.scan === "function") {
       const [newCursor, matches] = await this.redis.scan(
         cursor,
         "match",
-        match
+        match,
+        "count",
+        count
       );
       if (matches && matches.length > 0) {
         keysAry = keysAry.concat(matches);
@@ -104,7 +111,7 @@ export class Connection extends EventEmitter {
         return keysAry;
       }
 
-      return this.getKeys(match, keysAry, parseInt(newCursor));
+      return this.getKeys(match, count, keysAry, parseInt(newCursor));
     }
 
     this.emit(
