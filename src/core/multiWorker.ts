@@ -297,18 +297,18 @@ export class MultiWorker extends EventEmitter {
     });
   }
 
-  private async checkWraper() {
+  private async checkWrapper() {
     clearTimeout(this.checkTimer);
     const { verb, eventLoopDelay } = await this.checkWorkers();
     this.emit("multiWorkerAction", verb, eventLoopDelay);
     this.checkTimer = setTimeout(() => {
-      this.checkWraper();
+      this.checkWrapper();
     }, this.options.checkTimeout);
   }
 
   start() {
     this.running = true;
-    this.checkWraper();
+    this.checkWrapper();
   }
 
   async stop() {
