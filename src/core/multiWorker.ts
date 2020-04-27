@@ -1,7 +1,6 @@
 import { EventEmitter } from "events";
 import * as os from "os";
 import { Worker } from "./worker";
-import { Connection } from "./connection";
 import { EventLoopDelay } from "./../utils/eventLoopDelay";
 import { MultiWorkerOptions } from "../types/options";
 import { Jobs } from "../types/jobs";
@@ -18,7 +17,6 @@ export declare interface MultiWorker {
   eventLoopDelay: number;
   eventLoopCheckCounter: number;
   stopInProcess: boolean;
-  connection: Connection;
   checkTimer: NodeJS.Timeout;
 
   on(event: "start" | "end", cb: (workerId: number) => void): this;
