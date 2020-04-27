@@ -16,10 +16,10 @@ const connectionDetails = {
   // options: {password: 'abc'},
 };
 
-// OR
+// Or, to share a single connection connection
 
 // var ioredis = require('ioredis');
-// connectionDetails = { redis: new ioredis() };
+// const connectionDetails = { redis: new ioredis() };
 
 async function boot() {
   // //////////////
