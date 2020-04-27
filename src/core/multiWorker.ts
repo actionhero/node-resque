@@ -199,10 +199,7 @@ export class MultiWorker extends EventEmitter {
       }
     });
 
-    this.working = false;
-    if (workingCount > 0) {
-      this.working = true;
-    }
+    this.working = workingCount > 0;
 
     if (this.running === false && this.workers.length > 0) {
       verb = "--";
