@@ -51,8 +51,8 @@
   "scripts": {
     "prepare": "npm run build && npm run docs",
     "pretest": "npm run lint",
-    "lint": "prettier --check src __tests__ examples",
-    "pretty": "prettier --write src __tests__ examples",
+    "lint": "prettier --check src __tests__ examples \"*.md\"",
+    "pretty": "prettier --write src __tests__ examples \"**/*.md\"",
     "test": "jest",
     "build": "tsc --declaration",
     "docs": "typedoc --out docs --theme default"
