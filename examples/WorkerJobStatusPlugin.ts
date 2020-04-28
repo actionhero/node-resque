@@ -1,6 +1,11 @@
-import { Connection, MultiWorker, Worker } from "node-resque";
-import { Job, JobEmit } from "node-resque/src/types/job";
-import { ConnectionOptions } from "node-resque/src/types/options";
+import {
+  Connection,
+  ConnectionOptions,
+  Job,
+  JobEmit,
+  MultiWorker,
+  Worker,
+} from "node-resque";
 
 /**
  * Add Job status update plugin (php-resque way).
