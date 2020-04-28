@@ -246,7 +246,7 @@ worker.start();
 You can also pass redis client directly.
 
 ```javascript
-// assume you already initialize redis client before
+// assume you already initialized redis client before
 
 var redisClient = new Redis();
 var connectionDetails = { redis: redisClient };
