@@ -323,7 +323,16 @@ You can work with these failed jobs with the following methods:
 
 ### Failing a Job
 
-We use a try/catch pattern to catch errors in your jobs. If any job throws an uncaught exception, it will be caught, and the job's payload moved to the error queue for inspection. Do not use `domains`, `process.onExit`, or any other method of "catching" a process crash. The error payload looks like:
+We use a try/catch pattern to catch errors in your jobs. If any job throws an
+uncaught exception, it will be caught, and the job's payload moved to the error
+queue for inspection.
+Do not use [domain], [process.on("exit")][process.onexit], or any other method
+of "catching" a process crash.
+
+[domain]: https://nodejs.org/api/domain.html
+[process.onexit]: https://nodejs.org/api/process.html#process_event_exit
+
+The error payload looks like:
 
 ```javascript
 { worker: 'busted-worker-3',
