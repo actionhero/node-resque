@@ -34,7 +34,7 @@ async function boot() {
     host: "127.0.0.1",
     password: null,
     port: 6379,
-    database: 0
+    database: 0,
     // namespace: 'resque',
     // looping: true,
     // options: {password: 'abc'},
@@ -50,10 +50,10 @@ async function boot() {
     add: {
       plugins: ["JobLock"],
       pluginOptions: {
-        JobLock: {}
+        JobLock: {},
       },
       perform: async (a, b) => {
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           setTimeout(resolve, 1000);
         });
         jobsToComplete--;
@@ -61,7 +61,7 @@ async function boot() {
 
         const answer = a + b;
         return answer;
-      }
+      },
     },
     subtract: {
       perform: (a, b) => {
@@ -70,14 +70,14 @@ async function boot() {
 
         const answer = a - b;
         return answer;
-      }
-    }
+      },
+    },
   };
 
   // just a helper for this demo
   async function tryShutdown() {
     if (jobsToComplete === 0) {
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         setTimeout(resolve, 500);
       });
       await scheduler.end();
@@ -118,10 +118,10 @@ async function boot() {
   worker.on("cleaning_worker", (worker, pid) => {
     console.log(`cleaning old worker ${worker}`);
   });
-  worker.on("poll", queue => {
+  worker.on("poll", (queue) => {
     console.log(`worker polling ${queue}`);
   });
-  worker.on("ping", time => {
+  worker.on("ping", (time) => {
     console.log(`worker check in @ ${time}`);
   });
   worker.on("job", (queue, job) => {
@@ -161,7 +161,7 @@ async function boot() {
   scheduler.on("leader", () => {
     console.log("scheduler became leader");
   });
-  scheduler.on("error", error => {
+  scheduler.on("error", (error) => {
     console.log(`scheduler error >> ${error}`);
   });
   scheduler.on("cleanStuckWorker", (workerName, errorPayload, delta) => {
@@ -169,7 +169,7 @@ async function boot() {
       `failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`
     );
   });
-  scheduler.on("workingTimestamp", timestamp => {
+  scheduler.on("workingTimestamp", (timestamp) => {
     console.log(`scheduler working timestamp ${timestamp}`);
   });
   scheduler.on("transferredJob", (timestamp, job) => {
@@ -181,7 +181,7 @@ async function boot() {
   // //////////////////////
 
   const queue = new Queue({ connection: connectionDetails }, jobs);
-  queue.on("error", function(error) {
+  queue.on("error", function (error) {
     console.log(error);
   });
   await queue.connect();
@@ -211,7 +211,7 @@ options = {
   looping: true,
   timeout: 5000,
   queues: "*",
-  name: os.hostname() + ":" + process.pid
+  name: os.hostname() + ":" + process.pid,
 };
 ```
 
@@ -224,7 +224,7 @@ var connectionDetails = {
   password: "",
   port: 6379,
   database: 0,
-  namespace: "resque" // Also allow array of strings
+  namespace: "resque", // Also allow array of strings
 };
 
 var worker = new NodeResque.Worker(
@@ -232,7 +232,7 @@ var worker = new NodeResque.Worker(
   jobs
 );
 
-worker.on("error", error => {
+worker.on("error", (error) => {
   // handler errors
 });
 
@@ -256,7 +256,7 @@ var worker = new NodeResque.Worker(
   jobs
 );
 
-worker.on("error", error => {
+worker.on("error", (error) => {
   // handler errors
 });
 
@@ -379,7 +379,6 @@ If you know the name of a worker that should be removed, you can also call `awai
 
 You may want to use node-resque to schedule jobs every minute/hour/day, like a distributed CRON system. There are a number of excellent node packages to help you with this, like [node-schedule](https://github.com/tejasmanohar/node-schedule) and [node-cron](https://github.com/ncb000gt/node-cron). Node-resque makes it possible for you to use the package of your choice to schedule jobs with.
 
-
 Assuming you are running node-resque across multiple machines, you will need to ensure that only one of your processes is actually scheduling the jobs. To help you with this, you can inspect which of the scheduler processes is currently acting as leader, and flag only the master scheduler process to run the schedule. A full example can be found at [/examples/scheduledJobs.ts](https://github.com/actionhero/node-resque/blob/master/examples/scheduledJobs.ts), but the relevant section is:
 
 ```javascript
@@ -442,13 +441,13 @@ const jobs = {
   add: {
     plugins: ["MyPlugin"],
     pluginOptions: {
-      MyPlugin: { thing: "stuff" }
+      MyPlugin: { thing: "stuff" },
     },
     perform: (a, b) => {
       let answer = a + b;
       return answer;
-    }
-  }
+    },
+  },
 };
 ```
 
@@ -463,13 +462,13 @@ var jobs = {
   add: {
     plugins: [require("Myplugin").Myplugin],
     pluginOptions: {
-      MyPlugin: { thing: "stuff" }
+      MyPlugin: { thing: "stuff" },
     },
     perform: (a, b) => {
       let answer = a + b;
       return answer;
-    }
-  }
+    },
+  },
 };
 ```
 
@@ -494,7 +493,7 @@ var NodeResque = require(__dirname + "/../index.js");
 var connectionDetails = {
   pkg: "ioredis",
   host: "127.0.0.1",
-  password: ""
+  password: "",
 };
 
 var multiWorker = new NodeResque.MultiWorker(
@@ -504,16 +503,16 @@ var multiWorker = new NodeResque.MultiWorker(
     minTaskProcessors: 1,
     maxTaskProcessors: 100,
     checkTimeout: 1000,
-    maxEventLoopDelay: 10
+    maxEventLoopDelay: 10,
   },
   jobs
 );
 
 // normal worker emitters
-multiWorker.on("start", workerId => {
+multiWorker.on("start", (workerId) => {
   console.log("worker[" + workerId + "] started");
 });
-multiWorker.on("end", workerId => {
+multiWorker.on("end", (workerId) => {
   console.log("worker[" + workerId + "] ended");
 });
 multiWorker.on("cleaning_worker", (workerId, worker, pid) => {
@@ -578,12 +577,12 @@ multiWorker.on("error", (workerId, queue, job, error) => {
       error
   );
 });
-multiWorker.on("pause", workerId => {
+multiWorker.on("pause", (workerId) => {
   console.log("worker[" + workerId + "] paused");
 });
 
 // multiWorker emitters
-multiWorker.on("internalError", error => {
+multiWorker.on("internalError", (error) => {
   console.log(error);
 });
 multiWorker.on("multiWorkerAction", (verb, delay) => {
