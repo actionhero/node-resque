@@ -135,7 +135,7 @@ async function boot() {
   });
   multiWorker.on("error", (error, workerId, queue, job) => {
     console.log(
-      `worker[${workerId}] error #{queue} ${JSON.stringify(job)} >> ${error}`
+      `worker[${workerId}] error ${queue} ${JSON.stringify(job)} >> ${error}`
     );
   });
   multiWorker.on("pause", (workerId) => {
