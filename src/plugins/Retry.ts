@@ -37,17 +37,17 @@ export class Retry extends Plugin {
       return true;
     }
 
-    const remaning = await this.attemptUp();
+    const remaining = await this.attemptUp();
     await this.saveLastError();
 
-    if (remaning <= 0) {
+    if (remaining <= 0) {
       await this.cleanup();
       throw this.worker.error;
     }
 
     let nextTryDelay = this.options.retryDelay;
     if (Array.isArray(this.options.backoffStrategy)) {
-      let index = this.options.retryLimit - remaning - 1;
+      let index = this.options.retryLimit - remaining - 1;
       if (index > this.options.backoffStrategy.length - 1) {
         index = this.options.backoffStrategy.length - 1;
       }
@@ -64,7 +64,8 @@ export class Retry extends Plugin {
     this.job.args = this.args;
     this.worker.emit("reEnqueue", this.queue, this.job, {
       delay: nextTryDelay,
-      remaningAttempts: remaning,
+      remaningAttempts: remaining, // @deprecated
+      remainingAttempts: remaining,
       err: this.worker.error,
     });
 
@@ -129,8 +130,8 @@ export class Retry extends Plugin {
     await this.redis().setnx(key, -1);
     const retryCount = await this.redis().incr(key);
     await this.redis().expire(key, this.maxDelay());
-    const remaning = this.options.retryLimit - retryCount - 1;
-    return remaning;
+
+    return this.options.retryLimit - retryCount - 1;
   }
 
   async saveLastError() {
