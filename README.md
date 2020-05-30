@@ -6,7 +6,7 @@ The full API documentation for this package is automatically generated from the 
 
 [![Nodei stats](https://nodei.co/npm/node-resque.png?downloads=true)](https://npmjs.org/package/node-resque)
 
-[![CircleCI](https://circleci.com/gh/actionhero/node-resque.svg?style=svg)](https://circleci.com/gh/actionhero/node-resque)
+![Test](https://github.com/actionhero/node-resque/workflows/Test/badge.svg)
 
 ## API Docs
 
