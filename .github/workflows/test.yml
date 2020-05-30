@@ -47,16 +47,13 @@ jobs:
     container:
       image: node
 
-    services:
-      redis:
-        image: redis
-
     strategy:
       matrix:
         node-version: [10.x, 12.x, 14.x]
 
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt install redis-server
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -70,8 +67,6 @@ jobs:
           key: ${{ runner.os }}-cache-${{ hashFiles('**/package-lock.json') }}
       - run: npm rebuild
       - run: ./node_modules/.bin/jest --ci
-        env:
-          REDIS_HOST: redis
 
   complete:
     runs-on: ubuntu-latest
