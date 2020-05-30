@@ -53,7 +53,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: apt install redis-server
+      - run: apt-get update
+      - run: apt-get -y install redis-server
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
