@@ -12,7 +12,7 @@ const SpecHelper = {
   redis: null,
   connectionDetails: {
     pkg: pkg,
-    host: "127.0.0.1",
+    host: process.env.REDIS_HOST || "127.0.0.1",
     password: "",
     port: 6379,
     database: parseInt(process.env.JEST_WORKER_ID || "0"),
