@@ -76,7 +76,7 @@ describe("connection", () => {
     test("getKeys returns appropriate keys based on matcher given", async () => {
       // seed the DB with keys to test with
       await Promise.all(
-        new Array(25)
+        new Array(5)
           .fill(0)
           .map((v, i) => i + 1)
           .map(async (v) => {
@@ -89,17 +89,14 @@ describe("connection", () => {
 
       // sanity checks to confirm keys above are set and exist
       expect(await connection.redis.get("test-key1")).toBe("1");
-      expect(await connection.redis.get("test-key20")).toBe("20");
       expect(await connection.redis.get("test-not-key1")).toBe("1");
       expect(await connection.redis.get("test-not-key5")).toBe("5");
 
       const foundKeys = await connection.getKeys("test-key*");
 
-      expect(foundKeys.length).toBe(25);
+      expect(foundKeys.length).toBe(5);
       expect(foundKeys).toContain("test-key1");
       expect(foundKeys).toContain("test-key5");
-      expect(foundKeys).toContain("test-key20");
-      expect(foundKeys).toContain("test-key25");
       expect(foundKeys).not.toContain("test-key50");
       expect(foundKeys).not.toContain("test-not-key1");
       expect(foundKeys).not.toContain("test-not-key3");
