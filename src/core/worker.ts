@@ -191,9 +191,7 @@ export class Worker extends EventEmitter {
   }
 
   private async poll(nQueue = 0) {
-    if (!this.running) {
-      return;
-    }
+    if (!this.running) return;
 
     this.queue = this.queues[nQueue];
     this.emit("poll", this.queue);
@@ -227,6 +225,7 @@ export class Worker extends EventEmitter {
       } else {
         this.working = false;
         if (nQueue === this.queues.length - 1) {
+          if (this.originalQueue === "*") await this.checkQueues();
           await this.pause();
           return null;
         } else {
@@ -492,7 +491,8 @@ export class Worker extends EventEmitter {
 
     if (
       (this.queues[0] === "*" && this.queues.length === 1) ||
-      this.queues.length === 0
+      this.queues.length === 0 ||
+      this.originalQueue === "*"
     ) {
       this.originalQueue = "*";
       await this.untrack();
