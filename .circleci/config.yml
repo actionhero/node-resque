@@ -66,9 +66,9 @@ jobs:
       - image: redis:5
     <<: *shared-test-steps
 
-  test-node-v13:
+  test-node-v14:
     docker:
-      - image: circleci/node:13
+      - image: circleci/node:14
       - image: redis:5
     <<: *shared-test-steps
 
@@ -121,7 +121,7 @@ workflows:
           filters:
             <<: *ignored-branches
 
-      - test-node-v13:
+      - test-node-v14:
           requires:
             - linter
           filters:
@@ -133,7 +133,7 @@ workflows:
           requires:
             - test-node-v10
             - test-node-v12
-            - test-node-v13
+            - test-node-v14
 
       - deploy-docs-website:
           filters:
