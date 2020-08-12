@@ -64,7 +64,6 @@ export class Retry extends Plugin {
     this.job.args = this.args;
     this.worker.emit("reEnqueue", this.queue, this.job, {
       delay: nextTryDelay,
-      remaningAttempts: remaining, // @deprecated
       remainingAttempts: remaining,
       err: this.worker.error,
     });
