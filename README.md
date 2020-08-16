@@ -202,9 +202,8 @@ boot();
 
 ## Configuration Options:
 
-`new queue` requires only the "queue" variable to be set. You can also pass the `jobs` hash to it.
-
-`new worker` has some additional options:
+- `new queue` requires only the "queue" variable to be set. You can also pass the `jobs` hash to it.
+- `new worker` has some additional options:
 
 ```javascript
 options = {
@@ -214,6 +213,11 @@ options = {
   name: os.hostname() + ":" + process.pid,
 };
 ```
+
+Note that when using `"*"` queue:
+
+- there's minor performance impact for checking the queues
+- queues are processed in undefined order
 
 The configuration hash passed to `new NodeResque.Worker`, `new NodeResque.Scheduler` or `new NodeResque.Queue` can also take a `connection` option.
 
