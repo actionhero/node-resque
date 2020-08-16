@@ -202,8 +202,8 @@ boot();
 
 ## Configuration Options:
 
-* `new queue` requires only the "queue" variable to be set. You can also pass the `jobs` hash to it.
-* `new worker` has some additional options:
+- `new queue` requires only the "queue" variable to be set. You can also pass the `jobs` hash to it.
+- `new worker` has some additional options:
 
 ```javascript
 options = {
@@ -215,6 +215,7 @@ options = {
 ```
 
 Note that when using `"*"` queue:
+
 - there's minor performance impact for checking the queues
 - queues are processed in undefined order
 
