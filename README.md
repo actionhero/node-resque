@@ -200,6 +200,16 @@ boot();
 // await worker.end()
 ```
 
+## Node Resque Interfaces: Queue, Worker, and Scheduler
+
+There are 3 main classes in `node-resque`: Queue, Worker, and Scheduler
+
+- **Queue**: This is the interface your program uses to interact with resque's queues - to insert jobs, check on the performance of things, and generally administer your background jobs.
+- **Worker**: This interface is how jobs get processed. Workers are started and then they check for jobs enqueued into various queues and complete them. If there's an error, they write to the `error` queue.
+  - There's a special class called `multiWorker` in Node Resque which will run many workers at once for you (see below).
+- **Scheduler**: The scheduler can be thought of as the coordinator for Node Resque. It is primarily in charge of checking when jobs told to run later (with `queue.enqueueIn` or `queue.enqueueAt`) should be processed, but it performs some other jobs like checking for 'stuck' workers and general cluster cleanup.
+  - You can (and should) run many instances of the scheduler class at once, but only one will be elected to be the 'leader', and actually do work.
+
 ## Configuration Options:
 
 - `new queue` requires only the "queue" variable to be set. You can also pass the `jobs` hash to it.
