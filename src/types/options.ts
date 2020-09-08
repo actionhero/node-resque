@@ -10,7 +10,7 @@ export interface ConnectionOptions {
   namespace?: string;
   looping?: boolean;
   options?: any;
-  redis?: IORedis.Redis;
+  redis?: IORedis.Redis | IORedis.Cluster;
   scanCount?: number;
 }
 
