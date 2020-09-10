@@ -4,8 +4,7 @@ import specHelper from "../utils/specHelper";
 const jobs = {
   add: {
     perform: (a, b) => {
-      var answer = a + b;
-      return answer;
+      return a + b;
     },
   },
   badAdd: {

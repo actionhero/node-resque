@@ -9,7 +9,7 @@ import { Queue } from "./queue";
 
 function prepareJobs(jobs) {
   return Object.keys(jobs).reduce(function (h, k) {
-    var job = jobs[k];
+    const job = jobs[k];
     h[k] = typeof job === "function" ? { perform: job } : job;
     return h;
   }, {});

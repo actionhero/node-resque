@@ -67,7 +67,7 @@ describe("plugins", () => {
       const length = await queue.length(specHelper.queue);
       expect(length).toBe(1);
 
-      var worker = new Worker(
+      const worker = new Worker(
         {
           connection: specHelper.cleanConnectionDetails(),
           timeout: specHelper.timeout,
