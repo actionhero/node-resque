@@ -261,9 +261,13 @@ You can also pass redis client directly.
 
 ```javascript
 // assume you already initialized redis client before
+// the "redis" key can be IORedis.Redis or IORedis.Cluster instance
 
 var redisClient = new Redis();
 var connectionDetails = { redis: redisClient };
+
+var redisCluster = new Cluster();
+var connectionDetails = { redis: redisCluster };
 
 var worker = new NodeResque.Worker(
   { connection: connectionDetails, queues: "math" },

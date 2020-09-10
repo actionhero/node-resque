@@ -12,7 +12,7 @@ export class Connection extends EventEmitter {
   options: ConnectionOptions | null;
   private eventListeners: EventListeners;
   connected: boolean;
-  redis: IORedis.Redis;
+  redis: IORedis.Redis | IORedis.Cluster;
 
   constructor(options: ConnectionOptions = {}) {
     super();
