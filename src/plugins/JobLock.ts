@@ -67,7 +67,7 @@ export class JobLock extends Plugin {
         ? this.options.key.apply(this)
         : this.options.key;
     } else {
-      var flattenedArgs = JSON.stringify(this.args);
+      const flattenedArgs = JSON.stringify(this.args);
       return this.worker.connection.key(
         "workerslock",
         this.func,

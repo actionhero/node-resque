@@ -18,7 +18,7 @@ const connectionDetails = {
 
 // Or, to share a single connection connection
 
-// var ioredis = require('ioredis');
+// const ioredis = require('ioredis');
 // const connectionDetails = { redis: new ioredis() };
 
 async function boot() {
@@ -27,13 +27,13 @@ async function boot() {
   // //////////////
 
   const blockingSleep = function (naptime) {
-    var sleeping = true;
-    var now = new Date();
-    var alarm;
-    var startingMSeconds = now.getTime();
+    const now = new Date();
+    const startingMSeconds = now.getTime();
+    let sleeping = true;
+    let alarm;
     while (sleeping) {
       alarm = new Date();
-      var alarmMSeconds = alarm.getTime();
+      const alarmMSeconds = alarm.getTime();
       if (alarmMSeconds - startingMSeconds > naptime) {
         sleeping = false;
       }
@@ -69,8 +69,7 @@ async function boot() {
 
   const queue = new Queue({ connection: connectionDetails }, jobs);
   await queue.connect();
-  var i;
-  i = 0;
+  let i = 0;
   while (i < 10) {
     await queue.enqueue("slowQueue", "slowCPUJob", []);
     i++;

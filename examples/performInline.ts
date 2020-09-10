@@ -45,15 +45,13 @@ async function boot() {
   // BUILD A WORKER & WORK A JOB //
   // //////////////////////////////
 
-  var worker = new Worker(
+  const worker = new Worker(
     { connection: connectionDetails, queues: ["math", "otherQueue"] },
     jobs
   );
   await worker.connect();
 
-  let result;
-
-  result = await worker.performInline("add", [1, 2]);
+  let result = await worker.performInline("add", [1, 2]);
   console.log("Result: " + result);
 
   result = await worker.performInline("add", [5, 8]);

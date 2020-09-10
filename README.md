@@ -232,7 +232,7 @@ Note that when using `"*"` queue:
 The configuration hash passed to `new NodeResque.Worker`, `new NodeResque.Scheduler` or `new NodeResque.Queue` can also take a `connection` option.
 
 ```javascript
-var connectionDetails = {
+const connectionDetails = {
   pkg: "ioredis",
   host: "127.0.0.1",
   password: "",
@@ -241,7 +241,7 @@ var connectionDetails = {
   namespace: "resque", // Also allow array of strings
 };
 
-var worker = new NodeResque.Worker(
+const worker = new NodeResque.Worker(
   { connection: connectionDetails, queues: "math" },
   jobs
 );
@@ -263,13 +263,15 @@ You can also pass redis client directly.
 // assume you already initialized redis client before
 // the "redis" key can be IORedis.Redis or IORedis.Cluster instance
 
-var redisClient = new Redis();
-var connectionDetails = { redis: redisClient };
+const redisClient = new Redis();
+const connectionDetails = { redis: redisClient };
 
-var redisCluster = new Cluster();
-var connectionDetails = { redis: redisCluster };
+// or
 
-var worker = new NodeResque.Worker(
+const redisCluster = new Cluster();
+const connectionDetails = { redis: redisCluster };
+
+const worker = new NodeResque.Worker(
   { connection: connectionDetails, queues: "math" },
   jobs
 );
@@ -282,7 +284,7 @@ await worker.connect();
 worker.start();
 
 // and when you are done
-// await worker.end()
+await worker.end();
 ```
 
 ## Notes
@@ -301,8 +303,8 @@ worker.start();
 If you want to learn more about running Node-Resque with docker, please view the examples here: https://github.com/actionhero/node-resque/tree/master/examples/docker
 
 ```javascript
-var name = os.hostname() + ":" + process.pid + "+" + counter;
-var worker = new NodeResque.Worker(
+const name = os.hostname() + ":" + process.pid + "+" + counter;
+const worker = new NodeResque.Worker(
   { connection: connectionDetails, queues: "math", name: name },
   jobs
 );
@@ -485,7 +487,7 @@ const jobs = {
 - There are a few included plugins, all in the lib/plugins/\* directory. You can rewrite you own and include it like this:
 
 ```javascript
-var jobs = {
+const jobs = {
   add: {
     plugins: [require("Myplugin").Myplugin],
     pluginOptions: {
@@ -515,15 +517,15 @@ The plugins which are included with this package are:
 `node-resque` provides a wrapper around the `Worker` class which will auto-scale the number of resque workers. This will process more than one job at a time as long as there is idle CPU within the event loop. For example, if you have a slow job that sends email via SMTP (with low overhead), we can process many jobs at a time, but if you have a math-heavy operation, we'll stick to 1. The `MultiWorker` handles this by spawning more and more node-resque workers and managing the pool.
 
 ```javascript
-var NodeResque = require(__dirname + "/../index.js");
+const NodeResque = require("node-resque");
 
-var connectionDetails = {
+const connectionDetails = {
   pkg: "ioredis",
   host: "127.0.0.1",
   password: "",
 };
 
-var multiWorker = new NodeResque.MultiWorker(
+const multiWorker = new NodeResque.MultiWorker(
   {
     connection: connectionDetails,
     queues: ["slowQueue"],

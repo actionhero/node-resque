@@ -240,7 +240,7 @@ describe("plugins", () => {
         if (completed === 2) {
           await worker1.end();
           await worker2.end();
-          var delta = new Date().getTime() - startTime;
+          const delta = new Date().getTime() - startTime;
           expect(delta).toBeLessThan(jobDelay * 2);
           done();
         }

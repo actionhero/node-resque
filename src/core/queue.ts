@@ -304,8 +304,8 @@ export class Queue extends EventEmitter {
       values.push(value);
     }
 
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i];
+    for (let i = 0; i < keys.length; i++) {
+      let k = keys[i];
       k = k.replace(this.connection.key(""), "");
       if (k[0] === ":") {
         k = k.substr(1);
@@ -450,7 +450,7 @@ export class Queue extends EventEmitter {
   async cleanOldWorkers(age: number) {
     // note: this method will remove the data created by a 'stuck' worker and move the payload to the error queue
     // however, it will not actually remove any processes which may be running.  A job *may* be running that you have removed
-    var results = {};
+    const results = {};
 
     const data = await this.allWorkingOn();
     for (const i in Object.keys(data)) {
@@ -526,8 +526,8 @@ export class Queue extends EventEmitter {
     }
 
     const values = await this.connection.redis.mget(keys);
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i];
+    for (let i = 0; i < keys.length; i++) {
+      let k = keys[i];
       k = k.replace(this.connection.key("stat:"), "");
       data[k] = values[i];
     }
