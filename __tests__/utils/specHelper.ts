@@ -39,9 +39,7 @@ const SpecHelper = {
 
   cleanup: async function () {
     const keys = await this.redis.keys(this.namespace + "*");
-    if (keys.length > 0) {
-      await this.redis.del(keys);
-    }
+    if (keys.length > 0) await this.redis.del(keys);
   },
 
   disconnect: async function () {

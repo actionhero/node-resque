@@ -50,7 +50,7 @@ async function boot() {
     add: {
       plugins: ["JobLock"],
       pluginOptions: {
-        JobLock: {},
+        JobLock: { reEnqueue: true },
       },
       perform: async (a, b) => {
         await new Promise((resolve) => {
