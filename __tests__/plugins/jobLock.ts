@@ -18,6 +18,13 @@ const jobs = {
       return answer;
     },
   },
+  withoutReEnqueue: {
+    plugins: ["JobLock"],
+    pluginOptions: { JobLock: { reEnqueue: false } },
+    perform: async () => {
+      return "hi";
+    },
+  },
 };
 
 describe("plugins", () => {
@@ -199,6 +206,57 @@ describe("plugins", () => {
 
       await queue.enqueue(specHelper.queue, "slowAdd", [1, 2]);
       await queue.enqueue(specHelper.queue, "slowAdd", [1, 2]);
+
+      worker1.start();
+      worker2.start();
+    });
+
+    test("can be configured not to re-enqueue a duplicate task", async (done) => {
+      let count = 0;
+      worker1 = new Worker(
+        {
+          connection: specHelper.cleanConnectionDetails(),
+          timeout: specHelper.timeout,
+          queues: [specHelper.queue],
+        },
+        jobs
+      );
+      worker2 = new Worker(
+        {
+          connection: specHelper.cleanConnectionDetails(),
+          timeout: specHelper.timeout,
+          queues: [specHelper.queue],
+        },
+        jobs
+      );
+
+      worker1.on("error", (error) => {
+        throw error;
+      });
+      worker2.on("error", (error) => {
+        throw error;
+      });
+
+      await worker1.connect();
+      await worker2.connect();
+
+      const onComplete = async () => {
+        count++;
+        expect(count).toBe(1);
+        await worker1.end();
+        await worker2.end();
+
+        const timestamps = await queue.timestamps();
+        expect(timestamps).toEqual([]);
+
+        done();
+      };
+
+      worker1.on("success", onComplete);
+      worker2.on("success", onComplete);
+
+      await queue.enqueue(specHelper.queue, "withoutReEnqueue");
+      await queue.enqueue(specHelper.queue, "withoutReEnqueue");
 
       worker1.start();
       worker2.start();

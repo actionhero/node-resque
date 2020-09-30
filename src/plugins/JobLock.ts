@@ -25,7 +25,15 @@ export class JobLock extends Plugin {
     if (lockedByMe && lockedByMe.toString().toLowerCase() === "ok") {
       return true;
     } else {
-      await this.reEnqueue();
+      const options = this.job.pluginOptions;
+      const toReEnqueue = options.JobLock
+        ? options.JobLock.reEnqueue !== null &&
+          options.JobLock.reEnqueue !== undefined
+          ? options.JobLock.reEnqueue
+          : true
+        : true;
+
+      if (toReEnqueue) await this.reEnqueue();
       return false;
     }
   }
