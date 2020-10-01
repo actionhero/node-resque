@@ -211,11 +211,8 @@ export class Worker extends EventEmitter {
     this.working = true;
 
     try {
-      const encodedJob = await this.connection.redis.lpop(
-        this.connection.key("queue", this.queue)
-      );
-      if (encodedJob) {
-        const currentJob = JSON.parse(encodedJob.toString());
+      const currentJob = await this.getJob();
+      if (currentJob) {
         if (this.options.looping) {
           this.result = null;
           return this.perform(currentJob);
@@ -256,8 +253,6 @@ export class Worker extends EventEmitter {
       this.error = new Error(`Missing Job: "${job.class}"`);
       return this.completeJob(false, startedAt);
     }
-
-    await this.workingOn(this.job);
     this.emit("job", this.queue, this.job);
 
     let triedAfterPerform = false;
@@ -421,16 +416,47 @@ export class Worker extends EventEmitter {
     });
   }
 
-  private async workingOn(job) {
-    return this.connection.redis.set(
-      this.connection.key("worker", this.name, this.stringQueues()),
-      JSON.stringify({
-        run_at: new Date().toString(),
-        queue: this.queue,
-        payload: job,
-        worker: this.name,
-      })
+  private async getJob() {
+    let currentJob: { [key: string]: any } = null;
+    const queueKey = this.connection.key("queue", this.queue);
+    const workerKey = this.connection.key(
+      "worker",
+      this.name,
+      this.stringQueues()
     );
+
+    await this.connection.redis.watch(queueKey);
+    const encodedJob = await this.connection.redis.lindex(queueKey, 0);
+    // const encodedJob = await this.connection.redis.lpop(queueKey);
+
+    if (encodedJob) {
+      currentJob = JSON.parse(encodedJob.toString());
+
+      try {
+        await this.connection.redis
+          .multi()
+          .lpop(queueKey)
+          .set(
+            workerKey,
+            JSON.stringify({
+              run_at: new Date().toString(),
+              queue: this.queue,
+              payload: currentJob,
+              worker: this.name,
+            })
+          )
+          .exec((error, results) => {
+            // the multi/exec was interrupted by another process
+            if (error) throw error;
+            if (!results || results[0][1] !== encodedJob) currentJob = null;
+          });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    await this.connection.redis.unwatch();
+    return currentJob;
   }
 
   private async track() {

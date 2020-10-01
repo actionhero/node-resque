@@ -22,7 +22,9 @@ const jobs = {
     plugins: ["JobLock"],
     pluginOptions: { JobLock: { reEnqueue: false } },
     perform: async () => {
-      return "hi";
+      await new Promise((resolve) => {
+        setTimeout(resolve, jobDelay);
+      });
     },
   },
 };
