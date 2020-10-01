@@ -301,7 +301,7 @@ describe("plugins", () => {
           await worker1.end();
           await worker2.end();
           const delta = new Date().getTime() - startTime;
-          expect(delta).toBeLessThan(jobDelay * 2);
+          expect(delta).toBeLessThan(jobDelay * 3);
           done();
         }
       };
