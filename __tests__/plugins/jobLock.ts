@@ -90,7 +90,7 @@ describe("plugins", () => {
           if (completed === 2) {
             worker1.end();
             worker2.end();
-            expect(new Date().getTime() - startTime).toBeLessThan(jobDelay * 2);
+            expect(new Date().getTime() - startTime).toBeLessThan(jobDelay * 3);
             resolve();
           }
         };
