@@ -26,6 +26,7 @@ export interface SchedulerOptions extends ConnectionOptions {
   timeout?: number;
   leaderLockTimeout: number;
   stuckWorkerTimeout: number;
+  retryStuckJobs: boolean;
 }
 
 export interface MultiWorkerOptions extends ConnectionOptions {

@@ -516,6 +516,34 @@ export class Queue extends EventEmitter {
   }
 
   /**
+   * Look though the failed jobs to find those which were failed as a result of forceCleanWorker and re-enqueue them.
+   * This is potentially very slow if you have a lot of failed jobs
+   */
+  async retryStuckJobs(upperLimit = Infinity) {
+    let start = 0;
+    let batchSize = 100;
+    let failedJobs = [];
+
+    async function loadFailedJobs() {
+      failedJobs = await this.failed(start, start + batchSize);
+      start = start + batchSize;
+    }
+
+    await loadFailedJobs();
+
+    while (failedJobs.length > 0 && start < upperLimit) {
+      for (const i in failedJobs) {
+        const job = failedJobs[i];
+        if (job?.backtrace[1] === "queue#forceCleanWorker") {
+          await this.retryAndRemoveFailed(job);
+        }
+      }
+
+      await loadFailedJobs();
+    }
+  }
+
+  /**
    * - stats will be a hash containing details about all the queues in your redis, and how many jobs are in each
    */
   async stats() {
