@@ -39,8 +39,8 @@ const jobs = {
   },
 };
 
-let worker;
-let queue;
+let worker: Worker;
+let queue: Queue;
 
 describe("worker", () => {
   afterAll(async () => {
@@ -159,6 +159,7 @@ describe("worker", () => {
       await worker.checkQueues();
       expect(worker.queues).toEqual([specHelper.queue]);
 
+      //@ts-ignore
       await queue.del(specHelper.queue);
       await worker.end();
     });
@@ -221,7 +222,7 @@ describe("worker", () => {
             expect(job.class).toBe("badAdd");
             expect(failire.message).toBe("Blue Smoke");
 
-            worker.removeAllListeners("failire");
+            worker.removeAllListeners("failure");
             done();
           });
         });

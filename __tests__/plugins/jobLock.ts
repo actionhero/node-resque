@@ -22,7 +22,9 @@ const jobs = {
     plugins: ["JobLock"],
     pluginOptions: { JobLock: { reEnqueue: false } },
     perform: async () => {
-      return "hi";
+      await new Promise((resolve) => {
+        setTimeout(resolve, jobDelay);
+      });
     },
   },
 };
@@ -88,7 +90,7 @@ describe("plugins", () => {
           if (completed === 2) {
             worker1.end();
             worker2.end();
-            expect(new Date().getTime() - startTime).toBeLessThan(jobDelay * 2);
+            expect(new Date().getTime() - startTime).toBeLessThan(jobDelay * 3);
             resolve();
           }
         };
@@ -299,7 +301,7 @@ describe("plugins", () => {
           await worker1.end();
           await worker2.end();
           const delta = new Date().getTime() - startTime;
-          expect(delta).toBeLessThan(jobDelay * 2);
+          expect(delta).toBeLessThan(jobDelay * 3);
           done();
         }
       };

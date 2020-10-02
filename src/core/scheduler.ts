@@ -67,6 +67,7 @@ export class Scheduler extends EventEmitter {
       stuckWorkerTimeout: 60 * 60 * 1000, // 60 minutes in ms
       leaderLockTimeout: 60 * 3, // in seconds
       name: os.hostname() + ":" + process.pid, // assumes only one worker per node process
+      retryStuckJobs: false,
     };
 
     for (const i in defaults) {
@@ -313,6 +314,10 @@ export class Scheduler extends EventEmitter {
       if (delta > stuckWorkerTimeoutInSeconds) {
         await this.forceCleanWorker(name, delta);
       }
+    }
+
+    if (this.options.retryStuckJobs === true) {
+      await this.queue.retryStuckJobs();
     }
   }
 

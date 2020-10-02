@@ -15,7 +15,7 @@ describe("connection", () => {
 
   test(
     "can provide an error if connection failed",
-    async () => {
+    async (resolve) => {
       const connectionDetails = {
         pkg: specHelper.connectionDetails.pkg,
         host: "wrong-hostname",
@@ -27,14 +27,12 @@ describe("connection", () => {
 
       const connection = new Connection(connectionDetails);
 
-      await new Promise((resolve) => {
-        connection.connect();
+      connection.connect();
 
-        connection.on("error", (error) => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-          connection.end();
-          resolve();
-        });
+      connection.on("error", (error) => {
+        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
+        connection.end();
+        resolve();
       });
     },
     30 * 1000
@@ -47,7 +45,7 @@ describe("connection", () => {
 
   describe("keys and namespaces", () => {
     const db = specHelper.connectionDetails.database;
-    let connection;
+    let connection: Connection;
     beforeAll(async () => {
       connection = new Connection(specHelper.cleanConnectionDetails());
       await connection.connect();
@@ -144,6 +142,7 @@ describe("connection", () => {
     });
 
     test("keys built with a array namespace are correct", () => {
+      //@ts-ignore
       connection.options.namespace = ["custom", "namespace"];
       expect(connection.key("thing")).toBe("custom:namespace:thing");
 

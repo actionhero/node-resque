@@ -327,7 +327,7 @@ export class Queue extends EventEmitter {
    * - returns a hash of the form: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
    */
   async workers() {
-    const workers = {};
+    const workers: { [key: string]: any } = {};
 
     const results = await this.connection.redis.smembers(
       this.connection.key("workers")
@@ -367,7 +367,7 @@ export class Queue extends EventEmitter {
    * - returns a hash of the results of `queue.workingOn` with the worker names as keys.
    */
   async allWorkingOn() {
-    const results = {};
+    const results: { [key: string]: any } = {};
 
     const workers = await this.workers();
     for (const i in Object.keys(workers)) {
@@ -450,7 +450,7 @@ export class Queue extends EventEmitter {
   async cleanOldWorkers(age: number) {
     // note: this method will remove the data created by a 'stuck' worker and move the payload to the error queue
     // however, it will not actually remove any processes which may be running.  A job *may* be running that you have removed
-    const results = {};
+    const results: { [key: string]: any } = {};
 
     const data = await this.allWorkingOn();
     for (const i in Object.keys(data)) {
@@ -516,10 +516,38 @@ export class Queue extends EventEmitter {
   }
 
   /**
+   * Look though the failed jobs to find those which were failed as a result of forceCleanWorker and re-enqueue them.
+   * This is potentially very slow if you have a lot of failed jobs
+   */
+  async retryStuckJobs(upperLimit = Infinity) {
+    let start = 0;
+    let batchSize = 100;
+    let failedJobs = [];
+
+    const loadFailedJobs = async () => {
+      failedJobs = await this.failed(start, start + batchSize);
+      start = start + batchSize;
+    };
+
+    await loadFailedJobs();
+
+    while (failedJobs.length > 0 && start < upperLimit) {
+      for (const i in failedJobs) {
+        const job = failedJobs[i];
+        if (job?.backtrace[1] === "queue#forceCleanWorker") {
+          await this.retryAndRemoveFailed(job);
+        }
+      }
+
+      await loadFailedJobs();
+    }
+  }
+
+  /**
    * - stats will be a hash containing details about all the queues in your redis, and how many jobs are in each
    */
   async stats() {
-    const data = {};
+    const data: { [key: string]: any } = {};
     const keys = await this.connection.getKeys(this.connection.key("stat:*"));
     if (keys.length === 0) {
       return data;
