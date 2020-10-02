@@ -15,7 +15,7 @@ describe("connection", () => {
 
   test(
     "can provide an error if connection failed",
-    async () => {
+    async (resolve) => {
       const connectionDetails = {
         pkg: specHelper.connectionDetails.pkg,
         host: "wrong-hostname",
@@ -27,14 +27,12 @@ describe("connection", () => {
 
       const connection = new Connection(connectionDetails);
 
-      await new Promise((resolve) => {
-        connection.connect();
+      connection.connect();
 
-        connection.on("error", (error) => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-          connection.end();
-          resolve();
-        });
+      connection.on("error", (error) => {
+        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
+        connection.end();
+        resolve();
       });
     },
     30 * 1000

@@ -18,7 +18,7 @@ describe("queue", () => {
 
   test(
     "can provide an error if connection failed",
-    async () => {
+    async (resolve) => {
       const connectionDetails = {
         pkg: specHelper.connectionDetails.pkg,
         host: "wronghostname",
@@ -33,14 +33,12 @@ describe("queue", () => {
         {}
       );
 
-      await new Promise((resolve) => {
-        queue.connect();
+      queue.connect();
 
-        queue.on("error", (error) => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-          queue.end();
-          resolve();
-        });
+      queue.on("error", (error) => {
+        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
+        queue.end();
+        resolve();
       });
     },
     30 * 1000
@@ -545,121 +543,111 @@ describe("queue", () => {
         expect(data).toHaveProperty("workerB", "started");
       });
 
-      test("we can see what workers are working on (active)", async () => {
+      test("we can see what workers are working on (active)", async (resolve) => {
         queue.enqueue(specHelper.queue, "slowJob");
         workerA.start();
 
-        await new Promise((resolve) => {
-          workerA.on("job", async () => {
-            workerA.removeAllListeners("job");
+        workerA.on("job", async () => {
+          workerA.removeAllListeners("job");
 
-            const data = await queue.allWorkingOn();
-            expect(data).toHaveProperty("workerB", "started");
-            const paylaod = data.workerA.payload;
-            expect(paylaod.queue).toBe("test_queue");
-            expect(paylaod.class).toBe("slowJob");
+          const data = await queue.allWorkingOn();
+          expect(data).toHaveProperty("workerB", "started");
+          const paylaod = data.workerA.payload;
+          expect(paylaod.queue).toBe("test_queue");
+          expect(paylaod.class).toBe("slowJob");
 
-            return resolve();
-          });
+          return resolve();
         });
       });
 
-      test("can remove stuck workers and re-enqueue their jobs", async () => {
+      test("can remove stuck workers and re-enqueue their jobs", async (resolve) => {
         const age = 1;
         await queue.enqueue(specHelper.queue, "slowJob", [{ a: 1 }]);
         await workerA.start();
 
-        await new Promise((resolve) => {
-          // hijack a worker in the middle of working on a job
-          workerA.on("job", async () => {
-            workerA.removeAllListeners("job");
+        // hijack a worker in the middle of working on a job
+        workerA.on("job", async () => {
+          workerA.removeAllListeners("job");
 
-            const workingOnData = await queue.allWorkingOn();
-            const paylaod = workingOnData.workerA.payload;
-            expect(paylaod.queue).toBe("test_queue");
-            expect(paylaod.class).toBe("slowJob");
-            expect(paylaod.args[0].a).toBe(1);
+          const workingOnData = await queue.allWorkingOn();
+          const paylaod = workingOnData.workerA.payload;
+          expect(paylaod.queue).toBe("test_queue");
+          expect(paylaod.class).toBe("slowJob");
+          expect(paylaod.args[0].a).toBe(1);
 
-            const runAt = Date.parse(workingOnData.workerA.run_at);
-            const now = new Date().getTime();
-            expect(runAt).toBeGreaterThanOrEqual(now - 1001);
-            expect(runAt).toBeLessThanOrEqual(now);
+          const runAt = Date.parse(workingOnData.workerA.run_at);
+          const now = new Date().getTime();
+          expect(runAt).toBeGreaterThanOrEqual(now - 1001);
+          expect(runAt).toBeLessThanOrEqual(now);
 
-            const cleanData = await queue.cleanOldWorkers(age);
-            expect(Object.keys(cleanData).length).toBe(1);
-            expect(cleanData.workerA.queue).toBe("test_queue");
-            expect(cleanData.workerA.worker).toBe("workerA");
-            expect(cleanData.workerA.payload.class).toBe("slowJob");
-            expect(cleanData.workerA.payload.args[0].a).toBe(1);
+          const cleanData = await queue.cleanOldWorkers(age);
+          expect(Object.keys(cleanData).length).toBe(1);
+          expect(cleanData.workerA.queue).toBe("test_queue");
+          expect(cleanData.workerA.worker).toBe("workerA");
+          expect(cleanData.workerA.payload.class).toBe("slowJob");
+          expect(cleanData.workerA.payload.args[0].a).toBe(1);
 
-            let failedData = await specHelper.redis.rpop(
-              specHelper.namespace + ":" + "failed"
-            );
-            failedData = JSON.parse(failedData);
-            expect(failedData.queue).toBe(specHelper.queue);
-            expect(failedData.exception).toBe(
-              "Worker Timeout (killed manually)"
-            );
-            expect(failedData.error).toBe("Worker Timeout (killed manually)");
-            expect(failedData.payload.class).toBe("slowJob");
-            expect(failedData.payload.args[0].a).toBe(1);
+          let failedData = await specHelper.redis.rpop(
+            specHelper.namespace + ":" + "failed"
+          );
+          failedData = JSON.parse(failedData);
+          expect(failedData.queue).toBe(specHelper.queue);
+          expect(failedData.exception).toBe("Worker Timeout (killed manually)");
+          expect(failedData.error).toBe("Worker Timeout (killed manually)");
+          expect(failedData.payload.class).toBe("slowJob");
+          expect(failedData.payload.args[0].a).toBe(1);
 
-            const workingOnDataAgain = await queue.allWorkingOn();
-            expect(Object.keys(workingOnDataAgain).length).toBe(1);
-            expect(workingOnDataAgain.workerB).toBe("started");
+          const workingOnDataAgain = await queue.allWorkingOn();
+          expect(Object.keys(workingOnDataAgain).length).toBe(1);
+          expect(workingOnDataAgain.workerB).toBe("started");
 
-            return resolve();
-          });
+          return resolve();
         });
       });
 
-      test("will not remove stuck jobs within the time limit", async () => {
+      test("will not remove stuck jobs within the time limit", async (resolve) => {
         const age = 999;
         queue.enqueue(specHelper.queue, "slowJob");
         workerA.start();
 
-        await new Promise((resolve) => {
-          // hijack a worker in the middle of working on a job
-          workerA.on("job", async () => {
-            workerA.removeAllListeners("job");
+        // hijack a worker in the middle of working on a job
+        workerA.on("job", async () => {
+          workerA.removeAllListeners("job");
 
-            const data = await queue.cleanOldWorkers(age);
-            expect(Object.keys(data).length).toBe(0);
+          const data = await queue.cleanOldWorkers(age);
+          expect(Object.keys(data).length).toBe(0);
 
-            const workingOn = await queue.allWorkingOn();
-            const paylaod = workingOn.workerA.payload;
-            expect(paylaod.queue).toBe("test_queue");
-            expect(paylaod.class).toBe("slowJob");
+          const workingOn = await queue.allWorkingOn();
+          const paylaod = workingOn.workerA.payload;
+          expect(paylaod.queue).toBe("test_queue");
+          expect(paylaod.class).toBe("slowJob");
 
-            return resolve();
-          });
+          return resolve();
         });
       });
 
-      test("can forceClean a worker, returning the error payload", async () => {
+      test("can forceClean a worker, returning the error payload", async (resolve) => {
         queue.enqueue(specHelper.queue, "slowJob");
         workerA.start();
 
-        await new Promise((resolve) => {
-          // hijack a worker in the middle of working on a job
-          workerA.on("job", async () => {
-            workerA.removeAllListeners("job");
+        // hijack a worker in the middle of working on a job
+        workerA.on("job", async () => {
+          workerA.removeAllListeners("job");
 
-            const errorPayload = await queue.forceCleanWorker(workerA.name);
+          const errorPayload = await queue.forceCleanWorker(workerA.name);
 
-            expect(errorPayload.worker).toBe("workerA");
-            expect(errorPayload.queue).toBe("test_queue");
-            expect(errorPayload.payload.class).toBe("slowJob");
-            expect(errorPayload.exception).toBe(
-              "Worker Timeout (killed manually)"
-            );
-            expect(errorPayload.backtrace[0]).toMatch(/killed by/);
-            expect(errorPayload.backtrace[1]).toBe("queue#forceCleanWorker");
-            expect(errorPayload.backtrace[2]).toBe("node-resque");
-            expect(errorPayload.failed_at).toBeTruthy();
+          expect(errorPayload.worker).toBe("workerA");
+          expect(errorPayload.queue).toBe("test_queue");
+          expect(errorPayload.payload.class).toBe("slowJob");
+          expect(errorPayload.exception).toBe(
+            "Worker Timeout (killed manually)"
+          );
+          expect(errorPayload.backtrace[0]).toMatch(/killed by/);
+          expect(errorPayload.backtrace[1]).toBe("queue#forceCleanWorker");
+          expect(errorPayload.backtrace[2]).toBe("node-resque");
+          expect(errorPayload.failed_at).toBeTruthy();
 
-            return resolve();
-          });
+          return resolve();
         });
       });
 
@@ -681,26 +669,24 @@ describe("queue", () => {
         });
       });
 
-      test("retryStuckJobs", async () => {
+      test("retryStuckJobs", async (resolve) => {
         queue.enqueue(specHelper.queue, "slowJob");
         workerA.start();
 
-        await new Promise((resolve) => {
-          // hijack a worker in the middle of working on a job
-          workerA.on("job", async () => {
-            workerA.removeAllListeners("job");
+        // hijack a worker in the middle of working on a job
+        workerA.on("job", async () => {
+          workerA.removeAllListeners("job");
 
-            await queue.forceCleanWorker(workerA.name);
-            let failedJobs = await queue.failed(0, 100);
-            expect(failedJobs.length).toBe(1);
+          await queue.forceCleanWorker(workerA.name);
+          let failedJobs = await queue.failed(0, 100);
+          expect(failedJobs.length).toBe(1);
 
-            await queue.retryStuckJobs();
+          await queue.retryStuckJobs();
 
-            failedJobs = await queue.failed(0, 100);
-            expect(failedJobs.length).toBe(0);
+          failedJobs = await queue.failed(0, 100);
+          expect(failedJobs.length).toBe(0);
 
-            return resolve();
-          });
+          return resolve();
         });
       });
     });
