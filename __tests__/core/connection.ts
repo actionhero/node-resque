@@ -47,7 +47,7 @@ describe("connection", () => {
 
   describe("keys and namespaces", () => {
     const db = specHelper.connectionDetails.database;
-    let connection;
+    let connection: Connection;
     beforeAll(async () => {
       connection = new Connection(specHelper.cleanConnectionDetails());
       await connection.connect();
@@ -144,6 +144,7 @@ describe("connection", () => {
     });
 
     test("keys built with a array namespace are correct", () => {
+      //@ts-ignore
       connection.options.namespace = ["custom", "namespace"];
       expect(connection.key("thing")).toBe("custom:namespace:thing");
 

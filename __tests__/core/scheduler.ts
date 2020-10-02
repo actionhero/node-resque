@@ -1,8 +1,8 @@
 import { Queue, Scheduler, Worker } from "../../src";
 import specHelper from "../utils/specHelper";
 
-let scheduler;
-let queue;
+let scheduler: Scheduler;
+let queue: Queue;
 
 describe("scheduler", () => {
   test("can connect", async () => {

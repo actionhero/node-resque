@@ -1,6 +1,6 @@
 import { Queue, Worker } from "../../src";
 import specHelper from "../utils/specHelper";
-let queue;
+let queue: Queue;
 
 describe("queue", () => {
   afterAll(async () => {
@@ -90,6 +90,7 @@ describe("queue", () => {
     });
 
     test("can add delayed job whose timestamp is a string (enqueueAt)", async () => {
+      //@ts-ignore
       await queue.enqueueAt("10000", specHelper.queue, "someJob", [1, 2, 3]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
@@ -140,6 +141,7 @@ describe("queue", () => {
       const now = Math.round(new Date().getTime() / 1000) + 5;
       const time = 5 * 1000;
 
+      // @ts-ignore
       await queue.enqueueIn(time.toString(), specHelper.queue, "someJob", [
         1,
         2,
@@ -232,6 +234,7 @@ describe("queue", () => {
     });
 
     test("can handle single arguments without explicit array", async () => {
+      // @ts-ignore
       await queue.enqueue(specHelper.queue, "someJob", 1);
       const obj = await specHelper.popFromQueue();
       expect(JSON.parse(obj).args).toEqual([1]);
@@ -563,7 +566,7 @@ describe("queue", () => {
 
       test("can remove stuck workers and re-enqueue their jobs", async () => {
         const age = 1;
-        await queue.enqueue(specHelper.queue, "slowJob", { a: 1 });
+        await queue.enqueue(specHelper.queue, "slowJob", [{ a: 1 }]);
         await workerA.start();
 
         await new Promise((resolve) => {
@@ -675,6 +678,29 @@ describe("queue", () => {
         const keys = await specHelper.redis.keys(specHelper.namespace + "*");
         keys.map((key) => {
           expect(key).not.toMatch(/workerA/);
+        });
+      });
+
+      test("retryStuckJobs", async () => {
+        queue.enqueue(specHelper.queue, "slowJob");
+        workerA.start();
+
+        await new Promise((resolve) => {
+          // hijack a worker in the middle of working on a job
+          workerA.on("job", async () => {
+            workerA.removeAllListeners("job");
+
+            await queue.forceCleanWorker(workerA.name);
+            let failedJobs = await queue.failed(0, 100);
+            expect(failedJobs.length).toBe(1);
+
+            await queue.retryStuckJobs();
+
+            failedJobs = await queue.failed(0, 100);
+            expect(failedJobs.length).toBe(0);
+
+            return resolve();
+          });
         });
       });
     });

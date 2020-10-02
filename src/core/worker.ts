@@ -316,13 +316,10 @@ export class Worker extends EventEmitter {
   // #performInline is used to run a job payload directly.
   // If you are planning on running a job via #performInline, this worker should also not be started, nor should be using event emitters to monitor this worker.
   // This method will also not write to redis at all, including logging errors, modify resque's stats, etc.
-  async performInline(func, args) {
+  async performInline(func, args = []) {
     const q = "_direct-queue-" + this.name;
     let toRun;
 
-    if (!args) {
-      args = [];
-    }
     if (!(args instanceof Array)) {
       args = [args];
     }

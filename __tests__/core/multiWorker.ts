@@ -1,8 +1,8 @@
 import specHelper from "../utils/specHelper";
 import { MultiWorker, Queue } from "../../src";
 
-let queue;
-let multiWorker;
+let queue: Queue;
+let multiWorker: MultiWorker;
 const checkTimeout = specHelper.timeout / 10;
 const minTaskProcessors = 1;
 const maxTaskProcessors = 5;
