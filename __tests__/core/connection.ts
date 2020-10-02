@@ -43,6 +43,13 @@ describe("connection", () => {
     expect(keys.length).toBe(0);
   });
 
+  test("it has loaded Lua commands", async () => {
+    const connection = new Connection(specHelper.cleanConnectionDetails());
+    await connection.connect();
+    expect(typeof connection.redis["popAndStoreJob"]).toBe("function");
+    connection.end();
+  });
+
   describe("keys and namespaces", () => {
     const db = specHelper.connectionDetails.database;
     let connection: Connection;

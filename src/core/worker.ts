@@ -422,37 +422,16 @@ export class Worker extends EventEmitter {
       this.stringQueues()
     );
 
-    await this.connection.redis.watch(queueKey);
-    const encodedJob = await this.connection.redis.lindex(queueKey, 0);
-    // const encodedJob = await this.connection.redis.lpop(queueKey);
+    const encodedJob: string = await this.connection.redis["popAndStoreJob"](
+      queueKey,
+      workerKey,
+      new Date().toString(),
+      this.queue,
+      this.name
+    );
 
-    if (encodedJob) {
-      currentJob = JSON.parse(encodedJob.toString());
+    if (encodedJob) currentJob = JSON.parse(encodedJob);
 
-      try {
-        await this.connection.redis
-          .multi()
-          .lpop(queueKey)
-          .set(
-            workerKey,
-            JSON.stringify({
-              run_at: new Date().toString(),
-              queue: this.queue,
-              payload: currentJob,
-              worker: this.name,
-            })
-          )
-          .exec((error, results) => {
-            // the multi/exec was interrupted by another process
-            if (error) throw error;
-            if (!results || results[0][1] !== encodedJob) currentJob = null;
-          });
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    await this.connection.redis.unwatch();
     return currentJob;
   }
 
