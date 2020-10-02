@@ -2,6 +2,9 @@
 
 import { EventEmitter } from "events";
 import * as IORedis from "ioredis";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import { ConnectionOptions } from "../types/options";
 
 interface EventListeners {
@@ -39,7 +42,7 @@ export class Connection extends EventEmitter {
   }
 
   async connect() {
-    const connectionTest = async () => {
+    const connectionTestAndLoadLua = async () => {
       try {
         await this.redis.set(this.key("connection_test_key"), "ok");
         const data = await this.redis.get(this.key("connection_test_key"));
@@ -47,6 +50,7 @@ export class Connection extends EventEmitter {
           throw new Error("cannot read connection test key");
         }
         this.connected = true;
+        this.loadLua();
       } catch (error) {
         this.connected = false;
         this.emit("error", error);
@@ -55,7 +59,7 @@ export class Connection extends EventEmitter {
 
     if (this.options.redis) {
       this.redis = this.options.redis;
-      await connectionTest();
+      await connectionTestAndLoadLua();
     } else {
       if (this.options.pkg === "ioredis") {
         const Pkg = IORedis;
@@ -87,7 +91,26 @@ export class Connection extends EventEmitter {
     if (!this.options.redis) {
       await this.redis.select(this.options.database);
     }
-    await connectionTest();
+    await connectionTestAndLoadLua();
+  }
+
+  loadLua() {
+    const luaDir = path.join(__dirname, "..", "..", "lua");
+
+    const files = fs.readdirSync(luaDir);
+    for (const i in files) {
+      const file = files[i];
+      const { name } = path.parse(file);
+      const contents = fs.readFileSync(path.join(luaDir, file)).toString();
+      const lines = contents.split(os.EOL);
+      const encodedMetadata = lines[0].replace(/^-- /, "");
+      const metadata = JSON.parse(encodedMetadata);
+
+      this.redis.defineCommand(name, {
+        numberOfKeys: metadata.numberOfKeys,
+        lua: contents,
+      });
+    }
   }
 
   async getKeys(match: string, count: number = null, keysAry = [], cursor = 0) {
