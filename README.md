@@ -14,6 +14,7 @@ You can read the API docs for Node Resque @ [node-resque.actionherojs.com](https
 
 ## Version Notes
 
+- The version of redis required is >= 2.6.0 as we use lua scripting to create custom atomic operations
 - ‼️ Version 6+ of Node Resque uses TypeScript. We will still include JavaScript transpiled code in NPM releases, but they will be generated from the TypeScript source. Functinality between node-resque v5 and v6 should be the same.
 - ‼️ Version 5+ of Node Resque uses async/await. There is no upgrade path from previous versions. Node v8.0.0+ is required.
 
