@@ -102,7 +102,7 @@ export class Connection extends EventEmitter {
       const file = files[i];
       const { name } = path.parse(file);
       const contents = fs.readFileSync(path.join(luaDir, file)).toString();
-      const lines = contents.split(os.EOL);
+      const lines = contents.split("\n"); // see https://github.com/actionhero/node-resque/issues/465 for why we split only on *nix line breaks
       const encodedMetadata = lines[0].replace(/^-- /, "");
       const metadata = JSON.parse(encodedMetadata);
 
