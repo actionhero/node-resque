@@ -127,10 +127,11 @@ export class Queue extends EventEmitter {
     time: number,
     q: string,
     func: string,
-    args: Array<any> = []
+    args: Array<any> = [],
+    suppressDuplicateTaskError = false
   ) {
     const timestamp = new Date().getTime() + parseInt(time.toString(), 10);
-    return this.enqueueAt(timestamp, q, func, args);
+    return this.enqueueAt(timestamp, q, func, args, suppressDuplicateTaskError);
   }
 
   /**
