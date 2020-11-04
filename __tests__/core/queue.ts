@@ -105,16 +105,30 @@ describe("queue", () => {
       expect(obj.args).toEqual([1, 2, 3]);
     });
 
-    test("will not enqueue a delayed job at the same time with matching params", async () => {
+    test("will not enqueue a delayed job at the same time with matching params with error", async () => {
       await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
-      try {
-        await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
-        throw new Error("should not get here");
-      } catch (error) {
-        expect(String(error)).toBe(
-          "Error: Job already enqueued at this time with same arguments"
-        );
-      }
+      await expect(
+        queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3])
+      ).rejects.toThrow(
+        /Job already enqueued at this time with same arguments/
+      );
+
+      const { tasks } = await queue.delayedAt(10000);
+      expect(tasks.length).toBe(1);
+    });
+
+    test("will not enqueue a delayed job at the same time with matching params with error suppressed", async () => {
+      await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
+      await queue.enqueueAt(
+        10000,
+        specHelper.queue,
+        "someJob",
+        [1, 2, 3],
+        true
+      ); // no error
+
+      const { tasks } = await queue.delayedAt(10000);
+      expect(tasks.length).toBe(1);
     });
 
     test("can add delayed job (enqueueIn)", async () => {
