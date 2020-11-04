@@ -83,7 +83,8 @@ export class Queue extends EventEmitter {
     timestamp: number,
     q: string,
     func: string,
-    args: Array<any> = []
+    args: Array<any> = [],
+    suppressDuplicateTaskError = false
   ) {
     // Don't run plugins here, they should be run by scheduler at the enqueue step
     args = arrayify(args);
@@ -95,8 +96,15 @@ export class Queue extends EventEmitter {
       this.connection.key("timestamps:" + item),
       match
     );
+
     if (foundMatch === 1) {
-      throw new Error("Job already enqueued at this time with same arguments");
+      if (suppressDuplicateTaskError) {
+        return;
+      } else {
+        throw new Error(
+          "Job already enqueued at this time with same arguments"
+        );
+      }
     }
 
     await this.connection.redis
