@@ -98,8 +98,7 @@ export class Connection extends EventEmitter {
     const luaDir = path.join(__dirname, "..", "..", "lua");
 
     const files = fs.readdirSync(luaDir);
-    for (const i in files) {
-      const file = files[i];
+    for (const file of files) {
       const { name } = path.parse(file);
       const contents = fs.readFileSync(path.join(luaDir, file)).toString();
       const lines = contents.split("\n"); // see https://github.com/actionhero/node-resque/issues/465 for why we split only on *nix line breaks
