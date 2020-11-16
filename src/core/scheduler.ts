@@ -268,10 +268,8 @@ export class Scheduler extends EventEmitter {
 
   private async cleanupTimestamp(timestamp: number) {
     const key = this.connection.key("delayed:" + timestamp);
-    await this.connection.redis.watch(key);
-    await this.connection.redis.watch(
-      this.connection.key("delayed_queue_schedule")
-    );
+    await this.watchIfPossible(key);
+    await this.watchIfPossible(this.connection.key("delayed_queue_schedule"));
     const length = await this.connection.redis.llen(key);
     if (length === 0) {
       await this.connection.redis
@@ -280,7 +278,7 @@ export class Scheduler extends EventEmitter {
         .zrem(this.connection.key("delayed_queue_schedule"), timestamp)
         .exec();
     }
-    await this.connection.redis.unwatch();
+    await this.unwatchIfPossible();
   }
 
   private async checkStuckWorkers() {
@@ -324,5 +322,17 @@ export class Scheduler extends EventEmitter {
   async forceCleanWorker(workerName, delta) {
     const errorPayload = await this.queue.forceCleanWorker(workerName);
     this.emit("cleanStuckWorker", workerName, errorPayload, delta);
+  }
+
+  private async watchIfPossible(key: string) {
+    if (typeof this.connection.redis.watch === "function") {
+      return this.connection.redis.watch(key);
+    }
+  }
+
+  private async unwatchIfPossible() {
+    if (typeof this.connection.redis.unwatch === "function") {
+      return this.connection.redis.unwatch();
+    }
   }
 }

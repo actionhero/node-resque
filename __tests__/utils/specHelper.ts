@@ -1,8 +1,9 @@
-const Redis = require("ioredis");
+import * as Redis from "ioredis";
+import * as NodeResque from "../../src/index";
+
 const namespace = `resque-test-${process.env.JEST_WORKER_ID || 0}`;
 const queue = "test_queue";
 const pkg = "ioredis";
-const NodeResque = require("../../src/index");
 
 const SpecHelper = {
   pkg: pkg,
@@ -21,11 +22,14 @@ const SpecHelper = {
   },
 
   connect: async function () {
-    this.redis = Redis.createClient(
+    if (!this.connectionDetails.options) this.connectionDetails.options = {};
+    this.connectionDetails.options.db = this.connectionDetails?.options?.database;
+    this.redis = new Redis(
       this.connectionDetails.port,
       this.connectionDetails.host,
       this.connectionDetails.options
     );
+
     this.redis.setMaxListeners(0);
     if (
       this.connectionDetails.password !== null &&

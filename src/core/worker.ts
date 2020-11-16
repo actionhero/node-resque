@@ -422,13 +422,30 @@ export class Worker extends EventEmitter {
       this.stringQueues()
     );
 
-    const encodedJob: string = await this.connection.redis["popAndStoreJob"](
-      queueKey,
-      workerKey,
-      new Date().toString(),
-      this.queue,
-      this.name
-    );
+    let encodedJob: string;
+
+    if (this.connection.redis["popAndStoreJob"]) {
+      encodedJob = await this.connection.redis["popAndStoreJob"](
+        queueKey,
+        workerKey,
+        new Date().toString(),
+        this.queue,
+        this.name
+      );
+    } else {
+      encodedJob = await this.connection.redis.lpop(queueKey);
+      if (encodedJob) {
+        await this.connection.redis.set(
+          workerKey,
+          JSON.stringify({
+            run_at: new Date().toString(),
+            queue: this.queue,
+            worker: this.name,
+            payload: JSON.parse(encodedJob),
+          })
+        );
+      }
+    }
 
     if (encodedJob) currentJob = JSON.parse(encodedJob);
 
