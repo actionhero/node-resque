@@ -1,11 +1,13 @@
-import { Queue, Worker, Scheduler } from "../src";
-import * as RedisMock from "ioredis-mock";
-import specHelper from "./utils/specHelper";
+import { Queue, Worker, Scheduler } from "../../src";
+import specHelper from "../utils/specHelper";
 
-// for ioredis-mock, we need to re-use a shared connection
-// setting "pkg" is important!
-const REDIS = new RedisMock();
-const connectionDetails = { redis: REDIS, pkg: "ioredis-mock" };
+const connectionDetails = {
+  pkg: "ioredis",
+  host: "127.0.0.1",
+  password: null,
+  port: 6379,
+  database: parseInt(process.env.JEST_WORKER_ID || "0"),
+};
 
 const jobs = {
   add: {
@@ -16,7 +18,7 @@ const jobs = {
   },
 };
 
-describe("testing with ioredis-mock", () => {
+describe("testing with ioredis package", () => {
   let queue: Queue;
   let scheduler: Scheduler;
   let worker: Worker;
