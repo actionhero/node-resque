@@ -3,7 +3,6 @@
 import { EventEmitter } from "events";
 import * as IORedis from "ioredis";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import { ConnectionOptions } from "../types/options";
 
@@ -61,17 +60,19 @@ export class Connection extends EventEmitter {
       this.redis = this.options.redis;
       await connectionTestAndLoadLua();
     } else {
-      if (this.options.pkg === "ioredis") {
-        const Pkg = IORedis;
-        this.options.options.db = this.options.database;
-        this.redis = new Pkg(
+      const Pkg = require(this.options.pkg);
+      if (
+        typeof Pkg.createClient === "function" &&
+        this.options.pkg !== "ioredis"
+      ) {
+        this.redis = Pkg.createClient(
           this.options.port,
           this.options.host,
           this.options.options
         );
       } else {
-        const Pkg = require(this.options.pkg);
-        this.redis = Pkg.createClient(
+        this.options.options.db = this.options.database;
+        this.redis = new Pkg(
           this.options.port,
           this.options.host,
           this.options.options
@@ -88,13 +89,17 @@ export class Connection extends EventEmitter {
     this.redis.on("error", (err) => this.eventListeners.error(err));
     this.redis.on("end", () => this.eventListeners.end());
 
-    if (!this.options.redis) {
+    if (!this.options.redis && typeof this.redis.select === "function") {
       await this.redis.select(this.options.database);
     }
+
     await connectionTestAndLoadLua();
   }
 
   loadLua() {
+    // even though ioredis-mock can run LUA, cjson is not available
+    if (this.options.pkg === "ioredis-mock") return;
+
     const luaDir = path.join(__dirname, "..", "..", "lua");
 
     const files = fs.readdirSync(luaDir);
