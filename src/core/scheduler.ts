@@ -324,13 +324,13 @@ export class Scheduler extends EventEmitter {
     this.emit("cleanStuckWorker", workerName, errorPayload, delta);
   }
 
-  async watchIfPossible(key: string) {
+  private async watchIfPossible(key: string) {
     if (typeof this.connection.redis.watch === "function") {
       return this.connection.redis.watch(key);
     }
   }
 
-  async unwatchIfPossible() {
+  private async unwatchIfPossible() {
     if (typeof this.connection.redis.unwatch === "function") {
       return this.connection.redis.unwatch();
     }
