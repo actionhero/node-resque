@@ -1,6 +1,6 @@
 // If a job with the same name, queue, and args is already in the delayed queue(s), do not enqueue it again
 
-import { Plugin } from "./../index";
+import { Plugin } from "..";
 
 class DelayQueueLock extends Plugin {
   async beforeEnqueue() {

@@ -1,10 +1,9 @@
 import { EventEmitter } from "events";
 import * as os from "os";
 import { Worker } from "./worker";
-import { EventLoopDelay } from "./../utils/eventLoopDelay";
+import { EventLoopDelay } from "../utils/eventLoopDelay";
 import { MultiWorkerOptions } from "../types/options";
-import { Jobs } from "../types/jobs";
-import { Job, JobEmit } from "../types/job";
+import { Jobs, Job, JobEmit } from "..";
 
 export declare interface MultiWorker {
   options: MultiWorkerOptions;

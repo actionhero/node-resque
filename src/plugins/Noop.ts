@@ -1,4 +1,4 @@
-import { Plugin } from "./../index";
+import { Plugin } from "..";
 
 export class Noop extends Plugin {
   afterPerform() {

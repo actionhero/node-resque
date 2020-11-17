@@ -1,5 +1,5 @@
 // If a job with the same name, queue, and args is already running, put this job back in the queue and try later
-import { Plugin } from "./../index";
+import { Plugin } from "..";
 
 export class JobLock extends Plugin {
   beforeEnqueue() {
