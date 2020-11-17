@@ -58,7 +58,6 @@ export class Connection extends EventEmitter {
 
     if (this.options.redis) {
       this.redis = this.options.redis;
-      await connectionTestAndLoadLua();
     } else {
       const Pkg = require(this.options.pkg);
       if (
