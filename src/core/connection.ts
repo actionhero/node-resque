@@ -5,6 +5,7 @@ import * as IORedis from "ioredis";
 import * as fs from "fs";
 import * as path from "path";
 import { ConnectionOptions } from "../types/options";
+import { RedisClientFactory } from "./redis/RedisClientFactory";
 
 interface EventListeners {
   [key: string]: Function;
@@ -56,28 +57,10 @@ export class Connection extends EventEmitter {
       }
     };
 
+    this.redis = RedisClientFactory.create(this.options);
+
     if (this.options.redis) {
-      this.redis = this.options.redis;
       await connectionTestAndLoadLua();
-    } else {
-      const Pkg = require(this.options.pkg);
-      if (
-        typeof Pkg.createClient === "function" &&
-        this.options.pkg !== "ioredis"
-      ) {
-        this.redis = Pkg.createClient(
-          this.options.port,
-          this.options.host,
-          this.options.options
-        );
-      } else {
-        this.options.options.db = this.options.database;
-        this.redis = new Pkg(
-          this.options.port,
-          this.options.host,
-          this.options.options
-        );
-      }
     }
 
     this.eventListeners.error = (error) => {
