@@ -1,6 +1,7 @@
 #!/usr/bin/env ts-node
 
 import { MultiWorker, Queue } from "../src";
+import { configureExampleEventLogging } from "./shared/logEvents";
 /* In your projects:
 import { MultiWorker, Queue } from "node-resque";
 */
@@ -93,60 +94,7 @@ async function boot() {
     jobs
   );
 
-  // normal worker emitters
-  multiWorker.on("start", (workerId) => {
-    console.log(`worker[${workerId}] started`);
-  });
-  multiWorker.on("end", (workerId) => {
-    console.log(`worker[${workerId}] ended`);
-  });
-  multiWorker.on("cleaning_worker", (workerId, worker, pid) => {
-    console.log("cleaning old worker " + worker);
-  });
-  multiWorker.on("poll", (workerId, queue) => {
-    console.log(`worker[${workerId}] polling ${queue}`);
-  });
-  multiWorker.on("job", (workerId, queue, job) => {
-    console.log(
-      `worker[${workerId}] working job ${queue} ${JSON.stringify(job)}`
-    );
-  });
-  multiWorker.on("reEnqueue", (workerId, queue, job, plugin) => {
-    console.log(
-      `worker[${workerId}] reEnqueue job (${plugin}) ${queue} ${JSON.stringify(
-        job
-      )}`
-    );
-  });
-  multiWorker.on("success", (workerId, queue, job, result, duration) => {
-    console.log(
-      `worker[${workerId}] job success ${queue} ${JSON.stringify(
-        job
-      )} >> ${result} (${duration}ms)`
-    );
-  });
-  multiWorker.on("failure", (workerId, queue, job, failure, duration) => {
-    console.log(
-      `worker[${workerId}] job failure ${queue} ${JSON.stringify(
-        job
-      )} >> ${failure} (${duration}ms)`
-    );
-  });
-  multiWorker.on("error", (error, workerId, queue, job) => {
-    console.log(
-      `worker[${workerId}] error ${queue} ${JSON.stringify(job)} >> ${error}`
-    );
-  });
-  multiWorker.on("pause", (workerId) => {
-    console.log(`worker[${workerId}] paused`);
-  });
-
-  // multiWorker emitters
-  multiWorker.on("multiWorkerAction", (verb, delay) => {
-    console.log(
-      `*** checked for worker status: ${verb} (event loop delay: ${delay}ms)`
-    );
-  });
+  configureExampleEventLogging({ multiWorker });
 
   multiWorker.start();
 
