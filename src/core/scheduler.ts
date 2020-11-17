@@ -3,9 +3,7 @@
 
 import { EventEmitter } from "events";
 import * as os from "os";
-import { ErrorPayload } from "../types/errorPayload";
-import { Job } from "../types/job";
-import { Jobs } from "../types/jobs";
+import { ErrorPayload, Job, Jobs } from "..";
 import { SchedulerOptions } from "../types/options";
 import { Connection } from "./connection";
 import { Queue } from "./queue";

@@ -4,7 +4,7 @@ import { EventEmitter } from "events";
 import * as IORedis from "ioredis";
 import * as fs from "fs";
 import * as path from "path";
-import { ConnectionOptions } from "../types/options";
+import { ConnectionOptions } from "..";
 
 interface EventListeners {
   [key: string]: Function;

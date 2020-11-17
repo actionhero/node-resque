@@ -1,6 +1,6 @@
 // If a job with the same name, queue, and args is already in the queue, do not enqueue it again
 
-import { Plugin } from "./../index";
+import { Plugin } from "..";
 
 export class QueueLock extends Plugin {
   async beforeEnqueue() {

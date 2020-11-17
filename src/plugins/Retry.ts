@@ -2,7 +2,7 @@
 // a port of some of the features in https://github.com/lantins/resque-retry
 
 import * as os from "os";
-import { Plugin } from "./../index";
+import { Plugin } from "..";
 
 export class Retry extends Plugin {
   constructor(worker, func, queue, job, args, options) {
