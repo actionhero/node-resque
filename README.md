@@ -23,7 +23,7 @@ You can read the API docs for Node Resque @ [node-resque.actionherojs.com](https
 I learn best by examples:
 
 ```javascript
-import { Worker, Scheduler, Queue } from "node-resque";
+import { Worker, Plugins, Scheduler, Queue } from "node-resque";
 
 async function boot() {
   // ////////////////////////
@@ -49,7 +49,7 @@ async function boot() {
 
   const jobs = {
     add: {
-      plugins: ["JobLock"],
+      plugins: [Plugins.JobLock],
       pluginOptions: {
         JobLock: { reEnqueue: true },
       },
@@ -469,7 +469,7 @@ And then your plugin can be invoked within a job like this:
 ```javascript
 const jobs = {
   add: {
-    plugins: ["MyPlugin"],
+    plugins: [MyPlugin],
     pluginOptions: {
       MyPlugin: { thing: "stuff" },
     },
@@ -485,7 +485,7 @@ const jobs = {
 
 - You need to return `true` or `false` on the before hooks. `true` indicates that the action should continue, and `false` prevents it. This is called `toRun`.
 - If you are writing a plugin to deal with errors which may occur during your resque job, you can inspect and modify `this.worker.error` in your plugin. If `this.worker.error` is null, no error will be logged in the resque error queue.
-- There are a few included plugins, all in the lib/plugins/\* directory. You can rewrite you own and include it like this:
+- There are a few included plugins, all in the `src/plugins/*` directory. You can write your own and include it like this:
 
 ```javascript
 const jobs = {
