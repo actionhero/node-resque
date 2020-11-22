@@ -1,12 +1,12 @@
 import specHelper from "../utils/specHelper";
-import { Plugin, Queue, Worker } from "../../src";
+import { Plugin, Queue, Plugins, Worker } from "../../src";
 
 let queue;
 const jobDelay = 100;
 
 const jobs = {
   slowAdd: {
-    plugins: ["JobLock"],
+    plugins: [Plugins.JobLock],
     pluginOptions: { jobLock: {} },
     perform: async (a, b) => {
       const answer = a + b;
@@ -17,7 +17,7 @@ const jobs = {
     },
   },
   uniqueJob: {
-    plugins: ["DelayQueueLock"],
+    plugins: [Plugins.DelayQueueLock],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
     perform: async (a, b) => {
       const answer = a + b;

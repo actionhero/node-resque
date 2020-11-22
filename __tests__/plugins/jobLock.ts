@@ -1,5 +1,5 @@
 import specHelper from "../utils/specHelper";
-import { Queue, Worker } from "../../src";
+import { Queue, Plugins, Worker } from "../../src";
 
 let queue;
 const jobDelay = 1000;
@@ -8,7 +8,7 @@ let worker2;
 
 const jobs = {
   slowAdd: {
-    plugins: ["JobLock"],
+    plugins: [Plugins.JobLock],
     pluginOptions: { jobLock: {} },
     perform: async (a, b) => {
       const answer = a + b;
@@ -19,7 +19,7 @@ const jobs = {
     },
   },
   withoutReEnqueue: {
-    plugins: ["JobLock"],
+    plugins: [Plugins.JobLock],
     pluginOptions: { JobLock: { reEnqueue: false } },
     perform: async () => {
       await new Promise((resolve) => {
@@ -117,7 +117,7 @@ describe("plugins", () => {
 
       const functionJobs = {
         jobLockAdd: {
-          plugins: ["JobLock"],
+          plugins: [Plugins.JobLock],
           pluginOptions: {
             JobLock: {
               key: function () {

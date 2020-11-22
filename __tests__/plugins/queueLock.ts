@@ -1,5 +1,5 @@
 import specHelper from "../utils/specHelper";
-import { Plugin, Queue, Worker } from "../../src";
+import { Plugin, Plugins, Queue, Worker } from "../../src";
 
 let queue;
 
@@ -23,12 +23,12 @@ class NeverRunPlugin extends Plugin {
 
 const jobs = {
   uniqueJob: {
-    plugins: ["QueueLock"],
+    plugins: [Plugins.QueueLock],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
     perform: (a, b) => a + b,
   },
   blockingJob: {
-    plugins: ["QueueLock", NeverRunPlugin],
+    plugins: [Plugins.QueueLock, NeverRunPlugin],
     perform: (a, b) => a + b,
   },
 };
