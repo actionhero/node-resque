@@ -2,7 +2,7 @@
 
 import { Plugin } from "..";
 
-class DelayQueueLock extends Plugin {
+export class DelayQueueLock extends Plugin {
   async beforeEnqueue() {
     const timestamps = await this.queueObject.scheduledAt(
       this.queue,
