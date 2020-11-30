@@ -17,7 +17,7 @@ export abstract class Plugin {
   };
 
   constructor(worker, func, queue, job, args, options) {
-    this.name = "CustomPlugin";
+    this.name = this?.constructor?.name || "Node Resque Plugin";
     this.worker = worker;
     this.queue = queue;
     this.func = func;
