@@ -7,12 +7,8 @@ export async function RunPlugins(
   args,
   pluginCounter?
 ) {
-  if (!pluginCounter) {
-    pluginCounter = 0;
-  }
-  if (!job) {
-    return true;
-  }
+  if (!pluginCounter) pluginCounter = 0;
+  if (!job) return true;
   if (
     job.plugins === null ||
     job.plugins === undefined ||
@@ -20,9 +16,7 @@ export async function RunPlugins(
   ) {
     return true;
   }
-  if (pluginCounter >= job.plugins.length) {
-    return true;
-  }
+  if (pluginCounter >= job.plugins.length) return true;
 
   const pluginRefrence = job.plugins[pluginCounter];
   const toRun = await RunPlugin(
@@ -35,9 +29,7 @@ export async function RunPlugins(
     args
   );
   pluginCounter++;
-  if (toRun === false) {
-    return false;
-  }
+  if (toRun === false) return false;
 
   return RunPlugins(self, type, func, queue, job, args, pluginCounter);
 }
@@ -51,9 +43,7 @@ export async function RunPlugin(
   job,
   args
 ) {
-  if (!job) {
-    return true;
-  }
+  if (!job) return true;
 
   let pluginName = PluginRefrence;
   if (typeof PluginRefrence === "function") {
