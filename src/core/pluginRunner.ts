@@ -7,8 +7,8 @@ export async function RunPlugins(
   args,
   pluginCounter?
 ) {
-  if (!pluginCounter) pluginCounter = 0;
   if (!job) return true;
+  if (!pluginCounter) pluginCounter = 0;
   if (
     job.plugins === null ||
     job.plugins === undefined ||
