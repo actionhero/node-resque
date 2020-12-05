@@ -169,7 +169,7 @@ export class Worker extends EventEmitter {
     if (this.working === true) {
       await new Promise((resolve) => {
         setTimeout(() => {
-          resolve();
+          resolve(null);
         }, this.options.timeout);
       });
       return this.end();
@@ -407,7 +407,7 @@ export class Worker extends EventEmitter {
     await new Promise((resolve) => {
       setTimeout(() => {
         this.poll();
-        resolve();
+        resolve(null);
       }, this.options.timeout);
     });
   }

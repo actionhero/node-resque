@@ -253,7 +253,7 @@ export class MultiWorker extends EventEmitter {
           new Promise(async (resolve) => {
             await worker.end();
             await this.cleanupWorker(worker);
-            return resolve();
+            return resolve(null);
           })
         );
       });
