@@ -91,7 +91,7 @@ describe("plugins", () => {
             worker1.end();
             worker2.end();
             expect(new Date().getTime() - startTime).toBeLessThan(jobDelay * 3);
-            resolve();
+            resolve(null);
           }
         };
 

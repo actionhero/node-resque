@@ -129,7 +129,7 @@ export class Scheduler extends EventEmitter {
       return new Promise((resolve) => {
         setTimeout(async () => {
           await this.end();
-          resolve();
+          resolve(null);
         }, this.options.timeout / 2);
       });
     }
