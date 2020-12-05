@@ -1,12 +1,12 @@
 import specHelper from "../utils/specHelper";
-import { Scheduler, Queue, Worker } from "../../src";
+import { Scheduler, Plugins, Queue, Worker } from "../../src";
 
 let queue;
 let scheduler;
 
 const jobs = {
   brokenJob: {
-    plugins: ["Retry"],
+    plugins: [Plugins.Retry],
     pluginOptions: {
       Retry: {
         retryLimit: 3,
@@ -18,7 +18,7 @@ const jobs = {
     },
   },
   happyJob: {
-    plugins: ["Retry"],
+    plugins: [Plugins.Retry],
     pluginOptions: {
       Retry: {
         retryLimit: 3,
@@ -137,7 +137,7 @@ describe("plugins", () => {
     test("can have a retry count set", async (done) => {
       const customJobs = {
         jobWithRetryCount: {
-          plugins: ["Retry"],
+          plugins: [Plugins.Retry],
           pluginOptions: {
             Retry: {
               retryLimit: 5,
@@ -192,7 +192,7 @@ describe("plugins", () => {
     test("can have custom retry times set", async (done) => {
       const customJobs = {
         jobWithBackoffStrategy: {
-          plugins: ["Retry"],
+          plugins: [Plugins.Retry],
           pluginOptions: {
             Retry: {
               retryLimit: 5,

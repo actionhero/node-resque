@@ -1,5 +1,5 @@
 import specHelper from "../utils/specHelper";
-import { Scheduler, Queue, Worker } from "../../src";
+import { Scheduler, Plugins, Queue, Worker } from "../../src";
 
 let queue;
 let scheduler;
@@ -7,7 +7,7 @@ let loggedErrors = [];
 
 const jobs = {
   brokenJob: {
-    plugins: ["Noop"],
+    plugins: [Plugins.Noop],
     pluginOptions: {
       Noop: {
         logger: (error) => {
@@ -20,7 +20,7 @@ const jobs = {
     },
   },
   happyJob: {
-    plugins: ["Noop"],
+    plugins: [Plugins.Noop],
     pluginOptions: {
       Noop: {
         logger: (error) => {

@@ -1,8 +1,8 @@
 #!/usr/bin/env ts-node
 
-import { Queue, Scheduler, Worker } from "../src";
+import { Queue, Plugins, Scheduler, Worker } from "../src";
 /* In your projects:
-import { Queue, Scheduler, Worker } from "node-resque";
+import { Queue, Plugins, Scheduler, Worker } from "node-resque";
 */
 
 async function boot() {
@@ -29,7 +29,7 @@ async function boot() {
 
   const jobs = {
     add: {
-      plugins: ["JobLock"],
+      plugins: [Plugins.JobLock],
       pluginOptions: {
         JobLock: {},
       },
