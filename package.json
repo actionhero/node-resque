@@ -26,20 +26,20 @@
     "node": ">= 8"
   },
   "dependencies": {
-    "ioredis": "^4.19.2"
+    "ioredis": "^4.19.4"
   },
   "devDependencies": {
-    "@types/ioredis": "^4.17.8",
-    "@types/jest": "^26.0.16",
-    "@types/node": "^14.14.10",
+    "@types/ioredis": "^4.17.10",
+    "@types/jest": "^26.0.19",
+    "@types/node": "^14.14.19",
     "ioredis-mock": "^5.2.0",
     "jest": "^26.6.3",
     "node-schedule": "^1.3.2",
     "prettier": "^2.2.1",
     "ts-jest": "^26.4.4",
-    "ts-node": "^9.1.0",
-    "typedoc": "^0.19.2",
-    "typescript": "^4.1.2"
+    "ts-node": "^9.1.1",
+    "typedoc": "^0.20.10",
+    "typescript": "^4.1.3"
   },
   "jest": {
     "testPathIgnorePatterns": [
@@ -56,6 +56,6 @@
     "pretty": "prettier --write src __tests__ examples \"**/*.md\"",
     "test": "jest",
     "build": "tsc --declaration",
-    "docs": "typedoc --out docs --theme default"
+    "docs": "typedoc --out docs --theme default src/index.ts"
   }
 }
