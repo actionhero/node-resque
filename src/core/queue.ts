@@ -111,7 +111,7 @@ export class Queue extends EventEmitter {
       .sadd(this.connection.key("timestamps:" + item), "delayed:" + rTimestamp)
       .zadd(
         this.connection.key("delayed_queue_schedule"),
-        rTimestamp.toString(),
+        rTimestamp,
         rTimestamp.toString()
       )
       .exec();
