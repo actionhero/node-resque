@@ -120,6 +120,13 @@ describe("scheduler", () => {
         await queue.end();
       });
 
+      test("queues can see who the leader is", async () => {
+        await scheduler.poll();
+        const leader = await queue.leader();
+        expect(leader).toBe(scheduler.options.name);
+        await scheduler.end();
+      });
+
       test("will move enqueued jobs when the time comes", async () => {
         await queue.enqueueAt(1000 * 10, specHelper.queue, "someJob", [
           1,

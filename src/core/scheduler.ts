@@ -172,14 +172,8 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  private leaderKey() {
-    // TODO: Figure out if more work is needed
-    // return this.connection.key("resque_scheduler_master_lock");
-    return this.connection.key("resque_scheduler_leader_lock");
-  }
-
   private async tryForLeader() {
-    const leaderKey = this.leaderKey();
+    const leaderKey = this.queue.leaderKey();
     if (!this.connection || !this.connection.redis) {
       return;
     }
@@ -218,7 +212,7 @@ export class Scheduler extends EventEmitter {
       return false;
     }
 
-    const deleted = await this.connection.redis.del(this.leaderKey());
+    const deleted = await this.connection.redis.del(this.queue.leaderKey());
     this.leader = false;
     return deleted === 1 || deleted.toString() === "true";
   }
