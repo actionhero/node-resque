@@ -26,20 +26,20 @@
     "node": ">= 8"
   },
   "dependencies": {
-    "ioredis": "^4.19.4"
+    "ioredis": "^4.22.0"
   },
   "devDependencies": {
-    "@types/ioredis": "^4.19.2",
+    "@types/ioredis": "^4.19.3",
     "@types/jest": "^26.0.20",
-    "@types/node": "^14.14.22",
-    "ioredis-mock": "^5.2.0",
+    "@types/node": "^14.14.25",
+    "ioredis-mock": "^5.2.1",
     "jest": "^26.6.3",
     "node-schedule": "^2.0.0",
     "prettier": "^2.2.1",
-    "ts-jest": "^26.4.4",
+    "ts-jest": "^26.5.1",
     "ts-node": "^9.1.1",
-    "typedoc": "^0.20.18",
-    "typescript": "^4.1.3"
+    "typedoc": "^0.20.24",
+    "typescript": "^4.1.5"
   },
   "jest": {
     "testPathIgnorePatterns": [
