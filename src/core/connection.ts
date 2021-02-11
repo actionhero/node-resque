@@ -166,7 +166,7 @@ export class Connection extends EventEmitter {
     this.connected = false;
   }
 
-  key(arg: any, arg2?: any, arg3?: any, arg4?: any) {
+  key(arg: any, arg2?: any, arg3?: any, arg4?: any): string {
     let args;
     args = arguments.length >= 1 ? [].slice.call(arguments, 0) : [];
     if (Array.isArray(this.options.namespace)) {

@@ -551,7 +551,14 @@ export class Queue extends EventEmitter {
   }
 
   /**
-   * - stats will be a hash containing details about all the queues in your redis, and how many jobs are in each
+   * Return the currently elected leader
+   */
+  async leader() {
+    return this.connection.redis.get(this.leaderKey());
+  }
+
+  /**
+   * - stats will be a hash containing details about all the queues in your redis, and how many jobs are in each, and who the leader is
    */
   async stats() {
     const data: { [key: string]: any } = {};
@@ -568,5 +575,12 @@ export class Queue extends EventEmitter {
     }
 
     return data;
+  }
+
+  /**
+   * The redis key which holds the currently elected leader
+   */
+  leaderKey() {
+    return this.connection.key("resque_scheduler_leader_lock");
   }
 }

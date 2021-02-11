@@ -317,6 +317,12 @@ describe("queue", () => {
       expect(Object.keys(hashThree)).toHaveLength(0);
     });
 
+    test("can determine who the leader is", async () => {
+      await queue.connection.redis.set(queue.leaderKey(), "the_scheduler");
+      let leader = await queue.leader();
+      expect(leader).toBe("the_scheduler");
+    });
+
     test("can load stats", async () => {
       await queue.connection.redis.set(
         specHelper.namespace + ":stat:failed",
