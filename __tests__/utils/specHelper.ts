@@ -10,6 +10,7 @@ const SpecHelper = {
   namespace: namespace,
   queue: queue,
   timeout: 500,
+  smallTimeout: 3,
   redis: null,
   connectionDetails: {
     pkg: pkg,

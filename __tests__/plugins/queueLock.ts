@@ -31,6 +31,26 @@ const jobs = {
     plugins: [Plugins.QueueLock, NeverRunPlugin],
     perform: (a, b) => a + b,
   },
+  jobWithLockTimeout: {
+    plugins: [Plugins.QueueLock],
+    pluginOptions: {
+      QueueLock: {
+        lockTimeout: specHelper.timeout,
+      },
+    },
+    perform: (a, b) => a + b,
+  },
+  stuckJob: {
+    plugins: [Plugins.QueueLock],
+    pluginOptions: {
+      QueueLock: {
+        lockTimeout: specHelper.smallTimeout,
+      },
+    },
+    perform: (a, b) => {
+      a + b;
+    },
+  },
 };
 
 describe("plugins", () => {
@@ -76,6 +96,60 @@ describe("plugins", () => {
       expect(length).toBe(2);
       expect(tryOne).toBe(true);
       expect(tryTwo).toBe(true);
+    });
+
+    test("will enqueue a job with timeout set by QueueLock plugin options and check its ttl", async () => {
+      let job = "jobWithLockTimeout";
+      const enqueue = await queue.enqueue(specHelper.queue, job, [1, 2]);
+      const length = await queue.length(specHelper.queue);
+      expect(length).toBe(1);
+      expect(enqueue).toBe(true);
+      const result = await specHelper.redis.keys(
+        specHelper.namespace + ":lock*"
+      );
+      expect(result).toHaveLength(1);
+      const ttl = await specHelper.redis.ttl(
+        specHelper.namespace +
+          ":lock" +
+          ":" +
+          job +
+          ":" +
+          specHelper.queue +
+          ":[1,2]"
+      );
+      expect(ttl).toBe(specHelper.timeout);
+    });
+
+    test("will enqueue a repeated stuck job after another one to overwrite the ttl and the expiration time of the lock", async () => {
+      let stuckJob = "stuckJob";
+      const tryOne = await queue.enqueue(specHelper.queue, stuckJob, [1, 2]);
+      await new Promise((resolve) =>
+        setTimeout(
+          resolve,
+          Math.min((specHelper.smallTimeout + 1) * 1000, 4000)
+        )
+      );
+      const tryTwo = await queue.enqueue(specHelper.queue, stuckJob, [1, 2]);
+
+      const length = await queue.length(specHelper.queue);
+      expect(length).toBe(2);
+      expect(tryOne).toBe(true);
+      expect(tryTwo).toBe(true);
+
+      const result = await specHelper.redis.keys(
+        specHelper.namespace + ":lock*"
+      );
+      expect(result).toHaveLength(1);
+      const ttl = await specHelper.redis.ttl(
+        specHelper.namespace +
+          ":lock" +
+          ":" +
+          stuckJob +
+          ":" +
+          specHelper.queue +
+          ":[1,2]"
+      );
+      expect(ttl).toBe(specHelper.smallTimeout);
     });
 
     describe("with worker", () => {
