@@ -11,6 +11,7 @@ export class QueueLock extends Plugin {
 
     //@ts-ignore
     if (set === true || set === 1) {
+      await this.queueObject.connection.redis.expire(key, this.lockTimeout());
       return true;
     }
 
@@ -21,7 +22,7 @@ export class QueueLock extends Plugin {
     }
 
     await this.queueObject.connection.redis.set(key, timeout);
-    await this.queueObject.connection.redis.expire(key, timeout);
+    await this.queueObject.connection.redis.expire(key, this.lockTimeout());
     return true;
   }
 
