@@ -54,12 +54,6 @@ jobs:
           name: linter
           command: npm run lint
 
-  test-node-v10:
-    docker:
-      - image: circleci/node:10
-      - image: redis:5
-    <<: *shared-test-steps
-
   test-node-v12:
     docker:
       - image: circleci/node:12
@@ -80,7 +74,7 @@ jobs:
 
   tests-complete:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:14
     steps:
       - run:
           name: hooray
@@ -88,7 +82,7 @@ jobs:
 
   deploy-docs-website:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:14
     steps:
       - add_ssh_keys:
           fingerprints:
@@ -115,12 +109,6 @@ workflows:
           filters:
             <<: *ignored-branches
 
-      - test-node-v10:
-          requires:
-            - linter
-          filters:
-            <<: *ignored-branches
-
       - test-node-v12:
           requires:
             - linter
@@ -143,7 +131,6 @@ workflows:
           filters:
             <<: *ignored-branches
           requires:
-            - test-node-v10
             - test-node-v12
             - test-node-v14
             - test-node-v15
