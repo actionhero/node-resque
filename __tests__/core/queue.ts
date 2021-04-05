@@ -211,7 +211,7 @@ describe("queue", () => {
       expect(timestamps.length).toBe(0);
     });
 
-    test("can deleted an enqued job", async () => {
+    test("can delete an enqueued job", async () => {
       await queue.enqueue(specHelper.queue, "someJob", [1, 2, 3]);
       const length = await queue.length(specHelper.queue);
       expect(length).toBe(1);
@@ -221,7 +221,29 @@ describe("queue", () => {
       expect(lengthAgain).toBe(0);
     });
 
-    test("can deleted a delayed job", async () => {
+    test("can delete all enqueued jobs of a particular function/class", async () => {
+      await queue.enqueue(specHelper.queue, "someJob1", [1, 2, 3]);
+      const length = await queue.length(specHelper.queue);
+      expect(length).toBe(1);
+
+      await queue.enqueue(specHelper.queue, "someJob1", [1, 2, 3]);
+      const lengthAgain = await queue.length(specHelper.queue);
+      expect(lengthAgain).toBe(2);
+
+      await queue.enqueue(specHelper.queue, "someJob2", [1, 2, 3]);
+      const lengthOnceAgain = await queue.length(specHelper.queue);
+      expect(lengthOnceAgain).toBe(3);
+
+      const countDeleted = await queue.delByFunction(
+        specHelper.queue,
+        "someJob1"
+      );
+      const lengthFinally = await queue.length(specHelper.queue);
+      expect(countDeleted).toBe(2);
+      expect(lengthFinally).toBe(1);
+    });
+
+    test("can delete a delayed job", async () => {
       await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
       const timestamps = await queue.delDelayed(specHelper.queue, "someJob", [
         1,

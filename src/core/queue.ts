@@ -160,7 +160,7 @@ export class Queue extends EventEmitter {
   }
 
   /**
-   * - jobs are deleted by those matching a `func` and agument collection within a given queue.
+   * - jobs are deleted by those matching a `func` and argument collection within a given queue.
    * - You might match none, or you might match many.
    */
   async del(q: string, func: string, args: Array<any> = [], count: number = 0) {
@@ -170,6 +170,41 @@ export class Queue extends EventEmitter {
       count,
       this.encode(q, func, args)
     );
+  }
+
+  /**
+   * delByFunction
+   * @param q - queue to look in
+   * @param func - function name to delete any jobs with
+   * @param start - optional place to start looking in list (default: beginning of list)
+   * @param stop - optional place to end looking in list (default: end of list)
+   * @returns number of jobs deleted from queue
+   */
+  async delByFunction(
+    q: string,
+    func: string,
+    start: number = 0,
+    stop: number = -1
+  ) {
+    const jobs = await this.connection.redis.lrange(
+      this.connection.key("queue", q),
+      start,
+      stop
+    );
+    let numJobsDeleted: number = 0;
+    for (let i = 0; i < jobs.length; i++) {
+      const jobEncoded = jobs[i];
+      const { class: jobFunc } = JSON.parse(jobEncoded);
+      if (jobFunc === func) {
+        await this.connection.redis.lrem(
+          this.connection.key("queue", q),
+          0,
+          jobEncoded
+        );
+        numJobsDeleted++;
+      }
+    }
+    return numJobsDeleted;
   }
 
   async delDelayed(q: string, func: string, args: Array<any> = []) {
