@@ -174,7 +174,7 @@ export class Queue extends EventEmitter {
 
   /**
    * delByFunction
-   *  * will delete all jobs in the queue of a certain function/class
+   *  * will delete all jobs in the given queue of the named function/class
    *  * will not prevent new jobs from being added as this method is running
    *  * will not delete jobs in the delayed queues
    * @param q - queue to look in
