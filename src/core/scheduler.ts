@@ -317,14 +317,16 @@ export class Scheduler extends EventEmitter {
   }
 
   private async watchIfPossible(key: string) {
-    if (typeof this.connection.redis.watch === "function") {
-      return this.connection.redis.watch(key);
-    }
+    if (this.canWatch()) return this.connection.redis.watch(key);
   }
 
   private async unwatchIfPossible() {
-    if (typeof this.connection.redis.unwatch === "function") {
-      return this.connection.redis.unwatch();
-    }
+    if (this.canWatch()) return this.connection.redis.unwatch();
+  }
+
+  private canWatch() {
+    if (this.connection.redis?.constructor?.name === "RedisMock") return false;
+    if (typeof this.connection.redis.unwatch !== "function") return false;
+    return true;
   }
 }
