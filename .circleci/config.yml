@@ -30,7 +30,7 @@ references:
 jobs:
   build:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:14
     steps:
       - checkout
       - restore_cache:
@@ -45,7 +45,7 @@ jobs:
 
   linter:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:14
     steps:
       - checkout
       - restore_cache:
@@ -66,9 +66,9 @@ jobs:
       - image: redis:5
     <<: *shared-test-steps
 
-  test-node-v15:
+  test-node-v16:
     docker:
-      - image: circleci/node:15
+      - image: circleci/node:16
       - image: redis:5
     <<: *shared-test-steps
 
@@ -133,7 +133,7 @@ workflows:
           requires:
             - test-node-v12
             - test-node-v14
-            - test-node-v15
+            - test-node-v16
 
       - deploy-docs-website:
           filters:
