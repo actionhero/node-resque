@@ -6,8 +6,8 @@ import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
 import { Queue } from "./queue";
 
-function prepareJobs(jobs) {
-  return Object.keys(jobs).reduce(function (h, k) {
+function prepareJobs(jobs: Jobs) {
+  return Object.keys(jobs).reduce(function (h:any, k:string) {
     const job = jobs[k];
     h[k] = typeof job === "function" ? { perform: job } : job;
     return h;
@@ -28,7 +28,7 @@ export declare interface Worker {
   running: boolean;
   working: boolean;
   pingTimer: NodeJS.Timeout;
-  job: Job<any>;
+  job: Job<any> | JobEmit;
   connection: Connection;
   queueObject: Queue;
   id: number;
@@ -100,10 +100,10 @@ export type WorkerEvent =
   | "pause";
 
 export class Worker extends EventEmitter {
-  constructor(options, jobs = {}) {
+  constructor(options: any, jobs: Jobs = {}) {
     super();
 
-    const defaults = {
+    const defaults: any = {
       name: os.hostname() + ":" + process.pid, // assumes only one worker per node process
       queues: "*",
       timeout: 5000,
@@ -163,7 +163,7 @@ export class Worker extends EventEmitter {
     this.pingTimer = setInterval(this.ping.bind(this), this.options.timeout);
   }
 
-  async end() {
+  async end(): Promise<any> {
     this.running = false;
 
     if (this.working === true) {
@@ -189,7 +189,7 @@ export class Worker extends EventEmitter {
     this.emit("end", new Date());
   }
 
-  private async poll(nQueue = 0) {
+  private async poll(nQueue: number = 0): Promise<any> {
     if (!this.running) return;
 
     this.queue = this.queues[nQueue];
@@ -210,7 +210,7 @@ export class Worker extends EventEmitter {
     this.working = true;
 
     try {
-      const currentJob = await this.getJob();
+      const currentJob: JobEmit = await this.getJob();
       if (currentJob) {
         if (this.options.looping) {
           this.result = null;
@@ -236,7 +236,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async perform(job) {
+  private async perform(job: JobEmit) {
     this.job = job;
     this.error = null;
     let toRun;
@@ -315,8 +315,8 @@ export class Worker extends EventEmitter {
   // #performInline is used to run a job payload directly.
   // If you are planning on running a job via #performInline, this worker should also not be started, nor should be using event emitters to monitor this worker.
   // This method will also not write to redis at all, including logging errors, modify resque's stats, etc.
-  async performInline(func, args = []) {
-    const q = "_direct-queue-" + this.name;
+  async performInline(func:any, args:any = []) {
+    const q: string = "_direct-queue-" + this.name;
     let toRun;
 
     if (!(args instanceof Array)) {
@@ -363,7 +363,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async completeJob(toRespond: boolean, startedAt: number) {
+  private async completeJob(toRespond: boolean, startedAt: number): Promise<void> {
     const duration = new Date().getTime() - startedAt;
     if (this.error) {
       await this.fail(this.error, duration);
@@ -382,7 +382,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async succeed(job, duration: number) {
+  private async succeed(job: Job<any> | JobEmit, duration: number) {
     await this.connection.redis.incr(this.connection.key("stat", "processed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "processed", this.name)
@@ -390,7 +390,7 @@ export class Worker extends EventEmitter {
     this.emit("success", this.queue, job, this.result, duration);
   }
 
-  private async fail(err, duration: number) {
+  private async fail(err:any, duration: number) {
     await this.connection.redis.incr(this.connection.key("stat", "failed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "failed", this.name)
@@ -412,7 +412,7 @@ export class Worker extends EventEmitter {
     });
   }
 
-  private async getJob() {
+  private async getJob(): Promise<JobEmit> {
     let currentJob: { [key: string]: any } = null;
     const queueKey = this.connection.key("queue", this.queue);
     const workerKey = this.connection.key(
@@ -423,7 +423,9 @@ export class Worker extends EventEmitter {
 
     let encodedJob: string;
 
+    // @ts-ignore
     if (this.connection.redis["popAndStoreJob"]) {
+      // @ts-ignore
       encodedJob = await this.connection.redis["popAndStoreJob"](
         queueKey,
         workerKey,
@@ -522,7 +524,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private failurePayload(err, job) {
+  private failurePayload(err: any, job: Job<any> | JobEmit) {
     return {
       worker: this.name,
       queue: this.queue,

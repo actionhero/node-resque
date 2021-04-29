@@ -4,7 +4,7 @@ import { ErrorPayload, Jobs, ConnectionOptions } from "..";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
 
-function arrayify(o) {
+function arrayify(o: Array<any>) {
   if (Array.isArray(o)) {
     return o;
   } else {
@@ -21,7 +21,7 @@ export declare interface Queue {
   once(event: "error", cb: (error: Error, queue: string) => void): this;
 }
 export class Queue extends EventEmitter {
-  constructor(options, jobs = {}) {
+  constructor(options: any, jobs: Jobs = {}) {
     super();
 
     this.options = options;
@@ -243,7 +243,7 @@ export class Queue extends EventEmitter {
    * - `timestampsForJob` is an array of integers
    */
   async scheduledAt(q: string, func: string, args: Array<any> = []) {
-    const timestamps = [];
+    const timestamps: Array<string> = [];
     args = arrayify(args);
     const search = this.encode(q, func, args);
 
@@ -260,8 +260,8 @@ export class Queue extends EventEmitter {
   /**
    * - `timestamps` is an array of integers for all timestamps which have at least one job scheduled in the future
    */
-  async timestamps() {
-    const results = [];
+  async timestamps(): Promise<Array<number>> {
+    const results: Array<number> = [];
     const timestamps = await this.connection.getKeys(
       this.connection.key("delayed:*")
     );
@@ -311,7 +311,7 @@ export class Queue extends EventEmitter {
    * - note that this operation can be very slow and very ram-heavy
    */
   async allDelayed() {
-    const results = {};
+    const results: any = {};
 
     const timestamps = await this.timestamps();
     for (const i in timestamps) {
@@ -327,9 +327,9 @@ export class Queue extends EventEmitter {
    * - types of locks include queue and worker locks, as created by the plugins below
    * - `locks` is a hash by type and timestamp
    */
-  async locks() {
+  async locks(): Promise<any> {
     let keys: Array<string> = [];
-    const data = {};
+    const data: any = {};
     let _keys: Array<string>;
     let values = [];
 
@@ -364,7 +364,7 @@ export class Queue extends EventEmitter {
   /**
    * - `count` is an integer. You might delete more than one lock by the name.
    */
-  async delLock(key) {
+  async delLock(key: string): Promise<any> {
     return this.connection.redis.del(this.connection.key(key));
   }
 
@@ -401,7 +401,7 @@ export class Queue extends EventEmitter {
   /**
    * - returns: `{"run_at":"Fri Dec 12 2014 14:01:16 GMT-0800 (PST)","queue":"test_queue","payload":{"class":"slowJob","queue":"test_queue","args":[null]},"worker":"workerA"}`
    */
-  async workingOn(workerName, queues) {
+  async workingOn(workerName:string, queues: any): Promise<string | null> {
     const fullWorkerName = workerName + ":" + queues;
     return this.connection.redis.get(
       this.connection.key("worker", fullWorkerName)
@@ -567,7 +567,7 @@ export class Queue extends EventEmitter {
   async retryStuckJobs(upperLimit = Infinity) {
     let start = 0;
     let batchSize = 100;
-    let failedJobs = [];
+    let failedJobs: Array<any> = [];
 
     const loadFailedJobs = async () => {
       failedJobs = await this.failed(start, start + batchSize);

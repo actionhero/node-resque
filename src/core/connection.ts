@@ -14,10 +14,10 @@ export class Connection extends EventEmitter {
   connected: boolean;
   redis: IORedis.Redis | IORedis.Cluster;
 
-  constructor(options: ConnectionOptions = {}) {
+  constructor(options: any = {}) {
     super();
 
-    const defaults = {
+    const defaults: any = {
       pkg: "ioredis",
       host: "127.0.0.1",
       port: 6379,
@@ -77,7 +77,7 @@ export class Connection extends EventEmitter {
       }
     }
 
-    this.eventListeners.error = (error) => {
+    this.eventListeners.error = (error:any) => {
       this.emit("error", error);
     };
     this.eventListeners.end = () => {
@@ -114,7 +114,7 @@ export class Connection extends EventEmitter {
     }
   }
 
-  async getKeys(match: string, count: number = null, keysAry = [], cursor = 0) {
+  async getKeys(match: string, count: number = null, keysAry: Array<any> = [], cursor = 0): Promise<Array<any>> {
     if (count === null || count === undefined) {
       count = this.options.scanCount || 10;
     }
@@ -138,16 +138,20 @@ export class Connection extends EventEmitter {
       return this.getKeys(match, count, keysAry, parseInt(newCursor));
     }
 
+
     this.emit(
       "error",
       new Error(
         "You must establish a connection to redis before running the getKeys command."
       )
     );
+
+    return null;
   }
 
   end() {
-    Object.keys(this.listeners).forEach((eventName) => {
+    Object.keys(this.listeners).forEach((eventName:string) => {
+      // @ts-ignore
       this.redis.removeListener(eventName, this.listeners[eventName]);
     });
 
@@ -172,7 +176,7 @@ export class Connection extends EventEmitter {
     } else {
       args.unshift(this.options.namespace);
     }
-    args = args.filter((e) => {
+    args = args.filter((e: any) => {
       return String(e).trim();
     });
     return args.join(":");

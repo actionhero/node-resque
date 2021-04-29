@@ -1,12 +1,15 @@
+import {Job} from "../types/job";
+import {Queue} from "./queue";
+
 export async function RunPlugins(
-  self,
-  type,
-  func,
-  queue,
-  job,
-  args,
-  pluginCounter?
-) {
+  self: any,
+  type: any,
+  func: any,
+  queue: string,
+  job: Job<any>,
+  args: any,
+  pluginCounter?: number
+): Promise<any> {
   if (!job) return true;
   if (!pluginCounter) pluginCounter = 0;
   if (
@@ -35,13 +38,13 @@ export async function RunPlugins(
 }
 
 export async function RunPlugin(
-  self,
-  PluginRefrence,
-  type,
-  func,
-  queue,
-  job,
-  args
+  self: any,
+  PluginRefrence: any,
+  type: any,
+  func: any,
+  queue: string,
+  job: Job<any>,
+  args: any
 ) {
   if (!job) return true;
 

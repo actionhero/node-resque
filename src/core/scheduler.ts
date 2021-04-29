@@ -57,10 +57,10 @@ export type SchedulerEvent =
   | "transferredJob";
 
 export class Scheduler extends EventEmitter {
-  constructor(options, jobs = {}) {
+  constructor(options: any, jobs = {}) {
     super();
 
-    const defaults = {
+    const defaults: any = {
       timeout: 5000, // in ms
       stuckWorkerTimeout: 60 * 60 * 1000, // 60 minutes in ms
       leaderLockTimeout: 60 * 3, // in seconds
@@ -135,7 +135,7 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  async poll() {
+  async poll():Promise<any> {
     this.processing = true;
     clearTimeout(this.timer);
     const isLeader = await this.tryForLeader();
@@ -172,10 +172,10 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  private async tryForLeader() {
+  private async tryForLeader(): Promise<boolean> {
     const leaderKey = this.queue.leaderKey();
     if (!this.connection || !this.connection.redis) {
-      return;
+      return false;
     }
 
     const lockedByMe = await this.connection.redis.set(
@@ -202,9 +202,9 @@ export class Scheduler extends EventEmitter {
     return false;
   }
 
-  private async releaseLeaderLock() {
+  private async releaseLeaderLock(): Promise<boolean> {
     if (!this.connection || !this.connection.redis) {
-      return;
+      return false;
     }
 
     const isLeader = await this.tryForLeader();
@@ -217,7 +217,7 @@ export class Scheduler extends EventEmitter {
     return deleted === 1 || deleted.toString() === "true";
   }
 
-  private async nextDelayedTimestamp() {
+  private async nextDelayedTimestamp(): Promise<string> {
     const time = Math.round(new Date().getTime() / 1000);
     const items = await this.connection.redis.zrangebyscore(
       this.connection.key("delayed_queue_schedule"),
@@ -228,7 +228,7 @@ export class Scheduler extends EventEmitter {
       1
     );
     if (items.length === 0) {
-      return;
+      return null;
     }
     return items[0];
   }
@@ -300,7 +300,7 @@ export class Scheduler extends EventEmitter {
     for (let i in payloads) {
       if (!payloads[i]) continue;
       const { name, time } = payloads[i];
-      const delta = nowInSeconds - time;
+      const delta:number = nowInSeconds - time;
       if (delta > stuckWorkerTimeoutInSeconds) {
         await this.forceCleanWorker(name, delta);
       }
@@ -311,17 +311,19 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  async forceCleanWorker(workerName, delta) {
+  async forceCleanWorker(workerName:string, delta:number) {
     const errorPayload = await this.queue.forceCleanWorker(workerName);
     this.emit("cleanStuckWorker", workerName, errorPayload, delta);
   }
 
-  private async watchIfPossible(key: string) {
+  private async watchIfPossible(key: string): Promise<string> {
     if (this.canWatch()) return this.connection.redis.watch(key);
+    else return null;
   }
 
-  private async unwatchIfPossible() {
+  private async unwatchIfPossible(): Promise<string> {
     if (this.canWatch()) return this.connection.redis.unwatch();
+    else return null;
   }
 
   private canWatch() {

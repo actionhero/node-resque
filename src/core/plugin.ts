@@ -16,7 +16,7 @@ export abstract class Plugin {
     [key: string]: any;
   };
 
-  constructor(worker, func, queue, job, args, options) {
+  constructor(worker: Connection | Worker | any, func: string, queue: string, job: any, args: Array<any>, options: any) {
     this.name = this?.constructor?.name || "Node Resque Plugin";
     this.worker = worker;
     this.queue = queue;

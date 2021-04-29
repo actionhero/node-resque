@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as os from "os";
-import { Worker } from "./worker";
+import {Worker, WorkerEvent} from "./worker";
 import { EventLoopDelay } from "../utils/eventLoopDelay";
 import { MultiWorkerOptions } from "../types/options";
 import { Jobs, Job, JobEmit } from "..";
@@ -75,10 +75,10 @@ export declare interface MultiWorker {
 }
 
 export class MultiWorker extends EventEmitter {
-  constructor(options, jobs) {
+  constructor(options: any, jobs: Jobs) {
     super();
 
-    const defaults = {
+    const defaults: any = {
       // all times in ms
       minTaskProcessors: 1,
       maxTaskProcessors: 10,
@@ -122,7 +122,7 @@ export class MultiWorker extends EventEmitter {
     EventLoopDelay(
       this.options.maxEventLoopDelay,
       this.options.checkTimeout,
-      (blocked, ms) => {
+      (blocked: any, ms: number) => {
         this.eventLoopBlocked = blocked;
         this.eventLoopDelay = ms;
         this.eventLoopCheckCounter++;
@@ -185,7 +185,7 @@ export class MultiWorker extends EventEmitter {
     await worker.start();
   }
 
-  private async checkWorkers() {
+  private async checkWorkers(): Promise<{ verb:any, eventLoopDelay:number }> {
     let verb;
     let worker;
     let workingCount = 0;
@@ -247,7 +247,7 @@ export class MultiWorker extends EventEmitter {
     if (verb === "--") {
       this.stopInProcess = true;
 
-      const promises = [];
+      const promises: Array<Promise<any>> = [];
       this.workers.forEach((worker) => {
         promises.push(
           new Promise(async (resolve) => {
@@ -269,9 +269,11 @@ export class MultiWorker extends EventEmitter {
       await this.startWorker();
       return { verb, eventLoopDelay: this.eventLoopDelay };
     }
+
+    return null;
   }
 
-  private async cleanupWorker(worker) {
+  private async cleanupWorker(worker: Worker) {
     [
       "start",
       "end",
@@ -286,14 +288,14 @@ export class MultiWorker extends EventEmitter {
       "pause",
       "internalError",
       "multiWorkerAction",
-    ].forEach(function (e) {
+    ].forEach(function (e: WorkerEvent) {
       worker.removeAllListeners(e);
     });
   }
 
   private async checkWrapper() {
     clearTimeout(this.checkTimer);
-    const { verb, eventLoopDelay } = await this.checkWorkers();
+    const { verb, eventLoopDelay }: { verb:any, eventLoopDelay:number } = await this.checkWorkers();
     this.emit("multiWorkerAction", verb, eventLoopDelay);
     this.checkTimer = setTimeout(() => {
       this.checkWrapper();
@@ -314,7 +316,7 @@ export class MultiWorker extends EventEmitter {
     return this.stop();
   }
 
-  private async stopWait() {
+  private async stopWait(): Promise<any> {
     if (
       this.workers.length === 0 &&
       this.working === false &&
