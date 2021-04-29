@@ -1,5 +1,3 @@
-/// <reference path="./../../node_modules/@types/ioredis/index.d.ts" />
-
 import { EventEmitter } from "events";
 import * as IORedis from "ioredis";
 import * as fs from "fs";

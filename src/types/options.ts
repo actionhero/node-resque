@@ -1,4 +1,3 @@
-/// <reference path="./../../node_modules/@types/ioredis/index.d.ts" />
 import * as IORedis from "ioredis";
 import { Connection } from "..";
 
