@@ -3,7 +3,9 @@
     "outDir": "./dist",
     "allowJs": true,
     "module": "commonjs",
-    "target": "es2018"
+    "target": "es2018",
+    "noImplicitReturns": true,
+    "noImplicitAny": true
   },
   "include": [
     "./src/**/*"
