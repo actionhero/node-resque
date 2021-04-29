@@ -243,7 +243,7 @@ export class Queue extends EventEmitter {
    * - `timestampsForJob` is an array of integers
    */
   async scheduledAt(q: string, func: string, args: Array<any> = []) {
-    const timestamps: Array<string> = [];
+    const timestamps: string[] = [];
     args = arrayify(args);
     const search = this.encode(q, func, args);
 
