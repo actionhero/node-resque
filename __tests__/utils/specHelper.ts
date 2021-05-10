@@ -24,7 +24,8 @@ const SpecHelper = {
 
   connect: async function () {
     if (!this.connectionDetails.options) this.connectionDetails.options = {};
-    this.connectionDetails.options.db = this.connectionDetails?.options?.database;
+    this.connectionDetails.options.db =
+      this.connectionDetails?.options?.database;
     this.redis = new Redis(
       this.connectionDetails.port,
       this.connectionDetails.host,

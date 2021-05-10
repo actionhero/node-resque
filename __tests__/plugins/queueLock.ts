@@ -172,10 +172,11 @@ describe("plugins", () => {
       });
 
       test("will remove a lock on a job when the job has been worked", async () => {
-        const enqueue = await queue.enqueue(specHelper.queue, "uniqueJob", [
-          1,
-          2,
-        ]);
+        const enqueue = await queue.enqueue(
+          specHelper.queue,
+          "uniqueJob",
+          [1, 2]
+        );
         expect(enqueue).toBe(true);
 
         await worker.start();
@@ -188,10 +189,11 @@ describe("plugins", () => {
       });
 
       test("will remove a lock on a job if a plugin does not run the job", async () => {
-        const enqueue = await queue.enqueue(specHelper.queue, "blockingJob", [
-          1,
-          2,
-        ]);
+        const enqueue = await queue.enqueue(
+          specHelper.queue,
+          "blockingJob",
+          [1, 2]
+        );
         expect(enqueue).toBe(true);
 
         await worker.start();

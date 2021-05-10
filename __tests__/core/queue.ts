@@ -153,12 +153,7 @@ describe("queue", () => {
       const now = Math.round(new Date().getTime() / 1000) + 5;
       const time = 5 * 1000;
 
-      // @ts-ignore
-      await queue.enqueueIn(time.toString(), specHelper.queue, "someJob", [
-        1,
-        2,
-        3,
-      ]);
+      await queue.enqueueIn(time, specHelper.queue, "someJob", [1, 2, 3]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
         now
@@ -192,22 +187,22 @@ describe("queue", () => {
 
     test("can find previously scheduled jobs", async () => {
       await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
-      const timestamps = await queue.scheduledAt(specHelper.queue, "someJob", [
-        1,
-        2,
-        3,
-      ]);
+      const timestamps = await queue.scheduledAt(
+        specHelper.queue,
+        "someJob",
+        [1, 2, 3]
+      );
       expect(timestamps.length).toBe(1);
       expect(timestamps[0]).toBe("10");
     });
 
     test("will not match previously scheduled jobs with differnt args", async () => {
       await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
-      const timestamps = await queue.scheduledAt(specHelper.queue, "someJob", [
-        3,
-        2,
-        1,
-      ]);
+      const timestamps = await queue.scheduledAt(
+        specHelper.queue,
+        "someJob",
+        [3, 2, 1]
+      );
       expect(timestamps.length).toBe(0);
     });
 
@@ -245,22 +240,22 @@ describe("queue", () => {
 
     test("can delete a delayed job", async () => {
       await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
-      const timestamps = await queue.delDelayed(specHelper.queue, "someJob", [
-        1,
-        2,
-        3,
-      ]);
+      const timestamps = await queue.delDelayed(
+        specHelper.queue,
+        "someJob",
+        [1, 2, 3]
+      );
       expect(timestamps.length).toBe(1);
       expect(timestamps[0]).toBe("10");
     });
 
     test("can delete a delayed job, and delayed queue should be empty", async () => {
       await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
-      const timestamps = await queue.delDelayed(specHelper.queue, "someJob", [
-        1,
-        2,
-        3,
-      ]);
+      const timestamps = await queue.delDelayed(
+        specHelper.queue,
+        "someJob",
+        [1, 2, 3]
+      );
       const hash = await queue.allDelayed();
       expect(Object.keys(hash)).toHaveLength(0);
       expect(timestamps.length).toBe(1);

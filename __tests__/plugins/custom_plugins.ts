@@ -23,10 +23,11 @@ describe("plugins", () => {
       );
 
       await queue.connect();
-      const enqueueResponse = await queue.enqueue(specHelper.queue, "myJob", [
-        1,
-        2,
-      ]);
+      const enqueueResponse = await queue.enqueue(
+        specHelper.queue,
+        "myJob",
+        [1, 2]
+      );
       expect(enqueueResponse).toBe(false);
       const length = await queue.length(specHelper.queue);
       expect(length).toBe(0);
