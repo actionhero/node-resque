@@ -128,11 +128,12 @@ describe("scheduler", () => {
       });
 
       test("will move enqueued jobs when the time comes", async () => {
-        await queue.enqueueAt(1000 * 10, specHelper.queue, "someJob", [
-          1,
-          2,
-          3,
-        ]);
+        await queue.enqueueAt(
+          1000 * 10,
+          specHelper.queue,
+          "someJob",
+          [1, 2, 3]
+        );
         await scheduler.poll();
         let obj = await specHelper.popFromQueue();
         expect(obj).toBeDefined();
