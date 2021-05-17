@@ -9,18 +9,23 @@ The full API documentation for this package is automatically generated from the 
 [![CircleCI](https://circleci.com/gh/actionhero/node-resque.svg?style=svg)](https://circleci.com/gh/actionhero/node-resque)
 
 ## The Resque Factory (How It Works)
+
 ### Overview
+
 Resque is a queue based task processing system that can be thought of as a "Kanban" style factory. Workers in this factory can each only work one Job at a time. They pull Jobs from Queues and work them to completion (or failure). Each Job has two parts: instructions on how to complete the job (the `perform` function), and any inputs necessary to complete the Job.
 
 ### Queues
+
 In our factory example, Queues are analogous to conveyor belts. Jobs are placed on the belts (Queues) and are held in order waiting for a Worker to pick them up. There are two "special" Queues: the Delayed Job Queue, and the Failed Job Queue. The Delayed Job Queue contains Job definitions that are intended to be worked at or in a specified time. The Failed Job Queue is where Workers place any Jobs that have failed during execution.
 
 ### Workers
+
 Our Workers are the heart of the factory. Each Worker is assigned one or more Queues to check for work. After taking a Job from a Queue the Worker attempts to complete the Job. If successful, they go back to check out more work from the Queues. However, if there is a failure, the Worker records the job and its inputs in the Failed Jobs Queue before going back for more work.
 
 ### Scheduler
-The Scheduler can be thought of as a specialized type of Worker. Unlike other Workers, the Scheduler does not execute any Jobs, instead it manages the Delayed Job Queue. As Job definitions are added to the Delayed Job Queue they must specify when they can become available for execution. The Scheduler constantly checks to see if any Delayed Jobs are ready to execute. When a Delayed Job becomes ready for execution the Scheduler places a new instance of that Job in its defined Queue. 
- 
+
+The Scheduler can be thought of as a specialized type of Worker. Unlike other Workers, the Scheduler does not execute any Jobs, instead it manages the Delayed Job Queue. As Job definitions are added to the Delayed Job Queue they must specify when they can become available for execution. The Scheduler constantly checks to see if any Delayed Jobs are ready to execute. When a Delayed Job becomes ready for execution the Scheduler places a new instance of that Job in its defined Queue.
+
 ## API Docs
 
 You can read the API docs for Node Resque @ [node-resque.actionherojs.com](https://node-resque.actionherojs.com). These are generated automatically from the master branch via [TypeDoc](https://typedoc.org/)
