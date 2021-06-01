@@ -33,7 +33,7 @@
     "@types/jest": "^26.0.23",
     "@types/node": "^15.3.0",
     "ioredis-mock": "^5.5.6",
-    "jest": "^26.6.3",
+    "jest": "^27.0.3",
     "node-schedule": "^2.0.0",
     "prettier": "^2.3.0",
     "ts-jest": "^26.5.6",
