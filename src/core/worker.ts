@@ -48,7 +48,7 @@ export declare interface Worker {
   ): this;
   on(
     event: "failure",
-    cb: (queue: string, job: JobEmit, failure: any, duration: number) => void
+    cb: (queue: string, job: JobEmit, failure: Error, duration: number) => void
   ): this;
   on(
     event: "error",
