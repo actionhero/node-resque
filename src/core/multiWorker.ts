@@ -54,17 +54,17 @@ export declare interface MultiWorker {
       workerId: number,
       queue: string,
       job: Job<any> | JobEmit,
-      failure: any,
+      failure: Error,
       duration: number
     ) => void
   ): this;
   on(
     event: "error",
     cb: (
+      error: Error,
       workerId: number,
       queue: string,
-      job: Job<any> | JobEmit,
-      error: any
+      job: Job<any> | JobEmit
     ) => void
   ): this;
   on(event: "pause", cb: (workerId: number) => void): this;
