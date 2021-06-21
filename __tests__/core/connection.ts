@@ -15,26 +15,29 @@ describe("connection", () => {
 
   test(
     "can provide an error if connection failed",
-    async (resolve) => {
-      const connectionDetails = {
-        pkg: specHelper.connectionDetails.pkg,
-        host: "wrong-hostname",
-        password: specHelper.connectionDetails.password,
-        port: specHelper.connectionDetails.port,
-        database: specHelper.connectionDetails.database,
-        namespace: specHelper.connectionDetails.namespace,
-      };
+    async () => {
+      await new Promise(async (resolve) => {
+        const connectionDetails = {
+          pkg: specHelper.connectionDetails.pkg,
+          host: "wrong-hostname",
+          password: specHelper.connectionDetails.password,
+          port: specHelper.connectionDetails.port,
+          database: specHelper.connectionDetails.database,
+          namespace: specHelper.connectionDetails.namespace,
+        };
 
-      const connection = new Connection(connectionDetails);
+        const connection = new Connection(connectionDetails);
 
-      connection.connect();
+        connection.connect();
 
-      connection.on("error", (error) => {
-        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-        connection.end();
-        resolve();
+        connection.on("error", (error) => {
+          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
+          connection.end();
+          resolve(null);
+        });
       });
     },
+
     30 * 1000
   );
 

@@ -24,35 +24,37 @@ describe("scheduler", () => {
 
     test(
       "can provide an error if connection failed",
-      async (done) => {
-        const connectionDetails = {
-          pkg: specHelper.connectionDetails.pkg,
-          host: "wronghostname",
-          password: specHelper.connectionDetails.password,
-          port: specHelper.connectionDetails.port,
-          database: specHelper.connectionDetails.database,
-          namespace: specHelper.connectionDetails.namespace,
-        };
+      async () => {
+        await new Promise(async (resolve) => {
+          const connectionDetails = {
+            pkg: specHelper.connectionDetails.pkg,
+            host: "wronghostname",
+            password: specHelper.connectionDetails.password,
+            port: specHelper.connectionDetails.port,
+            database: specHelper.connectionDetails.database,
+            namespace: specHelper.connectionDetails.namespace,
+          };
 
-        const brokenScheduler = new Scheduler({
-          connection: connectionDetails,
-          timeout: specHelper.timeout,
-        });
+          const brokenScheduler = new Scheduler({
+            connection: connectionDetails,
+            timeout: specHelper.timeout,
+          });
 
-        brokenScheduler.on("poll", () => {
-          throw new Error("Should not emit poll");
-        });
-        brokenScheduler.on("leader", () => {
-          throw new Error("Should not emit leader");
-        });
+          brokenScheduler.on("poll", () => {
+            throw new Error("Should not emit poll");
+          });
+          brokenScheduler.on("leader", () => {
+            throw new Error("Should not emit leader");
+          });
 
-        brokenScheduler.on("error", async (error) => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-          await brokenScheduler.end();
-          done();
-        });
+          brokenScheduler.on("error", async (error) => {
+            expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
+            await brokenScheduler.end();
+            resolve(null);
+          });
 
-        brokenScheduler.connect();
+          brokenScheduler.connect();
+        });
       },
       30 * 1000
     );
@@ -187,44 +189,48 @@ describe("scheduler", () => {
           await worker.end();
         });
 
-        test("will remove stuck workers and fail thier jobs", async (done) => {
-          await scheduler.connect();
-          await scheduler.start();
-          await worker.start();
+        test("will remove stuck workers and fail thier jobs", async () => {
+          await new Promise(async (resolve) => {
+            await scheduler.connect();
+            await scheduler.start();
+            await worker.start();
 
-          const workers = await queue.allWorkingOn();
-          const h = {};
-          h[worker.name] = "started";
-          expect(workers).toEqual(h);
+            const workers = await queue.allWorkingOn();
+            const h = {};
+            h[worker.name] = "started";
+            expect(workers).toEqual(h);
 
-          await queue.enqueue("stuckJobs", "stuck", ["oh no!"]);
+            await queue.enqueue("stuckJobs", "stuck", ["oh no!"]);
 
-          scheduler.on(
-            "cleanStuckWorker",
-            async (workerName, errorPayload, delta) => {
-              // response data should contain failure
-              expect(workerName).toEqual(worker.name);
-              expect(errorPayload.worker).toEqual(worker.name);
-              expect(errorPayload.error).toEqual(
-                "Worker Timeout (killed manually)"
-              );
+            scheduler.on(
+              "cleanStuckWorker",
+              async (workerName, errorPayload, delta) => {
+                // response data should contain failure
+                expect(workerName).toEqual(worker.name);
+                expect(errorPayload.worker).toEqual(worker.name);
+                expect(errorPayload.error).toEqual(
+                  "Worker Timeout (killed manually)"
+                );
 
-              // check the workers list, should be empty now
-              expect(await queue.allWorkingOn()).toEqual({});
+                // check the workers list, should be empty now
+                expect(await queue.allWorkingOn()).toEqual({});
 
-              // check the failed list
-              let failed = await specHelper.redis.rpop(
-                specHelper.namespace + ":" + "failed"
-              );
-              failed = JSON.parse(failed);
-              expect(failed.queue).toBe("stuckJobs");
-              expect(failed.exception).toBe("Worker Timeout (killed manually)");
-              expect(failed.error).toBe("Worker Timeout (killed manually)");
+                // check the failed list
+                let failed = await specHelper.redis.rpop(
+                  specHelper.namespace + ":" + "failed"
+                );
+                failed = JSON.parse(failed);
+                expect(failed.queue).toBe("stuckJobs");
+                expect(failed.exception).toBe(
+                  "Worker Timeout (killed manually)"
+                );
+                expect(failed.error).toBe("Worker Timeout (killed manually)");
 
-              scheduler.removeAllListeners("cleanStuckWorker");
-              done();
-            }
-          );
+                scheduler.removeAllListeners("cleanStuckWorker");
+                resolve(null);
+              }
+            );
+          });
         });
       });
     });
