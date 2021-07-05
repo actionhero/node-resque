@@ -129,19 +129,24 @@ describe("multiWorker", () => {
     30 * 1000
   );
 
-  test("should pass on all worker emits to the instance of multiWorker", async (resolve) => {
-    await queue.enqueue(specHelper.queue, "missingJob", []);
+  test("should pass on all worker emits to the instance of multiWorker", async () => {
+    await new Promise(async (resolve) => {
+      await queue.enqueue(specHelper.queue, "missingJob", []);
 
-    multiWorker.start();
+      multiWorker.start();
 
-    multiWorker.on("failure", async (workerId, queue, job, error, duration) => {
-      expect(String(error)).toBe(
-        'Error: No job defined for class "missingJob"'
+      multiWorker.on(
+        "failure",
+        async (workerId, queue, job, error, duration) => {
+          expect(String(error)).toBe(
+            'Error: No job defined for class "missingJob"'
+          );
+          expect(duration).toBeGreaterThanOrEqual(0);
+          multiWorker.removeAllListeners("error");
+          await multiWorker.end();
+          resolve(null);
+        }
       );
-      expect(duration).toBeGreaterThanOrEqual(0);
-      multiWorker.removeAllListeners("error");
-      await multiWorker.end();
-      resolve();
     });
   });
 });

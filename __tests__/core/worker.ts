@@ -56,38 +56,6 @@ describe("worker", () => {
     await worker.end();
   });
 
-  test(
-    "can provide an error if connection failed",
-    async (done) => {
-      const connectionDetails = {
-        pkg: specHelper.connectionDetails.pkg,
-        host: "wronghostname",
-        password: specHelper.connectionDetails.password,
-        port: specHelper.connectionDetails.port,
-        database: specHelper.connectionDetails.database,
-        namespace: specHelper.connectionDetails.namespace,
-      };
-
-      const worker = new Worker(
-        {
-          connection: connectionDetails,
-          timeout: specHelper.timeout,
-          queues: [specHelper.queue],
-        },
-        {}
-      );
-
-      worker.on("error", async (error) => {
-        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-        await worker.end();
-        done();
-      });
-
-      worker.connect();
-    },
-    30 * 1000
-  );
-
   describe("performInline", () => {
     beforeAll(() => {
       worker = new Worker(
@@ -165,33 +133,35 @@ describe("worker", () => {
     });
 
     describe("integration", () => {
-      test("will notice new job queues when started with queues=*", async (done) => {
-        const wildcardWorker = new Worker(
-          {
-            connection: specHelper.connectionDetails,
-            timeout: specHelper.timeout,
-            queues: ["*"],
-          },
-          jobs
-        );
+      test("will notice new job queues when started with queues=*", async () => {
+        await new Promise(async (resolve) => {
+          const wildcardWorker = new Worker(
+            {
+              connection: specHelper.connectionDetails,
+              timeout: specHelper.timeout,
+              queues: ["*"],
+            },
+            jobs
+          );
 
-        await wildcardWorker.connect();
-        await wildcardWorker.start();
+          await wildcardWorker.connect();
+          await wildcardWorker.start();
 
-        setTimeout(async () => {
-          await queue.enqueue("__newQueue", "add", [1, 2]);
-        }, 501);
+          setTimeout(async () => {
+            await queue.enqueue("__newQueue", "add", [1, 2]);
+          }, 501);
 
-        wildcardWorker.on("success", async (q, job, result, duration) => {
-          expect(q).toBe("__newQueue");
-          expect(job.class).toBe("add");
-          expect(result).toBe(3);
-          expect(wildcardWorker.result).toBe(result);
-          expect(duration).toBeGreaterThanOrEqual(0);
+          wildcardWorker.on("success", async (q, job, result, duration) => {
+            expect(q).toBe("__newQueue");
+            expect(job.class).toBe("add");
+            expect(result).toBe(3);
+            expect(wildcardWorker.result).toBe(result);
+            expect(duration).toBeGreaterThanOrEqual(0);
 
-          wildcardWorker.removeAllListeners("success");
-          await wildcardWorker.end();
-          done();
+            wildcardWorker.removeAllListeners("success");
+            await wildcardWorker.end();
+            resolve(null);
+          });
         });
       });
 
@@ -212,35 +182,39 @@ describe("worker", () => {
           await worker.end();
         });
 
-        test("will mark a job as failed", async (done) => {
-          await queue.enqueue(specHelper.queue, "badAdd", [1, 2]);
+        test("will mark a job as failed", async () => {
+          await new Promise(async (resolve) => {
+            await queue.enqueue(specHelper.queue, "badAdd", [1, 2]);
 
-          await worker.start();
+            await worker.start();
 
-          worker.on("failure", (q, job, failire) => {
-            expect(q).toBe(specHelper.queue);
-            expect(job.class).toBe("badAdd");
-            expect(failire.message).toBe("Blue Smoke");
+            worker.on("failure", (q, job, failire) => {
+              expect(q).toBe(specHelper.queue);
+              expect(job.class).toBe("badAdd");
+              expect(failire.message).toBe("Blue Smoke");
 
-            worker.removeAllListeners("failure");
-            done();
+              worker.removeAllListeners("failure");
+              resolve(null);
+            });
           });
         });
 
-        test("can work a job and return successful things", async (done) => {
-          await queue.enqueue(specHelper.queue, "add", [1, 2]);
+        test("can work a job and return successful things", async () => {
+          await new Promise(async (resolve) => {
+            await queue.enqueue(specHelper.queue, "add", [1, 2]);
 
-          worker.start();
+            worker.start();
 
-          worker.on("success", (q, job, result, duration) => {
-            expect(q).toBe(specHelper.queue);
-            expect(job.class).toBe("add");
-            expect(result).toBe(3);
-            expect(worker.result).toBe(result);
-            expect(duration).toBeGreaterThanOrEqual(0);
+            worker.on("success", (q, job, result, duration) => {
+              expect(q).toBe(specHelper.queue);
+              expect(job.class).toBe("add");
+              expect(result).toBe(3);
+              expect(worker.result).toBe(result);
+              expect(duration).toBeGreaterThanOrEqual(0);
 
-            worker.removeAllListeners("success");
-            done();
+              worker.removeAllListeners("success");
+              resolve(null);
+            });
           });
         });
 
@@ -259,33 +233,37 @@ describe("worker", () => {
         //   })
         // })
 
-        test("can accept jobs that are simple functions", async (done) => {
-          await queue.enqueue(specHelper.queue, "quickDefine");
+        test("can accept jobs that are simple functions", async () => {
+          await new Promise(async (resolve) => {
+            await queue.enqueue(specHelper.queue, "quickDefine");
 
-          worker.start();
+            worker.start();
 
-          worker.on("success", (q, job, result, duration) => {
-            expect(result).toBe("ok");
-            expect(duration).toBeGreaterThanOrEqual(0);
-            worker.removeAllListeners("success");
-            done();
+            worker.on("success", (q, job, result, duration) => {
+              expect(result).toBe("ok");
+              expect(duration).toBeGreaterThanOrEqual(0);
+              worker.removeAllListeners("success");
+              resolve(null);
+            });
           });
         });
 
-        test("will not work jobs that are not defined", async (done) => {
-          await queue.enqueue(specHelper.queue, "somethingFake");
+        test("will not work jobs that are not defined", async () => {
+          await new Promise(async (resolve) => {
+            await queue.enqueue(specHelper.queue, "somethingFake");
 
-          worker.start();
+            worker.start();
 
-          worker.on("failure", (q, job, failure, duration) => {
-            expect(q).toBe(specHelper.queue);
-            expect(String(failure)).toBe(
-              'Error: No job defined for class "somethingFake"'
-            );
-            expect(duration).toBeGreaterThanOrEqual(0);
+            worker.on("failure", (q, job, failure, duration) => {
+              expect(q).toBe(specHelper.queue);
+              expect(String(failure)).toBe(
+                'Error: No job defined for class "somethingFake"'
+              );
+              expect(duration).toBeGreaterThanOrEqual(0);
 
-            worker.removeAllListeners("failure");
-            done();
+              worker.removeAllListeners("failure");
+              resolve(null);
+            });
           });
         });
 
@@ -299,28 +277,40 @@ describe("worker", () => {
           expect(data.error).toBe('No job defined for class "somethingFake"');
         });
 
-        test("will ping with status even when working a slow job", async (done) => {
-          const nowInSeconds = Math.round(new Date().getTime() / 1000);
-          await worker.start();
-          await new Promise((resolve) =>
-            setTimeout(resolve, worker.options.timeout * 2)
-          );
-          const pingKey = worker.connection.key("worker", "ping", worker.name);
-          const firstPayload = JSON.parse(await specHelper.redis.get(pingKey));
-          expect(firstPayload.name).toEqual(worker.name);
-          expect(firstPayload.time).toBeGreaterThanOrEqual(nowInSeconds);
+        test("will ping with status even when working a slow job", async () => {
+          await new Promise(async (resolve) => {
+            const nowInSeconds = Math.round(new Date().getTime() / 1000);
+            await worker.start();
+            await new Promise((resolve) =>
+              setTimeout(resolve, worker.options.timeout * 2)
+            );
+            const pingKey = worker.connection.key(
+              "worker",
+              "ping",
+              worker.name
+            );
+            const firstPayload = JSON.parse(
+              await specHelper.redis.get(pingKey)
+            );
+            expect(firstPayload.name).toEqual(worker.name);
+            expect(firstPayload.time).toBeGreaterThanOrEqual(nowInSeconds);
 
-          await queue.enqueue(specHelper.queue, "twoSeconds");
+            await queue.enqueue(specHelper.queue, "twoSeconds");
 
-          worker.on("success", (q, job, result) => {
-            expect(result).toBe("slow");
-            worker.removeAllListeners("success");
-            done();
+            worker.on("success", (q, job, result) => {
+              expect(result).toBe("slow");
+              worker.removeAllListeners("success");
+              resolve(null);
+            });
+
+            const secondPayload = JSON.parse(
+              await specHelper.redis.get(pingKey)
+            );
+            expect(secondPayload.name).toEqual(worker.name);
+            expect(secondPayload.time).toBeGreaterThanOrEqual(
+              firstPayload.time
+            );
           });
-
-          const secondPayload = JSON.parse(await specHelper.redis.get(pingKey));
-          expect(secondPayload.name).toEqual(worker.name);
-          expect(secondPayload.time).toBeGreaterThanOrEqual(firstPayload.time);
         });
       });
     });

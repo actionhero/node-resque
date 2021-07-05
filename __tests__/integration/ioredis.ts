@@ -73,17 +73,19 @@ describe("testing with ioredis package", () => {
     expect(jobsLength).toBe(1);
   });
 
-  test("the worker can work the job", async (done) => {
-    await worker.start();
-    worker.on("success", async (q, job, result, duration) => {
-      expect(q).toBe("math");
-      expect(job.class).toBe("add");
-      expect(result).toBe(3);
-      expect(worker.result).toBe(result);
-      expect(duration).toBeGreaterThanOrEqual(0);
+  test("the worker can work the job", async () => {
+    await new Promise(async (resolve) => {
+      await worker.start();
+      worker.on("success", async (q, job, result, duration) => {
+        expect(q).toBe("math");
+        expect(job.class).toBe("add");
+        expect(result).toBe(3);
+        expect(worker.result).toBe(result);
+        expect(duration).toBeGreaterThanOrEqual(0);
 
-      worker.removeAllListeners("success");
-      done();
+        worker.removeAllListeners("success");
+        resolve(null);
+      });
     });
   });
 });
