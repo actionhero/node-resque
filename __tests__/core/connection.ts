@@ -55,31 +55,27 @@ describe("connection", () => {
 
     test("getKeys returns appropriate keys based on matcher given", async () => {
       // seed the DB with keys to test with
-      await Promise.all(
-        new Array(25)
-          .fill(0)
-          .map((v, i) => i + 1)
-          .map(async (v) => {
-            await connection.redis.set(`test-key${v}`, v.toString());
-            if (v <= 5) {
-              await connection.redis.set(`test-not-key${v}`, v.toString());
-            }
-          })
-      );
+
+      for (const v of new Array(5).fill(0).map((v, i) => i + 1)) {
+        await connection.redis.set(`test-key${v}`, v.toString());
+        await connection.redis.set(`test-not-key${v}`, v.toString());
+      }
+
+      await connection.redis.set(`test-key2`, 2);
+      await connection.redis.set(`test-key3`, 3);
+      await connection.redis.set(`test-key4`, 4);
+      await connection.redis.set(`test-key5`, 5);
 
       // sanity checks to confirm keys above are set and exist
       expect(await connection.redis.get("test-key1")).toBe("1");
-      expect(await connection.redis.get("test-key20")).toBe("20");
       expect(await connection.redis.get("test-not-key1")).toBe("1");
       expect(await connection.redis.get("test-not-key5")).toBe("5");
 
       const foundKeys = await connection.getKeys("test-key*");
 
-      expect(foundKeys.length).toBe(25);
+      expect(foundKeys.length).toBe(5);
       expect(foundKeys).toContain("test-key1");
       expect(foundKeys).toContain("test-key5");
-      expect(foundKeys).toContain("test-key20");
-      expect(foundKeys).toContain("test-key25");
       expect(foundKeys).not.toContain("test-key50");
       expect(foundKeys).not.toContain("test-not-key1");
       expect(foundKeys).not.toContain("test-not-key3");

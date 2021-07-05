@@ -17,7 +17,9 @@ describe("queue", () => {
       const brokenConnection = new Connection(connectionDetails);
 
       brokenConnection.on("error", async (error) => {
-        expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
+        expect(error.message).toMatch(
+          /ENOTFOUND|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN/
+        );
       });
 
       try {
