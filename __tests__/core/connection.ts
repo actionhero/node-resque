@@ -13,34 +13,6 @@ describe("connection", () => {
     await specHelper.disconnect();
   });
 
-  test(
-    "can provide an error if connection failed",
-    async () => {
-      await new Promise(async (resolve) => {
-        const connectionDetails = {
-          pkg: specHelper.connectionDetails.pkg,
-          host: "wrong-hostname",
-          password: specHelper.connectionDetails.password,
-          port: specHelper.connectionDetails.port,
-          database: specHelper.connectionDetails.database,
-          namespace: specHelper.connectionDetails.namespace,
-        };
-
-        const connection = new Connection(connectionDetails);
-
-        connection.connect();
-
-        connection.on("error", (error) => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-          connection.end();
-          resolve(null);
-        });
-      });
-    },
-
-    30 * 1000
-  );
-
   test("should stat with no redis keys in the namespace", async () => {
     const keys = await specHelper.redis.keys(specHelper.namespace + "*");
     expect(keys.length).toBe(0);

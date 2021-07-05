@@ -16,36 +16,6 @@ describe("queue", () => {
     await queue.end();
   });
 
-  test(
-    "can provide an error if connection failed",
-    async () => {
-      await new Promise(async (resolve) => {
-        const connectionDetails = {
-          pkg: specHelper.connectionDetails.pkg,
-          host: "wronghostname",
-          password: specHelper.connectionDetails.password,
-          port: specHelper.connectionDetails.port,
-          database: specHelper.connectionDetails.database,
-          namespace: specHelper.connectionDetails.namespace,
-        };
-
-        queue = new Queue(
-          { connection: connectionDetails, queue: specHelper.queue },
-          {}
-        );
-
-        queue.connect();
-
-        queue.on("error", (error) => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-          queue.end();
-          resolve(null);
-        });
-      });
-    },
-    30 * 1000
-  );
-
   describe("[with connection]", () => {
     beforeAll(async () => {
       await specHelper.connect();

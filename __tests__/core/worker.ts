@@ -56,40 +56,6 @@ describe("worker", () => {
     await worker.end();
   });
 
-  test(
-    "can provide an error if connection failed",
-    async () => {
-      await new Promise(async (resolve) => {
-        const connectionDetails = {
-          pkg: specHelper.connectionDetails.pkg,
-          host: "wronghostname",
-          password: specHelper.connectionDetails.password,
-          port: specHelper.connectionDetails.port,
-          database: specHelper.connectionDetails.database,
-          namespace: specHelper.connectionDetails.namespace,
-        };
-
-        const worker = new Worker(
-          {
-            connection: connectionDetails,
-            timeout: specHelper.timeout,
-            queues: [specHelper.queue],
-          },
-          {}
-        );
-
-        worker.on("error", async (error) => {
-          expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-          await worker.end();
-          resolve(null);
-        });
-
-        worker.connect();
-      });
-    },
-    30 * 1000
-  );
-
   describe("performInline", () => {
     beforeAll(() => {
       worker = new Worker(

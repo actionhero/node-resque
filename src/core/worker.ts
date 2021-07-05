@@ -460,6 +460,8 @@ export class Worker extends EventEmitter {
   }
 
   private async ping() {
+    if (!this.running) return;
+
     const name = this.name;
     const nowSeconds = Math.round(new Date().getTime() / 1000);
     this.emit("ping", nowSeconds);

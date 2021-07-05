@@ -15,49 +15,8 @@ describe("scheduler", () => {
   });
 
   describe("with specHelper", () => {
-    beforeAll(async () => {
-      await specHelper.connect();
-    });
-    afterAll(async () => {
-      await specHelper.disconnect();
-    });
-
-    test(
-      "can provide an error if connection failed",
-      async () => {
-        await new Promise(async (resolve) => {
-          const connectionDetails = {
-            pkg: specHelper.connectionDetails.pkg,
-            host: "wronghostname",
-            password: specHelper.connectionDetails.password,
-            port: specHelper.connectionDetails.port,
-            database: specHelper.connectionDetails.database,
-            namespace: specHelper.connectionDetails.namespace,
-          };
-
-          const brokenScheduler = new Scheduler({
-            connection: connectionDetails,
-            timeout: specHelper.timeout,
-          });
-
-          brokenScheduler.on("poll", () => {
-            throw new Error("Should not emit poll");
-          });
-          brokenScheduler.on("leader", () => {
-            throw new Error("Should not emit leader");
-          });
-
-          brokenScheduler.on("error", async (error) => {
-            expect(error.message).toMatch(/ENOTFOUND|ETIMEDOUT|ECONNREFUSED/);
-            await brokenScheduler.end();
-            resolve(null);
-          });
-
-          brokenScheduler.connect();
-        });
-      },
-      30 * 1000
-    );
+    beforeAll(async () => await specHelper.connect());
+    afterAll(async () => await specHelper.disconnect());
 
     describe("locking", () => {
       beforeEach(async () => {
@@ -186,10 +145,9 @@ describe("scheduler", () => {
 
         afterAll(async () => {
           await scheduler.end();
-          await worker.end();
         });
 
-        test("will remove stuck workers and fail thier jobs", async () => {
+        test("will remove stuck workers and fail their jobs", async () => {
           await new Promise(async (resolve) => {
             await scheduler.connect();
             await scheduler.start();
