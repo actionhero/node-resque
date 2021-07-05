@@ -4,8 +4,6 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: node
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14.x
@@ -24,8 +22,6 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     needs: build
-    container:
-      image: node
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14.x
@@ -44,8 +40,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: lint
-    container:
-      image: node
 
     services:
       redis:
