@@ -69,7 +69,7 @@ jobs:
             dist
           key: ${{ runner.os }}-cache-${{ hashFiles('**/package-lock.json') }}
       - run: npm rebuild
-      - run: ./node_modules/.bin/jest --ci
+      - run: ./node_modules/.bin/jest --ci --runInBand
         env:
           REDIS_HOST: redis
 
