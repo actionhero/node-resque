@@ -41,15 +41,6 @@
     "typedoc": "^0.21.2",
     "typescript": "^4.3.5"
   },
-  "jest": {
-    "maxWorkers": "50%",
-    "testPathIgnorePatterns": [
-      "<rootDir>/__tests__/utils"
-    ],
-    "transform": {
-      "^.+\\.ts?$": "ts-jest"
-    }
-  },
   "scripts": {
     "prepare": "npm run build && npm run docs",
     "pretest": "npm run lint && npm run build",
