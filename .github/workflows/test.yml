@@ -39,7 +39,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: build
 
     services:
       redis:
