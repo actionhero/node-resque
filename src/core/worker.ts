@@ -27,6 +27,8 @@ export declare interface Worker {
   ready: boolean;
   running: boolean;
   working: boolean;
+  pollTimer: NodeJS.Timeout;
+  endTimer: NodeJS.Timeout;
   pingTimer: NodeJS.Timeout;
   job: Job<any>;
   connection: Connection;
@@ -129,6 +131,8 @@ export class Worker extends EventEmitter {
     this.running = false;
     this.working = false;
     this.job = null;
+    this.pollTimer = null;
+    this.endTimer = null;
     this.pingTimer = null;
     this.started = false;
 
@@ -168,12 +172,16 @@ export class Worker extends EventEmitter {
 
     if (this.working === true) {
       await new Promise((resolve) => {
-        setTimeout(() => {
+        this.endTimer = setTimeout(() => {
           resolve(null);
         }, this.options.timeout);
       });
       return this.end();
     }
+
+    clearTimeout(this.pollTimer);
+    clearTimeout(this.endTimer);
+    clearInterval(this.pingTimer);
 
     if (
       this.connection &&
@@ -181,7 +189,6 @@ export class Worker extends EventEmitter {
         this.connection.connected === undefined ||
         this.connection.connected === null)
     ) {
-      clearInterval(this.pingTimer);
       await this.untrack();
     }
 
@@ -405,7 +412,7 @@ export class Worker extends EventEmitter {
   private async pause() {
     this.emit("pause");
     await new Promise((resolve) => {
-      setTimeout(() => {
+      this.pollTimer = setTimeout(() => {
         this.poll();
         resolve(null);
       }, this.options.timeout);
