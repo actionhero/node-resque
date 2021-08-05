@@ -1,7 +1,7 @@
 import { Connection } from "../../src";
 import specHelper from "../utils/specHelper";
 
-describe("queue", () => {
+describe("connection error", () => {
   test("can provide an error if connection failed", async () => {
     await new Promise(async (resolve) => {
       const connectionDetails = {
