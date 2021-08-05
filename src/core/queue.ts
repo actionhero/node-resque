@@ -528,6 +528,7 @@ export class Queue extends EventEmitter {
 
       if (
         typeof payload !== "string" &&
+        payload.run_at &&
         Date.now() - Date.parse(payload.run_at) > age
       ) {
         const errorPayload = await this.forceCleanWorker(workerName);
