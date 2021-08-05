@@ -424,7 +424,7 @@ export class Queue extends EventEmitter {
   /**
    * - returns: `{"run_at":"Fri Dec 12 2014 14:01:16 GMT-0800 (PST)","queue":"test_queue","payload":{"class":"slowJob","queue":"test_queue","args":[null]},"worker":"workerA"}`
    */
-  async workingOn(workerName: string, queues: string[]) {
+  async workingOn(workerName: string, queues: string) {
     const fullWorkerName = workerName + ":" + queues;
     return this.connection.redis.get(
       this.connection.key("worker", fullWorkerName)
