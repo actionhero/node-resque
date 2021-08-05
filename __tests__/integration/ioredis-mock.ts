@@ -1,6 +1,9 @@
-import { Queue, Worker, Scheduler } from "../../src";
-import * as RedisMock from "ioredis-mock";
+import { Queue, Worker, Scheduler, Job } from "../../src";
 import specHelper from "../utils/specHelper";
+
+// import * as RedisMock from "ioredis-mock"; // TYPE HACK!
+import * as IORedis from "ioredis";
+const RedisMock: typeof IORedis = require("ioredis-mock");
 
 // for ioredis-mock, we need to re-use a shared connection
 // setting "pkg" is important!
@@ -13,7 +16,7 @@ const jobs = {
       const response = a + b;
       return response;
     },
-  },
+  } as Job<any>,
 };
 
 describe("testing with ioredis-mock package", () => {
@@ -28,18 +31,12 @@ describe("testing with ioredis-mock package", () => {
   });
 
   test("a queue can be created", async () => {
-    queue = new Queue(
-      { connection: connectionDetails, queues: ["math"] },
-      jobs
-    );
+    queue = new Queue({ connection: connectionDetails }, jobs);
     await queue.connect();
   });
 
   test("a scheduler can be created", async () => {
-    scheduler = new Scheduler(
-      { connection: connectionDetails, queues: ["math"] },
-      jobs
-    );
+    scheduler = new Scheduler({ connection: connectionDetails }, jobs);
     await scheduler.connect();
     // await scheduler.start();
   });

@@ -9,7 +9,7 @@ interface EventListeners {
 }
 
 export class Connection extends EventEmitter {
-  options: ConnectionOptions | null;
+  options: ConnectionOptions;
   private eventListeners: EventListeners;
   connected: boolean;
   redis: IORedis.Redis | IORedis.Cluster;
@@ -17,21 +17,13 @@ export class Connection extends EventEmitter {
   constructor(options: ConnectionOptions = {}) {
     super();
 
-    const defaults = {
-      pkg: "ioredis",
-      host: "127.0.0.1",
-      port: 6379,
-      database: 0,
-      namespace: "resque",
-      options: {},
-      scanCount: 10,
-    };
-
-    for (const i in defaults) {
-      if (options[i] === null || options[i] === undefined) {
-        options[i] = defaults[i];
-      }
-    }
+    options.pkg = options.pkg ?? "ioredis";
+    options.host = options.host ?? "127.0.0.1";
+    options.port = options.port ?? 6379;
+    options.database = options.database ?? 0;
+    options.namespace = options.namespace ?? "resque";
+    options.scanCount = options.scanCount ?? 10;
+    options.options = options.options ?? {};
 
     this.options = options;
     this.eventListeners = {};
@@ -77,7 +69,7 @@ export class Connection extends EventEmitter {
       }
     }
 
-    this.eventListeners.error = (error) => {
+    this.eventListeners.error = (error: Error) => {
       this.emit("error", error);
     };
     this.eventListeners.end = () => {
@@ -114,7 +106,12 @@ export class Connection extends EventEmitter {
     }
   }
 
-  async getKeys(match: string, count: number = null, keysAry = [], cursor = 0) {
+  async getKeys(
+    match: string,
+    count: number = null,
+    keysAry: string[] = [],
+    cursor = 0
+  ): Promise<string[]> {
     if (count === null || count === undefined) {
       count = this.options.scanCount || 10;
     }
@@ -131,10 +128,7 @@ export class Connection extends EventEmitter {
         keysAry = keysAry.concat(matches);
       }
 
-      if (newCursor === "0") {
-        return keysAry;
-      }
-
+      if (newCursor === "0") return keysAry;
       return this.getKeys(match, count, keysAry, parseInt(newCursor));
     }
 
@@ -148,7 +142,7 @@ export class Connection extends EventEmitter {
 
   end() {
     Object.keys(this.listeners).forEach((eventName) => {
-      this.redis.removeListener(eventName, this.listeners[eventName]);
+      this.redis.removeAllListeners(eventName);
     });
 
     // Only disconnect if we established the redis connection on our own.
@@ -172,7 +166,7 @@ export class Connection extends EventEmitter {
     } else {
       args.unshift(this.options.namespace);
     }
-    args = args.filter((e) => {
+    args = args.filter((e: any) => {
       return String(e).trim();
     });
     return args.join(":");

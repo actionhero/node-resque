@@ -26,7 +26,7 @@ export class QueueLock extends Plugin {
     return true;
   }
 
-  afterEnqueue() {
+  async afterEnqueue() {
     return true;
   }
 
@@ -36,7 +36,7 @@ export class QueueLock extends Plugin {
     return true;
   }
 
-  afterPerform() {
+  async afterPerform() {
     return true;
   }
 

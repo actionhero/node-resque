@@ -1,6 +1,6 @@
 import { Worker } from "./worker";
 import { Connection } from "./connection";
-import { Queue } from "./queue";
+import { ParsedJob, Queue } from "./queue";
 
 export abstract class Plugin {
   name: string;
@@ -8,15 +8,22 @@ export abstract class Plugin {
   queueObject: Queue;
   queue: string;
   func: string;
-  job: {
-    [key: string]: any;
-  };
+  job: ParsedJob;
   args: Array<any>;
   options: {
     [key: string]: any;
   };
 
-  constructor(worker, func, queue, job, args, options) {
+  constructor(
+    worker: Queue | Worker,
+    func: string,
+    queue: string,
+    job: ParsedJob,
+    args: Array<any>,
+    options: {
+      [key: string]: any;
+    }
+  ) {
     this.name = this?.constructor?.name || "Node Resque Plugin";
     this.worker = worker;
     this.queue = queue;
@@ -32,8 +39,8 @@ export abstract class Plugin {
     }
   }
 
-  abstract beforeEnqueue?(): void;
-  abstract afterEnqueue?(): void;
-  abstract beforePerform?(): void;
-  abstract afterPerform?(): void;
+  abstract beforeEnqueue?(): Promise<boolean>;
+  abstract afterEnqueue?(): Promise<boolean>;
+  abstract beforePerform?(): Promise<boolean>;
+  abstract afterPerform?(): Promise<boolean>;
 }

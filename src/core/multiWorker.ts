@@ -75,24 +75,15 @@ export declare interface MultiWorker {
 }
 
 export class MultiWorker extends EventEmitter {
-  constructor(options, jobs) {
+  constructor(options: MultiWorkerOptions, jobs: Jobs) {
     super();
 
-    const defaults = {
-      // all times in ms
-      minTaskProcessors: 1,
-      maxTaskProcessors: 10,
-      timeout: 5000,
-      checkTimeout: 500,
-      maxEventLoopDelay: 10,
-      name: os.hostname(),
-    };
-
-    for (const i in defaults) {
-      if (options[i] === null || options[i] === undefined) {
-        options[i] = defaults[i];
-      }
-    }
+    options.name = options.name ?? os.hostname();
+    options.minTaskProcessors = options.minTaskProcessors ?? 1;
+    options.maxTaskProcessors = options.maxTaskProcessors ?? 10;
+    options.timeout = options.timeout ?? 5000;
+    options.checkTimeout = options.checkTimeout ?? 500;
+    options.maxEventLoopDelay = options.maxEventLoopDelay ?? 10;
 
     if (
       options.connection.redis &&
@@ -122,7 +113,7 @@ export class MultiWorker extends EventEmitter {
     EventLoopDelay(
       this.options.maxEventLoopDelay,
       this.options.checkTimeout,
-      (blocked, ms) => {
+      (blocked: boolean, ms: number) => {
         this.eventLoopBlocked = blocked;
         this.eventLoopDelay = ms;
         this.eventLoopCheckCounter++;
@@ -247,7 +238,7 @@ export class MultiWorker extends EventEmitter {
     if (verb === "--") {
       this.stopInProcess = true;
 
-      const promises = [];
+      const promises: Promise<unknown>[] = [];
       this.workers.forEach((worker) => {
         promises.push(
           new Promise(async (resolve) => {
@@ -271,7 +262,7 @@ export class MultiWorker extends EventEmitter {
     }
   }
 
-  private async cleanupWorker(worker) {
+  private async cleanupWorker(worker: Worker) {
     [
       "start",
       "end",
@@ -286,7 +277,7 @@ export class MultiWorker extends EventEmitter {
       "pause",
       "internalError",
       "multiWorkerAction",
-    ].forEach(function (e) {
+    ].forEach((e) => {
       worker.removeAllListeners(e);
     });
   }
@@ -314,7 +305,7 @@ export class MultiWorker extends EventEmitter {
     return this.stop();
   }
 
-  private async stopWait() {
+  private async stopWait(): Promise<void> {
     if (
       this.workers.length === 0 &&
       this.working === false &&

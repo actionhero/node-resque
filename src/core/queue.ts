@@ -1,10 +1,35 @@
 import { EventEmitter } from "events";
 import * as os from "os";
 import { ErrorPayload, Jobs, ConnectionOptions } from "..";
+import { QueueOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
 
-function arrayify(o) {
+export type ParsedJob = {
+  class: string;
+  queue: string;
+  args: Array<any>;
+  pluginOptions?: { [key: string]: any };
+};
+
+export type ParsedWorkerPayload = {
+  run_at: string;
+  queue: string;
+  worker: string;
+  payload: ParsedJob;
+};
+
+export type ParsedFailedJobPayload = {
+  worker: string;
+  queue: string;
+  payload: ParsedJob;
+  failed_at: string;
+  exception: string;
+  error: string;
+  backtrace: string[];
+};
+
+function arrayify<T>(o: T): T[] {
   if (Array.isArray(o)) {
     return o;
   } else {
@@ -14,14 +39,14 @@ function arrayify(o) {
 
 export declare interface Queue {
   connection: Connection;
-  options: ConnectionOptions;
+  options: QueueOptions;
   jobs: Jobs;
 
   on(event: "error", cb: (error: Error, queue: string) => void): this;
   once(event: "error", cb: (error: Error, queue: string) => void): this;
 }
 export class Queue extends EventEmitter {
-  constructor(options, jobs = {}) {
+  constructor(options: QueueOptions, jobs: Jobs = {}) {
     super();
 
     this.options = options;
@@ -59,9 +84,7 @@ export class Queue extends EventEmitter {
     const job = this.jobs[func];
 
     const toRun = await RunPlugins(this, "beforeEnqueue", func, q, job, args);
-    if (toRun === false) {
-      return toRun;
-    }
+    if (toRun === false) return toRun;
 
     await this.connection.redis.sadd(this.connection.key("queues"), q);
     await this.connection.redis.rpush(
@@ -197,7 +220,7 @@ export class Queue extends EventEmitter {
     let numJobsDeleted: number = 0;
     for (let i = 0; i < jobs.length; i++) {
       const jobEncoded = jobs[i];
-      const { class: jobFunc } = JSON.parse(jobEncoded);
+      const { class: jobFunc } = JSON.parse(jobEncoded) as ParsedJob;
       if (jobFunc === func) {
         await this.connection.redis.lrem(
           this.connection.key("queue", q),
@@ -243,7 +266,7 @@ export class Queue extends EventEmitter {
    * - `timestampsForJob` is an array of integers
    */
   async scheduledAt(q: string, func: string, args: Array<any> = []) {
-    const timestamps = [];
+    const timestamps: number[] = [];
     args = arrayify(args);
     const search = this.encode(q, func, args);
 
@@ -251,7 +274,7 @@ export class Queue extends EventEmitter {
       this.connection.key("timestamps:" + search)
     );
     members.forEach((key) => {
-      timestamps.push(key.split(":")[key.split(":").length - 1]);
+      timestamps.push(parseInt(key.split(":")[key.split(":").length - 1]));
     });
 
     return timestamps;
@@ -261,7 +284,7 @@ export class Queue extends EventEmitter {
    * - `timestamps` is an array of integers for all timestamps which have at least one job scheduled in the future
    */
   async timestamps() {
-    const results = [];
+    const results: number[] = [];
     const timestamps = await this.connection.getKeys(
       this.connection.key("delayed:*")
     );
@@ -285,7 +308,7 @@ export class Queue extends EventEmitter {
       -1
     );
     const tasks = items.map((i) => {
-      return JSON.parse(i);
+      return JSON.parse(i) as ParsedJob;
     });
     return { tasks, rTimestamp };
   }
@@ -311,13 +334,13 @@ export class Queue extends EventEmitter {
    * - note that this operation can be very slow and very ram-heavy
    */
   async allDelayed() {
-    const results = {};
+    const results: { [key: string]: any[] } = {};
 
     const timestamps = await this.timestamps();
     for (const i in timestamps) {
       const timestamp = timestamps[i];
       const { tasks, rTimestamp } = await this.delayedAt(timestamp);
-      results[rTimestamp * 1000] = tasks;
+      results[(rTimestamp * 1000).toString(10)] = tasks;
     }
 
     return results;
@@ -329,7 +352,7 @@ export class Queue extends EventEmitter {
    */
   async locks() {
     let keys: Array<string> = [];
-    const data = {};
+    const data: { [key: string]: string } = {};
     let _keys: Array<string>;
     let values = [];
 
@@ -364,7 +387,7 @@ export class Queue extends EventEmitter {
   /**
    * - `count` is an integer. You might delete more than one lock by the name.
    */
-  async delLock(key) {
+  async delLock(key: string) {
     return this.connection.redis.del(this.connection.key(key));
   }
 
@@ -401,7 +424,7 @@ export class Queue extends EventEmitter {
   /**
    * - returns: `{"run_at":"Fri Dec 12 2014 14:01:16 GMT-0800 (PST)","queue":"test_queue","payload":{"class":"slowJob","queue":"test_queue","args":[null]},"worker":"workerA"}`
    */
-  async workingOn(workerName, queues) {
+  async workingOn(workerName: string, queues: string[]) {
     const fullWorkerName = workerName + ":" + queues;
     return this.connection.redis.get(
       this.connection.key("worker", fullWorkerName)
@@ -412,11 +435,12 @@ export class Queue extends EventEmitter {
    * - returns a hash of the results of `queue.workingOn` with the worker names as keys.
    */
   async allWorkingOn() {
-    const results: { [key: string]: any } = {};
+    const results: { [key: string]: ParsedWorkerPayload } = {};
 
     const workers = await this.workers();
     for (const i in Object.keys(workers)) {
       const w = Object.keys(workers)[i];
+      //@ts-ignore
       results[w] = "started";
       let data = await this.workingOn(w, workers[w]);
       if (data) {
@@ -500,9 +524,12 @@ export class Queue extends EventEmitter {
     const data = await this.allWorkingOn();
     for (const i in Object.keys(data)) {
       const workerName = Object.keys(data)[i];
+      const payload = data[workerName];
+
       if (
-        data[workerName].run_at &&
-        Date.now() - Date.parse(data[workerName].run_at) > age
+        typeof payload !== "string" &&
+        payload.run_at &&
+        Date.now() - Date.parse(payload.run_at) > age
       ) {
         const errorPayload = await this.forceCleanWorker(workerName);
         if (errorPayload && errorPayload.worker) {
@@ -535,8 +562,9 @@ export class Queue extends EventEmitter {
       stop
     );
     const results = data.map((i) => {
-      return JSON.parse(i);
+      return JSON.parse(i) as ParsedFailedJobPayload;
     });
+
     return results;
   }
 
@@ -567,7 +595,7 @@ export class Queue extends EventEmitter {
   async retryStuckJobs(upperLimit = Infinity) {
     let start = 0;
     let batchSize = 100;
-    let failedJobs = [];
+    let failedJobs: ParsedFailedJobPayload[] = [];
 
     const loadFailedJobs = async () => {
       failedJobs = await this.failed(start, start + batchSize);

@@ -1,17 +1,18 @@
 import specHelper from "../utils/specHelper";
-import { Queue } from "../../src";
+import { Queue, Job } from "../../src";
 import { CustomPlugin } from "../utils/custom-plugin";
 
 describe("plugins", () => {
   describe("custom plugins", () => {
     test("runs a custom plugin outside of the plugins directory", async () => {
       const jobs = {
+        //@ts-ignore
         myJob: {
           plugins: [CustomPlugin],
-          perform: function (a, b, callback) {
+          perform: async () => {
             throw new Error("should not get here");
           },
-        },
+        } as Job<any>,
       };
 
       const queue = new Queue(

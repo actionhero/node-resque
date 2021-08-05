@@ -2,10 +2,18 @@
 // a port of some of the features in https://github.com/lantins/resque-retry
 
 import * as os from "os";
-import { Plugin } from "..";
-
+import { Plugin, Worker, ParsedJob, Queue } from "..";
 export class Retry extends Plugin {
-  constructor(worker, func, queue, job, args, options) {
+  constructor(
+    worker: Queue | Worker,
+    func: string,
+    queue: string,
+    job: ParsedJob,
+    args: Array<any>,
+    options: {
+      [key: string]: any;
+    }
+  ) {
     super(worker, func, queue, job, args, options);
 
     if (!this.options.retryLimit) {
@@ -19,15 +27,15 @@ export class Retry extends Plugin {
     }
   }
 
-  beforeEnqueue() {
+  async beforeEnqueue() {
     return true;
   }
 
-  afterEnqueue() {
+  async afterEnqueue() {
     return true;
   }
 
-  beforePerform() {
+  async beforePerform() {
     return true;
   }
 

@@ -1,10 +1,17 @@
 import specHelper from "../utils/specHelper";
-import { Scheduler, Plugins, Queue, Worker } from "../../src";
+import {
+  Scheduler,
+  Plugins,
+  Queue,
+  Worker,
+  Job,
+  ParsedFailedJobPayload,
+} from "../../src";
 
-let queue;
-let scheduler;
+let queue: Queue;
+let scheduler: Scheduler;
 
-const jobs = {
+const jobs: { [key: string]: Job<any> } = {
   brokenJob: {
     plugins: [Plugins.Retry],
     pluginOptions: {
@@ -25,6 +32,7 @@ const jobs = {
         retryDelay: 100,
       },
     },
+    //@ts-ignore
     perform: () => {
       // no return
     },
@@ -198,6 +206,7 @@ describe("plugins", () => {
     test("can have custom retry times set", async () => {
       await new Promise(async (resolve) => {
         const customJobs = {
+          //@ts-ignore
           jobWithBackoffStrategy: {
             plugins: [Plugins.Retry],
             pluginOptions: {
@@ -209,7 +218,7 @@ describe("plugins", () => {
             perform: function (a, b, callback) {
               callback(new Error("BUSTED"), null);
             },
-          },
+          } as Job<any>,
         };
 
         await queue.enqueue(specHelper.queue, "jobWithBackoffStrategy", [1, 2]);
@@ -347,11 +356,11 @@ describe("plugins", () => {
             `${specHelper.namespace}:failure-resque-retry:brokenJob:1-2`
           );
           expect(String(retryAttempts)).toBe("0");
-          failureData = JSON.parse(failureData);
-          expect(failureData.payload).toEqual([1, 2]);
-          expect(failureData.exception).toBe("Error: BUSTED");
-          expect(failureData.worker).toBe("brokenJob");
-          expect(failureData.queue).toBe("test_queue");
+          const failure = JSON.parse(failureData) as ParsedFailedJobPayload;
+          expect(failure.payload).toEqual([1, 2]);
+          expect(failure.exception).toBe("Error: BUSTED");
+          expect(failure.worker).toBe("brokenJob");
+          expect(failure.queue).toBe("test_queue");
           await worker.end();
           resolve(null);
         });

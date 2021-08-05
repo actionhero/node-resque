@@ -1,4 +1,10 @@
-import { Queue, Scheduler, Worker } from "../../src";
+import {
+  Queue,
+  Scheduler,
+  Worker,
+  Job,
+  ParsedFailedJobPayload,
+} from "../../src";
 import specHelper from "../utils/specHelper";
 
 let scheduler: Scheduler;
@@ -118,7 +124,7 @@ describe("scheduler", () => {
       });
 
       describe("stuck workers", () => {
-        let worker;
+        let worker: Worker;
         const jobs = {
           stuck: {
             perform: async function () {
@@ -128,7 +134,7 @@ describe("scheduler", () => {
                 clearTimeout(this.pingTimer);
               });
             },
-          },
+          } as Job<any>,
         };
 
         beforeAll(async () => {
@@ -154,7 +160,7 @@ describe("scheduler", () => {
             await worker.start();
 
             const workers = await queue.allWorkingOn();
-            const h = {};
+            const h: { [key: string]: any } = {};
             h[worker.name] = "started";
             expect(workers).toEqual(h);
 
@@ -174,10 +180,10 @@ describe("scheduler", () => {
                 expect(await queue.allWorkingOn()).toEqual({});
 
                 // check the failed list
-                let failed = await specHelper.redis.rpop(
+                const str = await specHelper.redis.rpop(
                   specHelper.namespace + ":" + "failed"
                 );
-                failed = JSON.parse(failed);
+                const failed = JSON.parse(str) as ParsedFailedJobPayload;
                 expect(failed.queue).toBe("stuckJobs");
                 expect(failed.exception).toBe(
                   "Worker Timeout (killed manually)"

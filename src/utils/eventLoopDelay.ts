@@ -1,6 +1,10 @@
 // inspired by https://github.com/tj/node-blocked
 
-export function EventLoopDelay(limit: number, interval: number, fn: Function) {
+export function EventLoopDelay(
+  limit: number,
+  interval: number,
+  fn: (blocked: boolean, delay: number) => any
+) {
   let start = process.hrtime();
 
   const timeout = setInterval(() => {

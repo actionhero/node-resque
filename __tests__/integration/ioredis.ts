@@ -1,10 +1,9 @@
-import { Queue, Worker, Scheduler } from "../../src";
+import { Queue, Worker, Scheduler, Job } from "../../src";
 import specHelper from "../utils/specHelper";
 
 const connectionDetails = {
   pkg: "ioredis",
   host: "127.0.0.1",
-  password: null,
   port: 6379,
   database: parseInt(process.env.JEST_WORKER_ID || "0"),
 };
@@ -15,7 +14,7 @@ const jobs = {
       const response = a + b;
       return response;
     },
-  },
+  } as Job<any>,
 };
 
 describe("testing with ioredis package", () => {
@@ -30,18 +29,12 @@ describe("testing with ioredis package", () => {
   });
 
   test("a queue can be created", async () => {
-    queue = new Queue(
-      { connection: connectionDetails, queues: ["math"] },
-      jobs
-    );
+    queue = new Queue({ connection: connectionDetails }, jobs);
     await queue.connect();
   });
 
   test("a scheduler can be created", async () => {
-    scheduler = new Scheduler(
-      { connection: connectionDetails, queues: ["math"] },
-      jobs
-    );
+    scheduler = new Scheduler({ connection: connectionDetails }, jobs);
     await scheduler.connect();
     // await scheduler.start();
   });

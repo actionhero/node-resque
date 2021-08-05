@@ -1,4 +1,4 @@
-import * as Redis from "ioredis";
+import * as IORedis from "ioredis";
 import * as NodeResque from "../../src/index";
 
 const namespace = `resque-test-${process.env.JEST_WORKER_ID || 0}`;
@@ -11,7 +11,7 @@ const SpecHelper = {
   queue: queue,
   timeout: 500,
   smallTimeout: 3,
-  redis: null,
+  redis: null as IORedis.Redis,
   connectionDetails: {
     pkg: pkg,
     host: process.env.REDIS_HOST || "127.0.0.1",
@@ -26,7 +26,7 @@ const SpecHelper = {
     if (!this.connectionDetails.options) this.connectionDetails.options = {};
     this.connectionDetails.options.db =
       this.connectionDetails?.options?.database;
-    this.redis = new Redis(
+    this.redis = new IORedis(
       this.connectionDetails.port,
       this.connectionDetails.host,
       this.connectionDetails.options
@@ -59,13 +59,14 @@ const SpecHelper = {
     delete this.connectionDetails.redis;
   },
 
-  startAll: async function (jobs) {
+  startAll: async function (jobs: NodeResque.Jobs) {
     const Worker = NodeResque.Worker;
     const Scheduler = NodeResque.Scheduler;
     const Queue = NodeResque.Queue;
 
     this.worker = new Worker(
       {
+        //@ts-ignore
         connection: { redis: this.redis },
         queues: this.queue,
         timeout: this.timeout,
@@ -78,6 +79,7 @@ const SpecHelper = {
       connection: { redis: this.redis },
       timeout: this.timeout,
     });
+
     await this.scheduler.connect();
 
     this.queue = new Queue({ connection: { redis: this.redis } });
@@ -106,6 +108,7 @@ const SpecHelper = {
 
     for (const i in this.connectionDetails) {
       if (i !== "redis") {
+        //@ts-ignore
         out[i] = this.connectionDetails[i];
       }
     }
