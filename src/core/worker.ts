@@ -4,7 +4,7 @@ import { Job, JobEmit, Jobs } from "..";
 import { WorkerOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
-import { DecodedJob, Queue } from "./queue";
+import { ParsedJob, Queue } from "./queue";
 
 function prepareJobs(jobs: Jobs) {
   return Object.keys(jobs).reduce((h: { [key: string]: any }, k) => {
@@ -30,7 +30,7 @@ export declare interface Worker {
   pollTimer: NodeJS.Timeout;
   endTimer: NodeJS.Timeout;
   pingTimer: NodeJS.Timeout;
-  job: DecodedJob;
+  job: ParsedJob;
   connection: Connection;
   queueObject: Queue;
   id: number;
@@ -149,7 +149,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async init() {
+  async init() {
     await this.track();
     await this.connection.redis.set(
       this.connection.key("worker", this.name, this.stringQueues(), "started"),
@@ -188,7 +188,7 @@ export class Worker extends EventEmitter {
     this.emit("end", new Date());
   }
 
-  private async poll(nQueue = 0): Promise<DecodedJob> {
+  private async poll(nQueue = 0): Promise<ParsedJob> {
     if (!this.running) return;
 
     this.queue = this.queues[nQueue];
@@ -235,7 +235,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async perform(job: DecodedJob) {
+  private async perform(job: ParsedJob) {
     this.job = job;
     this.error = null;
     let toRun;
@@ -314,7 +314,7 @@ export class Worker extends EventEmitter {
   // #performInline is used to run a job payload directly.
   // If you are planning on running a job via #performInline, this worker should also not be started, nor should be using event emitters to monitor this worker.
   // This method will also not write to redis at all, including logging errors, modify resque's stats, etc.
-  async performInline(func: string, args: string[] = []) {
+  async performInline(func: string, args: any[] = []) {
     const q = "_direct-queue-" + this.name;
     let toRun;
 
@@ -381,7 +381,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async succeed(job: DecodedJob, duration: number) {
+  private async succeed(job: ParsedJob, duration: number) {
     await this.connection.redis.incr(this.connection.key("stat", "processed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "processed", this.name)
@@ -412,7 +412,7 @@ export class Worker extends EventEmitter {
   }
 
   private async getJob() {
-    let currentJob: DecodedJob = null;
+    let currentJob: ParsedJob;
     const queueKey = this.connection.key("queue", this.queue);
     const workerKey = this.connection.key(
       "worker",
@@ -525,7 +525,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private failurePayload(err: Error, job: DecodedJob) {
+  private failurePayload(err: Error, job: ParsedJob) {
     return {
       worker: this.name,
       queue: this.queue,

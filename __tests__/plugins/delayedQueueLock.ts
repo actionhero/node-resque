@@ -1,14 +1,14 @@
 import specHelper from "../utils/specHelper";
-import { Plugin, Queue, Plugins, Worker } from "../../src";
+import { Queue, Plugins } from "../../src";
 
-let queue;
+let queue: Queue;
 const jobDelay = 100;
 
 const jobs = {
   slowAdd: {
     plugins: [Plugins.JobLock],
     pluginOptions: { jobLock: {} },
-    perform: async (a, b) => {
+    perform: async (a: number, b: number) => {
       const answer = a + b;
       await new Promise((resolve) => {
         setTimeout(resolve, jobDelay);
@@ -19,7 +19,7 @@ const jobs = {
   uniqueJob: {
     plugins: [Plugins.DelayQueueLock],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
-    perform: async (a, b) => {
+    perform: async (a: number, b: number) => {
       const answer = a + b;
       return answer;
     },
@@ -33,7 +33,7 @@ describe("plugins", () => {
     queue = new Queue(
       {
         connection: specHelper.cleanConnectionDetails(),
-        queues: [specHelper.queue],
+        queue: [specHelper.queue],
       },
       jobs
     );

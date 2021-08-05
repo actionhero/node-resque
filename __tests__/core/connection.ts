@@ -1,4 +1,4 @@
-import * as Ioredis from "ioredis";
+import * as IORedis from "ioredis";
 import { Connection } from "../../src";
 import specHelper from "../utils/specHelper";
 
@@ -21,6 +21,7 @@ describe("connection", () => {
   test("it has loaded Lua commands", async () => {
     const connection = new Connection(specHelper.cleanConnectionDetails());
     await connection.connect();
+    //@ts-ignore
     expect(typeof connection.redis["popAndStoreJob"]).toBe("function");
     connection.end();
   });
@@ -33,10 +34,10 @@ describe("connection", () => {
       await connection.connect();
     });
 
-    let prefixedConnection;
-    let prefixedRedis;
+    let prefixedConnection: Connection;
+    let prefixedRedis: IORedis.Redis;
     beforeAll(async () => {
-      prefixedRedis = new Ioredis(null, null, {
+      prefixedRedis = new IORedis(null, null, {
         keyPrefix: "customNamespace:",
         db: db,
       });

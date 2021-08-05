@@ -1,22 +1,21 @@
 import specHelper from "../utils/specHelper";
-import { Plugin, Plugins, Queue, Worker } from "../../src";
+import { Plugin, Plugins, Queue, Worker, Job } from "../../src";
 
-let queue;
-
+let queue: Queue;
 class NeverRunPlugin extends Plugin {
-  beforeEnqueue() {
+  async beforeEnqueue() {
     return true;
   }
 
-  afterEnqueue() {
+  async afterEnqueue() {
     return true;
   }
 
-  beforePerform() {
+  async beforePerform() {
     return false;
   }
 
-  afterPerform() {
+  async afterPerform() {
     return true;
   }
 }
@@ -26,11 +25,11 @@ const jobs = {
     plugins: [Plugins.QueueLock],
     pluginOptions: { queueLock: {}, delayQueueLock: {} },
     perform: (a, b) => a + b,
-  },
+  } as Job<any>,
   blockingJob: {
     plugins: [Plugins.QueueLock, NeverRunPlugin],
     perform: (a, b) => a + b,
-  },
+  } as Job<any>,
   jobWithLockTimeout: {
     plugins: [Plugins.QueueLock],
     pluginOptions: {
@@ -39,7 +38,7 @@ const jobs = {
       },
     },
     perform: (a, b) => a + b,
-  },
+  } as Job<any>,
   stuckJob: {
     plugins: [Plugins.QueueLock],
     pluginOptions: {
@@ -47,10 +46,10 @@ const jobs = {
         lockTimeout: specHelper.smallTimeout,
       },
     },
-    perform: (a, b) => {
+    perform: async (a, b) => {
       a + b;
     },
-  },
+  } as Job<any>,
 };
 
 describe("plugins", () => {
@@ -153,7 +152,7 @@ describe("plugins", () => {
     });
 
     describe("with worker", () => {
-      let worker;
+      let worker: Worker;
 
       beforeEach(async () => {
         worker = new Worker(

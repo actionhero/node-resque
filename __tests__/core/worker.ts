@@ -1,23 +1,24 @@
-import { Queue, Worker } from "../../src";
+import { ParsedFailedJobPayload, Job, Queue, Worker } from "../../src";
 import specHelper from "../utils/specHelper";
 
-const jobs = {
+const jobs: { [key: string]: Job<any> } = {
   add: {
     perform: (a, b) => {
       return a + b;
     },
-  },
+  } as Job<any>,
+  //@ts-ignore
   badAdd: {
     perform: () => {
       throw new Error("Blue Smoke");
     },
-  },
+  } as Job<any>,
   messWithData: {
     perform: (a) => {
       a.data = "new thing";
       return a;
     },
-  },
+  } as Job<any>,
   async: {
     perform: async () => {
       await new Promise((resolve) => {
@@ -25,7 +26,7 @@ const jobs = {
       });
       return "yay";
     },
-  },
+  } as Job<any>,
   twoSeconds: {
     perform: async () => {
       await new Promise((resolve) => {
@@ -33,7 +34,8 @@ const jobs = {
       });
       return "slow";
     },
-  },
+  } as Job<any>,
+  //@ts-ignore
   quickDefine: async () => {
     return "ok";
   },
@@ -268,10 +270,10 @@ describe("worker", () => {
         });
 
         test("will place failed jobs in the failed queue", async () => {
-          let data = await specHelper.redis.rpop(
+          let str = await specHelper.redis.rpop(
             specHelper.namespace + ":" + "failed"
           );
-          data = JSON.parse(data);
+          const data = JSON.parse(str) as ParsedFailedJobPayload;
           expect(data.queue).toBe(specHelper.queue);
           expect(data.exception).toBe("Error");
           expect(data.error).toBe('No job defined for class "somethingFake"');

@@ -1,8 +1,8 @@
 import specHelper from "../utils/specHelper";
-import { Scheduler, Plugins, Queue, Worker } from "../../src";
+import { Scheduler, Plugins, Queue, Worker, Job } from "../../src";
 
-let queue;
-let scheduler;
+let queue: Queue;
+let scheduler: Scheduler;
 let loggedErrors = [];
 
 const jobs = {
@@ -10,7 +10,7 @@ const jobs = {
     plugins: [Plugins.Noop],
     pluginOptions: {
       Noop: {
-        logger: (error) => {
+        logger: (error: Error) => {
           loggedErrors.push(error);
         },
       },
@@ -18,20 +18,20 @@ const jobs = {
     perform: () => {
       throw new Error("BUSTED");
     },
-  },
+  } as Job<any>,
   happyJob: {
     plugins: [Plugins.Noop],
     pluginOptions: {
       Noop: {
-        logger: (error) => {
+        logger: (error: Error) => {
           loggedErrors.push(error);
         },
       },
     },
-    perform: function () {
+    perform: async () => {
       // nothing
     },
-  },
+  } as Job<any>,
 };
 
 describe("plugins", () => {

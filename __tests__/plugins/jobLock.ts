@@ -1,16 +1,16 @@
 import specHelper from "../utils/specHelper";
-import { Queue, Plugins, Worker } from "../../src";
+import { Queue, Plugins, Worker, ParsedJob, Job } from "../../src";
 
-let queue;
+let queue: Queue;
 const jobDelay = 1000;
-let worker1;
-let worker2;
+let worker1: Worker;
+let worker2: Worker;
 
 const jobs = {
   slowAdd: {
     plugins: [Plugins.JobLock],
     pluginOptions: { jobLock: {} },
-    perform: async (a, b) => {
+    perform: async (a: number, b: number) => {
       const answer = a + b;
       await new Promise((resolve) => {
         setTimeout(resolve, jobDelay);
@@ -36,7 +36,7 @@ describe("plugins", () => {
     queue = new Queue(
       {
         connection: specHelper.cleanConnectionDetails(),
-        queues: [specHelper.queue],
+        queue: [specHelper.queue],
       },
       jobs
     );
@@ -85,7 +85,7 @@ describe("plugins", () => {
         const startTime = new Date().getTime();
         let completed = 0;
 
-        const onComplete = function (q, job, result) {
+        const onComplete = function () {
           completed++;
           if (completed === 2) {
             worker1.end();
@@ -117,6 +117,7 @@ describe("plugins", () => {
         let calls = 0;
 
         const functionJobs = {
+          //@ts-ignore
           jobLockAdd: {
             plugins: [Plugins.JobLock],
             pluginOptions: {
@@ -135,10 +136,10 @@ describe("plugins", () => {
                 },
               },
             },
-            perform: (a, b) => {
+            perform: (a: number, b: number) => {
               return a + b;
             },
-          },
+          } as Job<any>,
         };
 
         worker1 = new Worker(
@@ -195,13 +196,13 @@ describe("plugins", () => {
           await worker2.end();
 
           const timestamps = await queue.timestamps();
-          let dealyedJob = await specHelper.redis.lpop(
+          let str = await specHelper.redis.lpop(
             specHelper.namespace +
               ":delayed:" +
               Math.round(timestamps[0] / 1000)
           );
-          expect(dealyedJob).toBeDefined();
-          dealyedJob = JSON.parse(dealyedJob);
+          expect(str).toBeDefined();
+          const dealyedJob = JSON.parse(str) as ParsedJob;
           expect(dealyedJob.class).toBe("slowAdd");
           expect(dealyedJob.args).toEqual([1, 2]);
 
@@ -304,7 +305,7 @@ describe("plugins", () => {
         const startTime = new Date().getTime();
         let completed = 0;
 
-        const onComplete = async function (q, job, result) {
+        const onComplete = async function () {
           completed++;
           if (completed === 2) {
             await worker1.end();

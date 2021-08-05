@@ -1,4 +1,10 @@
-import { Queue, Worker } from "../../src";
+import {
+  ParsedJob,
+  ParsedFailedJobPayload,
+  Queue,
+  Worker,
+  Job,
+} from "../../src";
 import specHelper from "../utils/specHelper";
 let queue: Queue;
 
@@ -50,13 +56,13 @@ describe("queue", () => {
       );
       expect(String(score)).toBe("10");
 
-      let obj = await specHelper.redis.lpop(
+      const str = await specHelper.redis.lpop(
         specHelper.namespace + ":delayed:" + "10"
       );
-      expect(obj).toBeDefined();
-      obj = JSON.parse(obj);
-      expect(obj.class).toBe("someJob");
-      expect(obj.args).toEqual([1, 2, 3]);
+      expect(str).toBeDefined();
+      const job = JSON.parse(str) as ParsedJob;
+      expect(job.class).toBe("someJob");
+      expect(job.args).toEqual([1, 2, 3]);
     });
 
     test("can add delayed job whose timestamp is a string (enqueueAt)", async () => {
@@ -68,13 +74,13 @@ describe("queue", () => {
       );
       expect(String(score)).toBe("10");
 
-      let obj = await specHelper.redis.lpop(
+      let str = await specHelper.redis.lpop(
         specHelper.namespace + ":delayed:" + "10"
       );
-      expect(obj).toBeDefined();
-      obj = JSON.parse(obj);
-      expect(obj.class).toBe("someJob");
-      expect(obj.args).toEqual([1, 2, 3]);
+      expect(str).toBeDefined();
+      const job = JSON.parse(str) as ParsedJob;
+      expect(job.class).toBe("someJob");
+      expect(job.args).toEqual([1, 2, 3]);
     });
 
     test("will not enqueue a delayed job at the same time with matching params with error", async () => {
@@ -108,17 +114,17 @@ describe("queue", () => {
       await queue.enqueueIn(5 * 1000, specHelper.queue, "someJob", [1, 2, 3]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
-        now
+        now.toString()
       );
       expect(String(score)).toBe(String(now));
 
-      let obj = await specHelper.redis.lpop(
+      let str = await specHelper.redis.lpop(
         specHelper.namespace + ":delayed:" + now
       );
-      expect(obj).toBeDefined();
-      obj = JSON.parse(obj);
-      expect(obj.class).toBe("someJob");
-      expect(obj.args).toEqual([1, 2, 3]);
+      expect(str).toBeDefined();
+      const job = JSON.parse(str) as ParsedJob;
+      expect(job.class).toBe("someJob");
+      expect(job.args).toEqual([1, 2, 3]);
     });
 
     test("can add a delayed job whose time is a string (enqueueIn)", async () => {
@@ -128,17 +134,17 @@ describe("queue", () => {
       await queue.enqueueIn(time, specHelper.queue, "someJob", [1, 2, 3]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
-        now
+        now.toString()
       );
       expect(String(score)).toBe(String(now));
 
-      let obj = await specHelper.redis.lpop(
+      let str = await specHelper.redis.lpop(
         specHelper.namespace + ":delayed:" + now
       );
-      expect(obj).toBeDefined();
-      obj = JSON.parse(obj);
-      expect(obj.class).toBe("someJob");
-      expect(obj.args).toEqual([1, 2, 3]);
+      expect(str).toBeDefined();
+      const job = JSON.parse(str) as ParsedJob;
+      expect(job.class).toBe("someJob");
+      expect(job.args).toEqual([1, 2, 3]);
     });
 
     test("can get the number of jobs currently enqueued", async () => {
@@ -165,7 +171,7 @@ describe("queue", () => {
         [1, 2, 3]
       );
       expect(timestamps.length).toBe(1);
-      expect(timestamps[0]).toBe("10");
+      expect(timestamps[0]).toBe(10);
     });
 
     test("will not match previously scheduled jobs with differnt args", async () => {
@@ -367,7 +373,7 @@ describe("queue", () => {
 
     describe("failed job managment", () => {
       beforeEach(async () => {
-        const errorPayload = function (id) {
+        const errorPayload = function (id: number) {
           return JSON.stringify({
             worker: "busted-worker-" + id,
             queue: "busted-queue",
@@ -494,8 +500,8 @@ describe("queue", () => {
     });
 
     describe("worker status", () => {
-      let workerA;
-      let workerB;
+      let workerA: Worker;
+      let workerB: Worker;
       const timeout = 500;
 
       const jobs = {
@@ -505,7 +511,7 @@ describe("queue", () => {
               setTimeout(resolve, timeout);
             });
           },
-        },
+        } as Job<any>,
       };
 
       beforeEach(async () => {
@@ -599,10 +605,10 @@ describe("queue", () => {
             expect(cleanData.workerA.payload.class).toBe("slowJob");
             expect(cleanData.workerA.payload.args[0].a).toBe(1);
 
-            let failedData = await specHelper.redis.rpop(
+            let str = await specHelper.redis.rpop(
               specHelper.namespace + ":" + "failed"
             );
-            failedData = JSON.parse(failedData);
+            const failedData = JSON.parse(str) as ParsedFailedJobPayload;
             expect(failedData.queue).toBe(specHelper.queue);
             expect(failedData.exception).toBe(
               "Worker Timeout (killed manually)"

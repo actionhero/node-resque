@@ -1,6 +1,6 @@
 import { Worker } from "./worker";
 import { Connection } from "./connection";
-import { DecodedJob, Queue } from "./queue";
+import { ParsedJob, Queue } from "./queue";
 
 export abstract class Plugin {
   name: string;
@@ -8,7 +8,7 @@ export abstract class Plugin {
   queueObject: Queue;
   queue: string;
   func: string;
-  job: DecodedJob;
+  job: ParsedJob;
   args: Array<any>;
   options: {
     [key: string]: any;
@@ -18,7 +18,7 @@ export abstract class Plugin {
     worker: Queue | Worker,
     func: string,
     queue: string,
-    job: DecodedJob,
+    job: ParsedJob,
     args: Array<any>,
     options: {
       [key: string]: any;

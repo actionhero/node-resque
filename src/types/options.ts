@@ -6,11 +6,16 @@ export interface ConnectionOptions {
   host?: string;
   port?: number;
   database?: number;
-  namespace?: string;
+  namespace?: string | string[];
   looping?: boolean;
   options?: any;
   redis?: IORedis.Redis | IORedis.Cluster;
   scanCount?: number;
+}
+
+export interface QueueOptions extends ConnectionOptions {
+  connection?: ConnectionOptions;
+  queue?: string | string[];
 }
 
 export interface WorkerOptions extends ConnectionOptions {
@@ -19,16 +24,16 @@ export interface WorkerOptions extends ConnectionOptions {
   timeout?: number;
   looping?: boolean;
   id?: number;
-  connection?: Connection;
+  connection?: ConnectionOptions;
 }
 
 export interface SchedulerOptions extends ConnectionOptions {
   name?: string;
   timeout?: number;
-  leaderLockTimeout: number;
-  stuckWorkerTimeout: number;
-  retryStuckJobs: boolean;
-  connection?: Connection;
+  leaderLockTimeout?: number;
+  stuckWorkerTimeout?: number;
+  retryStuckJobs?: boolean;
+  connection?: ConnectionOptions;
 }
 
 export interface MultiWorkerOptions extends ConnectionOptions {
@@ -37,7 +42,7 @@ export interface MultiWorkerOptions extends ConnectionOptions {
   timeout?: number;
   maxEventLoopDelay?: number;
   checkTimeout?: number;
-  connection?: Connection;
+  connection?: ConnectionOptions;
   minTaskProcessors?: number;
   maxTaskProcessors?: number;
 }

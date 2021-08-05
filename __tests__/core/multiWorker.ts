@@ -7,7 +7,7 @@ const checkTimeout = specHelper.timeout / 10;
 const minTaskProcessors = 1;
 const maxTaskProcessors = 5;
 
-const blockingSleep = (naptime) => {
+const blockingSleep = (naptime: number) => {
   let sleeping = true;
   const now = new Date();
   let alarm;
@@ -23,7 +23,7 @@ const blockingSleep = (naptime) => {
 
 const jobs = {
   slowSleepJob: {
-    plugins: [],
+    plugins: [] as string[],
     pluginOptions: {},
     perform: async () => {
       await new Promise((resolve) => {
@@ -34,7 +34,7 @@ const jobs = {
     },
   },
   slowCPUJob: {
-    plugins: [],
+    plugins: [] as string[],
     pluginOptions: {},
     perform: async () => {
       blockingSleep(1000);
