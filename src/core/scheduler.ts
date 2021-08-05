@@ -57,22 +57,14 @@ export type SchedulerEvent =
   | "transferredJob";
 
 export class Scheduler extends EventEmitter {
-  constructor(options, jobs = {}) {
+  constructor(options: SchedulerOptions, jobs: Jobs = {}) {
     super();
 
-    const defaults = {
-      timeout: 5000, // in ms
-      stuckWorkerTimeout: 60 * 60 * 1000, // 60 minutes in ms
-      leaderLockTimeout: 60 * 3, // in seconds
-      name: os.hostname() + ":" + process.pid, // assumes only one worker per node process
-      retryStuckJobs: false,
-    };
-
-    for (const i in defaults) {
-      if (options[i] === null || options[i] === undefined) {
-        options[i] = defaults[i];
-      }
-    }
+    options.timeout = options.timeout ?? 5000; // in ms
+    options.stuckWorkerTimeout = options.stuckWorkerTimeout ?? 60 * 60 * 1000; // 60 minutes in ms
+    options.leaderLockTimeout = options.leaderLockTimeout ?? 60 * 3; // in seconds
+    options.name = options.name ?? os.hostname() + ":" + process.pid; // assumes only one worker per node process
+    options.retryStuckJobs = options.retryStuckJobs ?? false;
 
     this.options = options;
     this.name = this.options.name;
@@ -135,7 +127,7 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  async poll() {
+  async poll(): Promise<void> {
     this.processing = true;
     clearTimeout(this.timer);
     const isLeader = await this.tryForLeader();
@@ -311,7 +303,7 @@ export class Scheduler extends EventEmitter {
     }
   }
 
-  async forceCleanWorker(workerName, delta) {
+  async forceCleanWorker(workerName: string, delta: number) {
     const errorPayload = await this.queue.forceCleanWorker(workerName);
     this.emit("cleanStuckWorker", workerName, errorPayload, delta);
   }

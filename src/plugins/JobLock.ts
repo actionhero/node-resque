@@ -2,11 +2,11 @@
 import { Plugin } from "..";
 
 export class JobLock extends Plugin {
-  beforeEnqueue() {
+  async beforeEnqueue() {
     return true;
   }
 
-  afterEnqueue() {
+  async afterEnqueue() {
     return true;
   }
 

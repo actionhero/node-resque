@@ -1,7 +1,7 @@
 import { Plugin } from "..";
 
 export class Noop extends Plugin {
-  afterPerform() {
+  async afterPerform() {
     if (this.worker.error) {
       if (typeof this.options.logger === "function") {
         this.options.logger(this.worker.error);
@@ -14,15 +14,15 @@ export class Noop extends Plugin {
     return true;
   }
 
-  beforeEnqueue() {
+  async beforeEnqueue() {
     return true;
   }
 
-  afterEnqueue() {
+  async afterEnqueue() {
     return true;
   }
 
-  beforePerform() {
+  async beforePerform() {
     return true;
   }
 }

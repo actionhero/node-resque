@@ -4,10 +4,10 @@ import { Job, JobEmit, Jobs } from "..";
 import { WorkerOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
-import { Queue } from "./queue";
+import { DecodedJob, Queue } from "./queue";
 
-function prepareJobs(jobs) {
-  return Object.keys(jobs).reduce(function (h, k) {
+function prepareJobs(jobs: Jobs) {
+  return Object.keys(jobs).reduce((h: { [key: string]: any }, k) => {
     const job = jobs[k];
     h[k] = typeof job === "function" ? { perform: job } : job;
     return h;
@@ -19,7 +19,7 @@ export declare interface Worker {
   jobs: Jobs;
   started: boolean;
   name: string;
-  queues: Array<string>;
+  queues: Array<string> | string;
   queue: string;
   originalQueue: string | null;
   error: Error | null;
@@ -30,7 +30,7 @@ export declare interface Worker {
   pollTimer: NodeJS.Timeout;
   endTimer: NodeJS.Timeout;
   pingTimer: NodeJS.Timeout;
-  job: Job<any>;
+  job: DecodedJob;
   connection: Connection;
   queueObject: Queue;
   id: number;
@@ -85,7 +85,7 @@ export declare interface Worker {
     cb: (error: Error, queue: string, job: Job<any> | JobEmit) => void
   ): this;
 
-  removeAllListeners(event: WorkerEvent): this;
+  removeAllListeners(event: string): this;
 }
 
 export type WorkerEvent =
@@ -102,22 +102,14 @@ export type WorkerEvent =
   | "pause";
 
 export class Worker extends EventEmitter {
-  constructor(options, jobs = {}) {
+  constructor(options: WorkerOptions, jobs: Jobs = {}) {
     super();
 
-    const defaults = {
-      name: os.hostname() + ":" + process.pid, // assumes only one worker per node process
-      queues: "*",
-      timeout: 5000,
-      looping: true,
-      id: 1,
-    };
-
-    for (const i in defaults) {
-      if (options[i] === undefined || options[i] === null) {
-        options[i] = defaults[i];
-      }
-    }
+    options.name = options.name ?? os.hostname() + ":" + process.pid; // assumes only one worker per node process
+    options.id = options.id ?? 1;
+    options.queues = options.queues ?? "*";
+    options.timeout = options.timeout ?? 5000;
+    options.looping = options.looping ?? true;
 
     this.options = options;
     this.jobs = prepareJobs(jobs);
@@ -167,7 +159,7 @@ export class Worker extends EventEmitter {
     this.pingTimer = setInterval(this.ping.bind(this), this.options.timeout);
   }
 
-  async end() {
+  async end(): Promise<void> {
     this.running = false;
 
     if (this.working === true) {
@@ -196,7 +188,7 @@ export class Worker extends EventEmitter {
     this.emit("end", new Date());
   }
 
-  private async poll(nQueue = 0) {
+  private async poll(nQueue = 0): Promise<DecodedJob> {
     if (!this.running) return;
 
     this.queue = this.queues[nQueue];
@@ -221,7 +213,7 @@ export class Worker extends EventEmitter {
       if (currentJob) {
         if (this.options.looping) {
           this.result = null;
-          return this.perform(currentJob);
+          await this.perform(currentJob);
         } else {
           return currentJob;
         }
@@ -243,7 +235,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async perform(job) {
+  private async perform(job: DecodedJob) {
     this.job = job;
     this.error = null;
     let toRun;
@@ -322,7 +314,7 @@ export class Worker extends EventEmitter {
   // #performInline is used to run a job payload directly.
   // If you are planning on running a job via #performInline, this worker should also not be started, nor should be using event emitters to monitor this worker.
   // This method will also not write to redis at all, including logging errors, modify resque's stats, etc.
-  async performInline(func, args = []) {
+  async performInline(func: string, args: string[] = []) {
     const q = "_direct-queue-" + this.name;
     let toRun;
 
@@ -389,7 +381,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private async succeed(job, duration: number) {
+  private async succeed(job: DecodedJob, duration: number) {
     await this.connection.redis.incr(this.connection.key("stat", "processed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "processed", this.name)
@@ -397,7 +389,7 @@ export class Worker extends EventEmitter {
     this.emit("success", this.queue, job, this.result, duration);
   }
 
-  private async fail(err, duration: number) {
+  private async fail(err: Error, duration: number) {
     await this.connection.redis.incr(this.connection.key("stat", "failed"));
     await this.connection.redis.incr(
       this.connection.key("stat", "failed", this.name)
@@ -420,7 +412,7 @@ export class Worker extends EventEmitter {
   }
 
   private async getJob() {
-    let currentJob: { [key: string]: any } = null;
+    let currentJob: DecodedJob = null;
     const queueKey = this.connection.key("queue", this.queue);
     const workerKey = this.connection.key(
       "worker",
@@ -430,7 +422,9 @@ export class Worker extends EventEmitter {
 
     let encodedJob: string;
 
+    //@ts-ignore
     if (this.connection.redis["popAndStoreJob"]) {
+      //@ts-ignore
       encodedJob = await this.connection.redis["popAndStoreJob"](
         queueKey,
         workerKey,
@@ -531,7 +525,7 @@ export class Worker extends EventEmitter {
     }
   }
 
-  private failurePayload(err, job) {
+  private failurePayload(err: Error, job: DecodedJob) {
     return {
       worker: this.name,
       queue: this.queue,
@@ -548,7 +542,7 @@ export class Worker extends EventEmitter {
       return ["*"].join(",");
     } else {
       try {
-        return this.queues.join(",");
+        return Array.isArray(this.queues) ? this.queues.join(",") : this.queues;
       } catch (e) {
         return "";
       }

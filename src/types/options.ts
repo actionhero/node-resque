@@ -15,9 +15,11 @@ export interface ConnectionOptions {
 
 export interface WorkerOptions extends ConnectionOptions {
   name?: string;
-  queues?: Array<string>;
+  queues?: Array<string> | string;
   timeout?: number;
   looping?: boolean;
+  id?: number;
+  connection?: Connection;
 }
 
 export interface SchedulerOptions extends ConnectionOptions {
@@ -26,6 +28,7 @@ export interface SchedulerOptions extends ConnectionOptions {
   leaderLockTimeout: number;
   stuckWorkerTimeout: number;
   retryStuckJobs: boolean;
+  connection?: Connection;
 }
 
 export interface MultiWorkerOptions extends ConnectionOptions {
@@ -39,8 +42,8 @@ export interface MultiWorkerOptions extends ConnectionOptions {
   maxTaskProcessors?: number;
 }
 
-export interface Job<TResult> {
+export interface Job<T> {
   plugins?: string[];
   pluginOptions?: { [pluginName: string]: any };
-  perform: (...args: any[]) => Promise<TResult>;
+  perform: (...args: any[]) => Promise<T>;
 }

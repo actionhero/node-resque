@@ -1,12 +1,21 @@
+import { Job } from "../types/options";
+import { Worker } from "./worker";
+import { Queue } from "./queue";
+import { Plugin } from "./plugin";
+
+type PluginConstructor<T> = new (...args: any[]) => T & {
+  [key: string]: Plugin;
+};
+
 export async function RunPlugins(
-  self,
-  type,
-  func,
-  queue,
-  job,
-  args,
-  pluginCounter?
-) {
+  self: Queue | Worker,
+  type: string,
+  func: string,
+  queue: string,
+  job: Job<unknown>,
+  args: Array<any>,
+  pluginCounter?: number
+): Promise<boolean> {
   if (!job) return true;
   if (!pluginCounter) pluginCounter = 0;
   if (
@@ -35,21 +44,22 @@ export async function RunPlugins(
 }
 
 export async function RunPlugin(
-  self,
-  PluginRefrence,
-  type,
-  func,
-  queue,
-  job,
-  args
-) {
+  self: Queue | Worker,
+  PluginReference: string | PluginConstructor<unknown>,
+  type: string,
+  func: string,
+  queue: string,
+  job: Job<unknown>,
+  args: Array<any>
+): Promise<boolean> {
   if (!job) return true;
 
-  let pluginName = PluginRefrence;
-  if (typeof PluginRefrence === "function") {
-    pluginName = new PluginRefrence(self, func, queue, job, args, {}).name;
+  let pluginName: string;
+  if (typeof PluginReference === "function") {
+    // @ts-ignore
+    pluginName = new PluginReference(self, func, queue, job, args, {}).name;
   } else if (typeof pluginName === "function") {
-    pluginName = pluginName.name;
+    pluginName = pluginName["name"];
   }
 
   let pluginOptions = null;
@@ -63,14 +73,15 @@ export async function RunPlugin(
     pluginOptions = {};
   }
 
-  let plugin = null;
-  if (typeof PluginRefrence === "string") {
-    const PluginConstructor = require(`./../plugins/${PluginRefrence}`)[
-      PluginRefrence
+  let plugin: { [key: string]: Plugin };
+  if (typeof PluginReference === "string") {
+    const PluginConstructor = require(`./../plugins/${PluginReference}`)[
+      PluginReference
     ];
     plugin = new PluginConstructor(self, func, queue, job, args, pluginOptions);
-  } else if (typeof PluginRefrence === "function") {
-    plugin = new PluginRefrence(self, func, queue, job, args, pluginOptions);
+  } else if (typeof PluginReference === "function") {
+    // @ts-ignore
+    plugin = new PluginReference(self, func, queue, job, args, pluginOptions);
   } else {
     throw new Error("Plugin must be the constructor name or an object");
   }
@@ -83,5 +94,6 @@ export async function RunPlugin(
     return true;
   }
 
+  // @ts-ignore
   return plugin[type]();
 }
