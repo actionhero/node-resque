@@ -395,7 +395,7 @@ export class Queue extends EventEmitter {
    * - returns a hash of the form: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
    */
   async workers() {
-    const workers: { [key: string]: any } = {};
+    const workers: { [key: string]: string } = {};
 
     const results = await this.connection.redis.smembers(
       this.connection.key("workers")
@@ -403,7 +403,7 @@ export class Queue extends EventEmitter {
     results.forEach(function (r) {
       const parts = r.split(":");
       let name;
-      let queues;
+      let queues: string;
       if (parts.length === 1) {
         name = parts[0];
         workers[name] = null;
@@ -444,7 +444,7 @@ export class Queue extends EventEmitter {
       results[w] = "started";
       let data = await this.workingOn(w, workers[w]);
       if (data) {
-        let parsedData = JSON.parse(data);
+        let parsedData = JSON.parse(data) as ParsedWorkerPayload;
         results[parsedData.worker] = parsedData;
       }
     }
