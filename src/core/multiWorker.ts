@@ -3,7 +3,8 @@ import * as os from "os";
 import { Worker } from "./worker";
 import { EventLoopDelay } from "../utils/eventLoopDelay";
 import { MultiWorkerOptions } from "../types/options";
-import { Jobs, Job, JobEmit } from "..";
+import { Jobs, Job } from "..";
+import { ParsedJob } from "./queue";
 
 export declare interface MultiWorker {
   options: MultiWorkerOptions;
@@ -27,14 +28,14 @@ export declare interface MultiWorker {
   on(event: "ping", cb: (workerId: number, time: number) => void): this;
   on(
     event: "job",
-    cb: (workerId: number, queue: string, job: Job<any> | JobEmit) => void
+    cb: (workerId: number, queue: string, job: ParsedJob) => void
   ): this;
   on(
     event: "reEnqueue",
     cb: (
       workerId: number,
       queue: string,
-      job: Job<any> | JobEmit,
+      job: ParsedJob,
       plugin: string
     ) => void
   ): this;
@@ -43,7 +44,7 @@ export declare interface MultiWorker {
     cb: (
       workerId: number,
       queue: string,
-      job: Job<any> | JobEmit,
+      job: ParsedJob,
       result: any,
       duration: number
     ) => void
@@ -53,19 +54,14 @@ export declare interface MultiWorker {
     cb: (
       workerId: number,
       queue: string,
-      job: Job<any> | JobEmit,
+      job: ParsedJob,
       failure: Error,
       duration: number
     ) => void
   ): this;
   on(
     event: "error",
-    cb: (
-      error: Error,
-      workerId: number,
-      queue: string,
-      job: Job<any> | JobEmit
-    ) => void
+    cb: (error: Error, workerId: number, queue: string, job: ParsedJob) => void
   ): this;
   on(event: "pause", cb: (workerId: number) => void): this;
   on(
