@@ -224,7 +224,7 @@ describe("queue", () => {
         [1, 2, 3]
       );
       expect(timestamps.length).toBe(1);
-      expect(timestamps[0]).toBe("10");
+      expect(timestamps[0]).toBe(10);
     });
 
     test("can delete a delayed job, and delayed queue should be empty", async () => {
@@ -237,7 +237,7 @@ describe("queue", () => {
       const hash = await queue.allDelayed();
       expect(Object.keys(hash)).toHaveLength(0);
       expect(timestamps.length).toBe(1);
-      expect(timestamps[0]).toBe("10");
+      expect(timestamps[0]).toBe(10);
     });
 
     test("can handle single arguments without explicit array", async () => {

@@ -258,7 +258,7 @@ export class Queue extends EventEmitter {
       }
     }
 
-    return timestamps;
+    return timestamps.map((t) => parseInt(t, 10));
   }
 
   /**
