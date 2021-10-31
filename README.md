@@ -232,7 +232,7 @@ There are 3 main classes in `node-resque`: Queue, Worker, and Scheduler
 
 ## Configuration Options:
 
-- `new queue` requires only the "queue" variable to be set. You can also pass the `jobs` hash to it.
+- `new queue` requires only the "queue" variable to be set. If you intend to run [plugins](#plugins) with `beforeEnqueue` or `afterEnqueue` hooks, you should also pass the `jobs` object to it.
 - `new worker` has some additional options:
 
 ```javascript
