@@ -1,5 +1,4 @@
 import * as IORedis from "ioredis";
-import { Connection } from "..";
 
 export interface ConnectionOptions {
   pkg?: string;

@@ -3,7 +3,7 @@ import * as os from "os";
 import { Worker } from "./worker";
 import { EventLoopDelay } from "../utils/eventLoopDelay";
 import { MultiWorkerOptions } from "../types/options";
-import { Jobs, Job } from "..";
+import { Jobs } from "..";
 import { ParsedJob } from "./queue";
 
 export declare interface MultiWorker {

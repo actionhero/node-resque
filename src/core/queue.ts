@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as os from "os";
-import { ErrorPayload, Jobs, ConnectionOptions } from "..";
+import { ErrorPayload, Jobs } from "..";
 import { QueueOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";

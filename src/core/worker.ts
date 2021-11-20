@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as os from "os";
-import { Job, Jobs } from "..";
+import { Jobs } from "..";
 import { WorkerOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
