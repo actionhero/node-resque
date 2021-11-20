@@ -1,4 +1,4 @@
-import { Job } from "../types/options";
+import { Job } from "../types/job";
 import { Worker } from "./worker";
 import { Queue } from "./queue";
 import { Plugin } from "./plugin";
