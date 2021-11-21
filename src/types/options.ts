@@ -46,8 +46,5 @@ export interface MultiWorkerOptions extends ConnectionOptions {
   maxTaskProcessors?: number;
 }
 
-export interface Job<T> {
-  plugins?: string[];
-  pluginOptions?: { [pluginName: string]: any };
-  perform: (...args: any[]) => Promise<T>;
-}
+// Re-export for backward compatibility
+export { Job } from "./job";
