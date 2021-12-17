@@ -366,7 +366,6 @@ export class Queue extends EventEmitter {
       return data;
     }
 
-    // const values = await this.connection.redis.mget(keys)
     for (const i in keys) {
       let value = await this.connection.redis.get(keys[i]);
       values.push(value);
