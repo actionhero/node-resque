@@ -1,25 +1,18 @@
 #!/usr/bin/env ts-node
 
-import { Queue, Plugins, Scheduler, Worker } from "../src/index";
+import { Queue, Plugins, Scheduler, Worker } from "../src";
 /* In your projects:
 import { Queue, Plugins, Scheduler, Worker } from "node-resque";
 */
+
+import * as Redis from "ioredis";
 
 async function boot() {
   // ////////////////////////
   // SET UP THE CONNECTION //
   // ////////////////////////
 
-  const connectionDetails = {
-    pkg: "ioredis",
-    host: "127.0.0.1",
-    password: null as string,
-    port: 6379,
-    database: 0,
-    // namespace: 'resque',
-    // looping: true,
-    // options: {password: 'abc'},
-  };
+  const connection = new Redis.Cluster([{ host: "127.0.0.1", port: 7000 }]);
 
   // ///////////////////////////
   // DEFINE YOUR WORKER TASKS //
@@ -72,7 +65,7 @@ async function boot() {
   // /////////////////
 
   const worker = new Worker(
-    { connection: connectionDetails, queues: ["math", "otherQueue"] },
+    { connection, queues: ["math", "otherQueue"] },
     jobs
   );
   await worker.connect();
@@ -82,7 +75,7 @@ async function boot() {
   // START A SCHEDULER //
   // ////////////////////
 
-  const scheduler = new Scheduler({ connection: connectionDetails });
+  const scheduler = new Scheduler({ connection });
   await scheduler.connect();
   scheduler.start();
 
@@ -161,7 +154,7 @@ async function boot() {
   // CONNECT TO A QUEUE //
   // //////////////////////
 
-  const queue = new Queue({ connection: connectionDetails }, jobs);
+  const queue = new Queue({ connection }, jobs);
   queue.on("error", function (error) {
     console.log(error);
   });
@@ -171,6 +164,9 @@ async function boot() {
   await queue.enqueue("math", "add", [2, 3]);
   await queue.enqueueIn(3000, "math", "subtract", [2, 1]);
   jobsToComplete = 4;
+
+  // check stats
+  console.log(await queue.stats());
 }
 
 boot();

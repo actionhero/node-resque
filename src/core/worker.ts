@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { Cluster } from "ioredis";
 import * as os from "os";
 import { Jobs } from "..";
 import { WorkerOptions } from "../types/options";
@@ -424,8 +425,12 @@ export class Worker extends EventEmitter {
 
     let encodedJob: string;
 
-    //@ts-ignore
-    if (this.connection.redis["popAndStoreJob"]) {
+    if (
+      // We cannot use the atomic Lua script if we are using redis cluster - the shard storing the queue and worker may not be the same
+      !(this.connection.redis instanceof Cluster) &&
+      //@ts-ignore
+      this.connection.redis["popAndStoreJob"]
+    ) {
       //@ts-ignore
       encodedJob = await this.connection.redis["popAndStoreJob"](
         queueKey,
