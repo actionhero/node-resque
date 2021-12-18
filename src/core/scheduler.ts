@@ -3,6 +3,7 @@
 
 import { EventEmitter } from "events";
 import * as os from "os";
+import { Cluster } from "ioredis";
 import { ErrorPayload, Job, Jobs } from "..";
 import { SchedulerOptions } from "../types/options";
 import { Connection } from "./connection";
@@ -256,11 +257,20 @@ export class Scheduler extends EventEmitter {
     await this.watchIfPossible(this.connection.key("delayed_queue_schedule"));
     const length = await this.connection.redis.llen(key);
     if (length === 0) {
+      // if (this.connection.redis instanceof Cluster) {
+      //   await this.connection.redis
+      //     .multi()
+      //     .del(key)
+      //     .multi()
+      //     .zrem(this.connection.key("delayed_queue_schedule"), timestamp)
+      //     .exec();
+      // } else {
       await this.connection.redis
         .multi()
         .del(key)
         .zrem(this.connection.key("delayed_queue_schedule"), timestamp)
         .exec();
+      // }
     }
     await this.unwatchIfPossible();
   }

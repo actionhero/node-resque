@@ -11,7 +11,10 @@ const SpecHelper = {
   queue: queue,
   timeout: 500,
   smallTimeout: 3,
-  redis: null as IORedis.Redis,
+  redis:
+    process.env.CLUSTER === "true"
+      ? new IORedis.Cluster([{ host: "127.0.0.1", port: 7000 }])
+      : (null as IORedis.Redis),
   connectionDetails: {
     pkg: pkg,
     host: process.env.REDIS_HOST || "127.0.0.1",
@@ -23,24 +26,29 @@ const SpecHelper = {
   },
 
   connect: async function () {
-    if (!this.connectionDetails.options) this.connectionDetails.options = {};
-    this.connectionDetails.options.db =
-      this.connectionDetails?.options?.database;
-    this.redis = new IORedis(
-      this.connectionDetails.port,
-      this.connectionDetails.host,
-      this.connectionDetails.options
-    );
+    if (this.redis) {
+      this.redis.setMaxListeners(0);
+      this.connectionDetails.redis = this.redis;
+    } else {
+      if (!this.connectionDetails.options) this.connectionDetails.options = {};
+      this.connectionDetails.options.db =
+        this.connectionDetails?.options?.database;
+      this.redis = new IORedis(
+        this.connectionDetails.port,
+        this.connectionDetails.host,
+        this.connectionDetails.options
+      );
 
-    this.redis.setMaxListeners(0);
-    if (
-      this.connectionDetails.password !== null &&
-      this.connectionDetails.password !== ""
-    ) {
-      await this.redis.auth(this.connectionDetails.password);
+      this.redis.setMaxListeners(0);
+      if (
+        this.connectionDetails.password !== null &&
+        this.connectionDetails.password !== ""
+      ) {
+        await this.redis.auth(this.connectionDetails.password);
+      }
+      await this.redis.select(this.connectionDetails.database);
+      this.connectionDetails.redis = this.redis;
     }
-    await this.redis.select(this.connectionDetails.database);
-    this.connectionDetails.redis = this.redis;
   },
 
   cleanup: async function () {

@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import * as os from "os";
+import { Cluster, Command } from "ioredis";
 import { ErrorPayload, Jobs } from "..";
 import { QueueOptions } from "../types/options";
 import { Connection } from "./connection";
@@ -128,6 +129,23 @@ export class Queue extends EventEmitter {
       }
     }
 
+    // if (this.connection.redis instanceof Cluster) {
+    //   await this.connection.redis
+    //     .multi()
+    //     .rpush(this.connection.key("delayed:" + rTimestamp), item)
+    //     .multi()
+    //     .sadd(
+    //       this.connection.key("timestamps:" + item),
+    //       "delayed:" + rTimestamp
+    //     )
+    //     .multi()
+    //     .zadd(
+    //       this.connection.key("delayed_queue_schedule"),
+    //       rTimestamp,
+    //       rTimestamp.toString()
+    //     )
+    //     .exec();
+    // } else {
     await this.connection.redis
       .multi()
       .rpush(this.connection.key("delayed:" + rTimestamp), item)
@@ -138,6 +156,7 @@ export class Queue extends EventEmitter {
         rTimestamp.toString()
       )
       .exec();
+    // }
   }
   /**
    * - In ms, the number of ms to delay before this job is able to start being worked on.
@@ -166,12 +185,20 @@ export class Queue extends EventEmitter {
    * - delete a queue, and all jobs in that queue.
    */
   async delQueue(q: string) {
-    const { redis } = this.connection;
-    await redis
+    // if (this.connection.redis instanceof Cluster) {
+    //   await this.connection.redis
+    //     .multi()
+    //     .del(this.connection.key("queue", q))
+    //     .multi()
+    //     .srem(this.connection.key("queues"), q)
+    //     .exec();
+    // } else {
+    await this.connection.redis
       .multi()
       .del(this.connection.key("queue", q))
       .srem(this.connection.key("queues"), q)
       .exec();
+    // }
   }
 
   /**
