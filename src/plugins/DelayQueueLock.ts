@@ -16,7 +16,15 @@ export class DelayQueueLock extends Plugin {
     }
   }
 
+  async beforeDelayEnqueue() {
+    return true;
+  }
+
   async afterEnqueue() {
+    return true;
+  }
+
+  async afterDelayEnqueue() {
     return true;
   }
 

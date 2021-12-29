@@ -4,6 +4,7 @@ import { ErrorPayload, Jobs } from "..";
 import { QueueOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
+import { LockArgs } from "../utils/functions";
 
 export type ParsedJob = {
   class: string;
@@ -28,14 +29,6 @@ export type ParsedFailedJobPayload = {
   error: string;
   backtrace: string[];
 };
-
-function arrayify<T>(o: T): T[] {
-  if (Array.isArray(o)) {
-    return o;
-  } else {
-    return [o];
-  }
-}
 
 export declare interface Queue {
   connection: Connection;
@@ -80,7 +73,7 @@ export class Queue extends EventEmitter {
    * - args is optional, but should be an array of arguments passed to the job. Order of arguments is maintained
    */
   async enqueue(q: string, func: string, args: Array<any> = []) {
-    args = arrayify(args);
+    args = LockArgs(args);
     const job = this.jobs[func];
 
     const toRun = await RunPlugins(this, "beforeEnqueue", func, q, job, args);
@@ -107,8 +100,19 @@ export class Queue extends EventEmitter {
     args: Array<any> = [],
     suppressDuplicateTaskError = false
   ) {
-    // Don't run plugins here, they should be run by scheduler at the enqueue step
-    args = arrayify(args);
+    args = LockArgs(args);
+    const job = this.jobs[func];
+
+    const toRun = await RunPlugins(
+      this,
+      "beforeDelayEnqueue",
+      func,
+      q,
+      job,
+      args
+    );
+    if (toRun === false) return toRun;
+
     const item = this.encode(q, func, args);
     const rTimestamp = Math.round(timestamp / 1000); // assume timestamp is in ms
 
@@ -138,6 +142,9 @@ export class Queue extends EventEmitter {
         rTimestamp.toString()
       )
       .exec();
+
+    await RunPlugins(this, "afterDelayEnqueue", func, q, job, args);
+    return toRun;
   }
   /**
    * - In ms, the number of ms to delay before this job is able to start being worked on.
@@ -187,7 +194,6 @@ export class Queue extends EventEmitter {
    * - You might match none, or you might match many.
    */
   async del(q: string, func: string, args: Array<any> = [], count: number = 0) {
-    args = arrayify(args);
     return this.connection.redis.lrem(
       this.connection.key("queue", q),
       count,
@@ -235,7 +241,6 @@ export class Queue extends EventEmitter {
 
   async delDelayed(q: string, func: string, args: Array<any> = []) {
     const timestamps = [];
-    args = arrayify(args);
     const search = this.encode(q, func, args);
 
     const members = await this.connection.redis.smembers(
@@ -267,7 +272,6 @@ export class Queue extends EventEmitter {
    */
   async scheduledAt(q: string, func: string, args: Array<any> = []) {
     const timestamps: number[] = [];
-    args = arrayify(args);
     const search = this.encode(q, func, args);
 
     const members = await this.connection.redis.smembers(

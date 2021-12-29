@@ -6,6 +6,7 @@ import { WorkerOptions } from "../types/options";
 import { Connection } from "./connection";
 import { RunPlugins } from "./pluginRunner";
 import { ParsedJob, Queue } from "./queue";
+import { LockArgs } from "../utils/functions";
 
 function prepareJobs(jobs: Jobs) {
   return Object.keys(jobs).reduce((h: { [key: string]: any }, k) => {
@@ -244,6 +245,9 @@ export class Worker extends EventEmitter {
     let toRun;
     const startedAt = new Date().getTime();
 
+    // Seal the args so properties cannot be added/removed
+    job.args = LockArgs(job.args);
+
     if (!this.jobs[job.class]) {
       this.error = new Error(`No job defined for class "${job.class}"`);
       return this.completeJob(false, startedAt);
@@ -270,18 +274,7 @@ export class Worker extends EventEmitter {
         return this.completeJob(false, startedAt);
       }
 
-      let callableArgs = [job.args];
-      if (job.args === undefined || job.args instanceof Array) {
-        callableArgs = job.args;
-      }
-
-      for (const i in callableArgs) {
-        if (typeof callableArgs[i] === "object" && callableArgs[i] !== null) {
-          Object.freeze(callableArgs[i]);
-        }
-      }
-
-      this.result = await perform.apply(this, callableArgs);
+      this.result = await perform.apply(this, job.args);
       triedAfterPerform = true;
       toRun = await RunPlugins(
         this,
@@ -321,9 +314,8 @@ export class Worker extends EventEmitter {
     const q = "_direct-queue-" + this.name;
     let toRun;
 
-    if (!(args instanceof Array)) {
-      args = [args];
-    }
+    // Seal the args so properties cannot be added/removed
+    args = LockArgs(args);
 
     if (this.started) {
       throw new Error(

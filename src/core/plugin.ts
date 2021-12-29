@@ -1,6 +1,7 @@
 import { Worker } from "./worker";
 import { Connection } from "./connection";
 import { ParsedJob, Queue } from "./queue";
+import { LockArgs, DeepMerge } from "../utils/functions";
 
 export abstract class Plugin {
   name: string;
@@ -29,8 +30,21 @@ export abstract class Plugin {
     this.queue = queue;
     this.func = func;
     this.job = job;
-    this.args = args;
     this.options = options;
+
+    /**
+     * Define a getter/setter here to keep the original
+     * unsealed `args` argument in the local scope,
+     * preventing it from being accessed or modified directly
+     */
+    Object.defineProperty(this, "args", {
+      get() {
+        return LockArgs(args);
+      },
+      set(newArgs) {
+        args = DeepMerge(this.args, newArgs);
+      },
+    });
 
     if (this.worker && this.worker.queueObject) {
       this.queueObject = this.worker.queueObject;
@@ -40,7 +54,9 @@ export abstract class Plugin {
   }
 
   abstract beforeEnqueue?(): Promise<boolean>;
+  abstract beforeDelayEnqueue?(): Promise<boolean>;
   abstract afterEnqueue?(): Promise<boolean>;
+  abstract afterDelayEnqueue?(): Promise<boolean>;
   abstract beforePerform?(): Promise<boolean>;
   abstract afterPerform?(): Promise<boolean>;
 }

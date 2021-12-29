@@ -6,7 +6,15 @@ export class CustomPlugin extends Plugin {
     return false;
   }
 
+  async beforeDelayEnqueue() {
+    return false;
+  }
+
   async afterEnqueue() {
+    return false;
+  }
+
+  async afterDelayEnqueue() {
     return false;
   }
 
@@ -16,5 +24,31 @@ export class CustomPlugin extends Plugin {
 
   async afterPerform() {
     return false;
+  }
+}
+
+export class HooksPlugin extends Plugin {
+  async beforeEnqueue() {
+    return true;
+  }
+
+  async beforeDelayEnqueue() {
+    return true;
+  }
+
+  async afterEnqueue() {
+    return true;
+  }
+
+  async afterDelayEnqueue() {
+    return true;
+  }
+
+  async beforePerform() {
+    return true;
+  }
+
+  async afterPerform() {
+    return true;
   }
 }

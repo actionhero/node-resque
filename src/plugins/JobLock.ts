@@ -6,7 +6,15 @@ export class JobLock extends Plugin {
     return true;
   }
 
+  async beforeDelayEnqueue() {
+    return true;
+  }
+
   async afterEnqueue() {
+    return true;
+  }
+
+  async afterDelayEnqueue() {
     return true;
   }
 
