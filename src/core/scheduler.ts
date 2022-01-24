@@ -219,9 +219,7 @@ export class Scheduler extends EventEmitter {
       0,
       1
     );
-    if (items.length === 0) {
-      return;
-    }
+    if (items.length === 0) return;
     return items[0];
   }
 

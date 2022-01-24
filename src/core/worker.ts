@@ -385,22 +385,24 @@ export class Worker extends EventEmitter {
   }
 
   private async succeed(job: ParsedJob, duration: number) {
-    await this.connection.redis.incr(this.connection.key("stat", "processed"));
-    await this.connection.redis.incr(
-      this.connection.key("stat", "processed", this.name)
-    );
+    await this.connection.redis
+      .multi()
+      .incr(this.connection.key("stat", "processed"))
+      .incr(this.connection.key("stat", "processed", this.name))
+      .exec();
     this.emit("success", this.queue, job, this.result, duration);
   }
 
   private async fail(err: Error, duration: number) {
-    await this.connection.redis.incr(this.connection.key("stat", "failed"));
-    await this.connection.redis.incr(
-      this.connection.key("stat", "failed", this.name)
-    );
-    await this.connection.redis.rpush(
-      this.connection.key("failed"),
-      JSON.stringify(this.failurePayload(err, this.job))
-    );
+    await this.connection.redis
+      .multi()
+      .incr(this.connection.key("stat", "failed"))
+      .incr(this.connection.key("stat", "failed", this.name))
+      .rpush(
+        this.connection.key("failed"),
+        JSON.stringify(this.failurePayload(err, this.job))
+      )
+      .exec();
     this.emit("failure", this.queue, this.job, err, duration);
   }
 
@@ -491,25 +493,15 @@ export class Worker extends EventEmitter {
       return;
     }
 
-    await this.connection.redis.srem(
-      this.connection.key("workers"),
-      name + ":" + queues
-    );
-    await this.connection.redis.del(
-      this.connection.key("worker", "ping", name)
-    );
-    await this.connection.redis.del(
-      this.connection.key("worker", name, queues)
-    );
-    await this.connection.redis.del(
-      this.connection.key("worker", name, queues, "started")
-    );
-    await this.connection.redis.del(
-      this.connection.key("stat", "failed", name)
-    );
-    await this.connection.redis.del(
-      this.connection.key("stat", "processed", name)
-    );
+    await this.connection.redis
+      .multi()
+      .srem(this.connection.key("workers"), name + ":" + queues)
+      .del(this.connection.key("worker", "ping", name))
+      .del(this.connection.key("worker", name, queues))
+      .del(this.connection.key("worker", name, queues, "started"))
+      .del(this.connection.key("stat", "failed", name))
+      .del(this.connection.key("stat", "processed", name))
+      .exec();
   }
 
   async checkQueues() {
