@@ -86,11 +86,12 @@ export class Queue extends EventEmitter {
     const toRun = await RunPlugins(this, "beforeEnqueue", func, q, job, args);
     if (toRun === false) return toRun;
 
-    await this.connection.redis.sadd(this.connection.key("queues"), q);
-    await this.connection.redis.rpush(
-      this.connection.key("queue", q),
-      this.encode(q, func, args)
-    );
+    await this.connection.redis
+      .multi()
+      .sadd(this.connection.key("queues"), q)
+      .rpush(this.connection.key("queue", q), this.encode(q, func, args))
+      .exec();
+
     await RunPlugins(this, "afterEnqueue", func, q, job, args);
     return toRun;
   }
@@ -218,18 +219,18 @@ export class Queue extends EventEmitter {
       stop
     );
     let numJobsDeleted: number = 0;
+    const pipeline = this.connection.redis.multi();
+
     for (let i = 0; i < jobs.length; i++) {
       const jobEncoded = jobs[i];
       const { class: jobFunc } = JSON.parse(jobEncoded) as ParsedJob;
       if (jobFunc === func) {
-        await this.connection.redis.lrem(
-          this.connection.key("queue", q),
-          0,
-          jobEncoded
-        );
+        pipeline.lrem(this.connection.key("queue", q), 0, jobEncoded);
         numJobsDeleted++;
       }
     }
+
+    await pipeline.exec();
     return numJobsDeleted;
   }
 
@@ -242,6 +243,8 @@ export class Queue extends EventEmitter {
       this.connection.key("timestamps:" + search)
     );
 
+    const pipeline = this.connection.redis.multi();
+
     for (const i in members) {
       const key = members[i];
       const count = await this.connection.redis.lrem(
@@ -251,13 +254,11 @@ export class Queue extends EventEmitter {
       );
       if (count > 0) {
         timestamps.push(key.split(":")[key.split(":").length - 1]);
-        await this.connection.redis.srem(
-          this.connection.key("timestamps:" + search),
-          key
-        );
+        pipeline.srem(this.connection.key("timestamps:" + search), key);
       }
     }
 
+    await pipeline.exec();
     return timestamps.map((t) => parseInt(t, 10));
   }
 
@@ -481,36 +482,26 @@ export class Queue extends EventEmitter {
           failed_at: new Date().toString(),
         };
       }
-
-      await this.connection.redis.incr(this.connection.key("stat", "failed"));
-      await this.connection.redis.incr(
-        this.connection.key("stat", "failed", workerName)
-      );
-      if (errorPayload) {
-        await this.connection.redis.rpush(
-          this.connection.key("failed"),
-          JSON.stringify(errorPayload)
-        );
-      }
     }
 
-    await this.connection.redis.del(
-      this.connection.key("stat", "failed", workerName)
-    );
-    await this.connection.redis.del(
-      this.connection.key("stat", "processed", workerName)
-    );
-    await this.connection.redis.del(
-      this.connection.key("worker", "ping", workerName)
-    );
-    await this.connection.redis.del(
-      this.connection.key("worker", workerName, queues, "started")
-    );
-    await this.connection.redis.del(this.connection.key("worker", workerName));
-    await this.connection.redis.srem(
-      this.connection.key("workers"),
-      workerName + ":" + queues
-    );
+    const pipeline = this.connection.redis
+      .multi()
+      .incr(this.connection.key("stat", "failed"))
+      .del(this.connection.key("stat", "failed", workerName))
+      .del(this.connection.key("stat", "processed", workerName))
+      .del(this.connection.key("worker", "ping", workerName))
+      .del(this.connection.key("worker", workerName, queues, "started"))
+      .del(this.connection.key("worker", workerName))
+      .srem(this.connection.key("workers"), workerName + ":" + queues);
+
+    if (errorPayload) {
+      pipeline.rpush(
+        this.connection.key("failed"),
+        JSON.stringify(errorPayload)
+      );
+    }
+
+    await pipeline.exec();
 
     return errorPayload;
   }
