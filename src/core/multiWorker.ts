@@ -271,7 +271,6 @@ export class MultiWorker extends EventEmitter {
       "failure",
       "error",
       "pause",
-      "internalError",
       "multiWorkerAction",
     ].forEach((e) => {
       worker.removeAllListeners(e);
