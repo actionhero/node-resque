@@ -629,11 +629,6 @@ multiWorker.on("error", (workerId, queue, job, error) => {
 multiWorker.on("pause", (workerId) => {
   console.log("worker[" + workerId + "] paused");
 });
-
-// multiWorker emitters
-multiWorker.on("internalError", (error) => {
-  console.log(error);
-});
 multiWorker.on("multiWorkerAction", (verb, delay) => {
   console.log(
     "*** checked for worker status: " +
