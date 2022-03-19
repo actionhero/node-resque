@@ -337,6 +337,7 @@ export class Worker extends EventEmitter {
       throw new Error(`Missing Job: "${func}"`);
     }
 
+    let triedAfterPerform = false;
     try {
       toRun = await RunPlugins(
         this,
@@ -350,6 +351,7 @@ export class Worker extends EventEmitter {
         return;
       }
       this.result = await this.jobs[func].perform.apply(this, args);
+      triedAfterPerform = true;
       toRun = await RunPlugins(
         this,
         "afterPerform",
@@ -361,7 +363,24 @@ export class Worker extends EventEmitter {
       return this.result;
     } catch (error) {
       this.error = error;
-      throw error;
+      if (!triedAfterPerform) {
+        try {
+          await RunPlugins(
+            this,
+            "afterPerform",
+            func,
+            this.queue,
+            this.jobs[func],
+            args
+          );
+        } catch (error) {
+          if (error && !this.error) {
+            this.error = error;
+          }
+        }
+      }
+      // Allow afterPerform to clear the error
+      if (this.error) throw this.error;
     }
   }
 
