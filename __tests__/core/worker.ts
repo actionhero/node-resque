@@ -1,5 +1,21 @@
-import { ParsedFailedJobPayload, Job, Queue, Worker } from "../../src";
+import { ParsedFailedJobPayload, Job, Queue, Worker, Plugin } from "../../src";
 import specHelper from "../utils/specHelper";
+
+class MyPlugin extends Plugin {
+  async beforeEnqueue() {
+    return true;
+  }
+  async afterEnqueue() {
+    return true;
+  }
+  async beforePerform() {
+    return true;
+  }
+  async afterPerform() {
+    this.options.afterPerform(this);
+    return true;
+  }
+}
 
 const jobs: { [key: string]: Job<any> } = {
   add: {
@@ -87,6 +103,30 @@ describe("worker", () => {
       } catch (error) {
         expect(String(error)).toBe("Error: Blue Smoke");
       }
+    });
+
+    test("can call a Plugin's afterPerform given the job throws an error", async () => {
+      let actual = null;
+      let expected = new TypeError("John");
+
+      let failingJob = {
+        plugins: [MyPlugin],
+        pluginOptions: {
+          MyPlugin: {
+            afterPerform: (plugin: Plugin) => {
+              actual = plugin.worker.error;
+              delete plugin.worker.error;
+            },
+          },
+        },
+        perform: (x: string) => {
+          throw new TypeError(x);
+        },
+      };
+      let worker = new Worker({}, { failingJob });
+      await worker.performInline("failingJob", ["John"]);
+
+      expect(actual).toEqual(expected);
     });
   });
 
