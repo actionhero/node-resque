@@ -31,7 +31,7 @@ npm run docs
 cp -a docs/. gh-pages/
 touch gh-pages/.nojekyll
 cp images/favicon.ico gh-pages/favicon.ico
-cp CNAME gh-pages-branch/CNAME
+cp CNAME gh-pages/CNAME
 
 ## make the commmit
 git add -A
