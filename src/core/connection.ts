@@ -119,9 +119,9 @@ export class Connection extends EventEmitter {
     if (this.redis && typeof this.redis.scan === "function") {
       const [newCursor, matches] = await this.redis.scan(
         cursor,
-        "match",
+        "MATCH",
         match,
-        "count",
+        "COUNT",
         count
       );
       if (matches && matches.length > 0) {

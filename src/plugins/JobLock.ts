@@ -18,11 +18,11 @@ export class JobLock extends Plugin {
     const lockedByMe = await this.queueObject.connection.redis.set(
       key,
       timeout,
-      "NX",
       "EX",
-      this.lockTimeout()
+      this.lockTimeout(),
+      "NX"
     );
-    if (lockedByMe && lockedByMe.toString().toLowerCase() === "ok") {
+    if (lockedByMe && lockedByMe.toString().toUpperCase() === "OK") {
       return true;
     } else {
       const options = this.job.pluginOptions;
