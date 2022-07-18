@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 cd ..
 
 ## git config
-GIT_USER_NAME='CircleCI for ActionHero'
+GIT_USER_NAME='Github Actions for Actionhero'
 GIT_USER_EMAIL='admin@actionherojs.com'
 
 ## Configure a new direcotry to hold the site
@@ -24,7 +24,6 @@ fi
 cd ..
 
 ## build main's docs
-git checkout "main"
 rm -rf docs
 mkdir -p docs
 npm run docs
@@ -34,5 +33,6 @@ cp images/favicon.ico gh-pages/favicon.ico
 cp CNAME gh-pages/CNAME
 
 ## make the commmit
+cd gh-pages
 git add -A
 git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit --allow-empty -m "deploy static site @ $(date)"
