@@ -1,4 +1,4 @@
-import * as IORedis from "ioredis";
+import Redis from "ioredis";
 import { Connection } from "../../src";
 import specHelper from "../utils/specHelper";
 
@@ -35,9 +35,9 @@ describe("connection", () => {
     });
 
     let prefixedConnection: Connection;
-    let prefixedRedis: IORedis.Redis;
+    let prefixedRedis: Redis;
     beforeAll(async () => {
-      prefixedRedis = new IORedis(null, null, {
+      prefixedRedis = new Redis(null, null, {
         keyPrefix: "customNamespace:",
         db: db,
       });

@@ -2,8 +2,8 @@ import { Queue, Worker, Scheduler, Job } from "../../src";
 import specHelper from "../utils/specHelper";
 
 // import * as RedisMock from "ioredis-mock"; // TYPE HACK!
-import * as IORedis from "ioredis";
-const RedisMock: typeof IORedis = require("ioredis-mock");
+import Redis from "ioredis";
+const RedisMock: typeof Redis = require("ioredis-mock");
 
 // for ioredis-mock, we need to re-use a shared connection
 // setting "pkg" is important!

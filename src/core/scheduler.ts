@@ -173,12 +173,12 @@ export class Scheduler extends EventEmitter {
     const lockedByMe = await this.connection.redis.set(
       leaderKey,
       this.options.name,
-      "NX",
       "EX",
-      this.options.leaderLockTimeout
+      this.options.leaderLockTimeout,
+      "NX"
     );
 
-    if (lockedByMe && lockedByMe.toLowerCase() === "ok") {
+    if (lockedByMe && lockedByMe.toUpperCase() === "OK") {
       return true;
     }
 
