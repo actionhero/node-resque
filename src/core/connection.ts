@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import * as IORedis from "ioredis";
+import { Redis, Cluster } from "ioredis";
 import * as fs from "fs";
 import * as path from "path";
 import { ConnectionOptions } from "..";
@@ -12,7 +12,7 @@ export class Connection extends EventEmitter {
   options: ConnectionOptions;
   private eventListeners: EventListeners;
   connected: boolean;
-  redis: IORedis.Redis | IORedis.Cluster;
+  redis: Redis | Cluster;
 
   constructor(options: ConnectionOptions = {}) {
     super();
