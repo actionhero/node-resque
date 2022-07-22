@@ -1,6 +1,7 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    concurrent-ruby (1.1.10)
     et-orbi (1.1.6)
       tzinfo
     fugit (1.1.6)
@@ -40,10 +41,9 @@ GEM
       rack (~> 2.2)
       rack-protection (= 2.2.0)
       tilt (~> 2.0)
-    thread_safe (0.3.6)
     tilt (2.0.10)
-    tzinfo (1.2.5)
-      thread_safe (~> 0.1)
+    tzinfo (2.0.5)
+      concurrent-ruby (~> 1.0)
     vegas (0.1.11)
       rack (>= 1.0.0)
 
