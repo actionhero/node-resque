@@ -159,4 +159,15 @@ describe("connection", () => {
     expect(connection.key("thing")).toBe("thing");
     connection.end();
   });
+
+  test("removes the redis event listeners when end", async () => {
+    const connectionDetails = specHelper.cleanConnectionDetails();
+    const connection = new Connection(connectionDetails);
+    await connection.connect();
+    expect(connection.redis.listenerCount("error")).toBe(1);
+    expect(connection.redis.listenerCount("end")).toBe(1);
+    connection.end();
+    expect(connection.redis.listenerCount("error")).toBe(0);
+    expect(connection.redis.listenerCount("end")).toBe(0);
+  });
 });
