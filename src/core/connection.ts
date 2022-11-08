@@ -5,7 +5,7 @@ import * as path from "path";
 import { ConnectionOptions } from "..";
 
 interface EventListeners {
-  [key: string]: Function;
+  [key: string]: (...args: any[]) => void;
 }
 
 export class Connection extends EventEmitter {
@@ -75,7 +75,7 @@ export class Connection extends EventEmitter {
     this.eventListeners.end = () => {
       this.connected = false;
     };
-    Object.entries(this.listeners).forEach(([eventName, eventHandler]) => {
+    Object.entries(this.eventListeners).forEach(([eventName, eventHandler]) => {
       this.redis.on(eventName, eventHandler);
     });
 
@@ -142,7 +142,7 @@ export class Connection extends EventEmitter {
   }
 
   end() {
-    Object.entries(this.listeners).forEach(([eventName, eventHandler]) => {
+    Object.entries(this.eventListeners).forEach(([eventName, eventHandler]) => {
       this.redis.off(eventName, eventHandler);
     });
 
