@@ -5,7 +5,7 @@ import * as path from "path";
 import { ConnectionOptions } from "..";
 
 interface EventListeners {
-  [key: string]: Function;
+  [key: string]: (...args: any[]) => void;
 }
 
 export class Connection extends EventEmitter {
@@ -75,8 +75,9 @@ export class Connection extends EventEmitter {
     this.eventListeners.end = () => {
       this.connected = false;
     };
-    this.redis.on("error", (err) => this.eventListeners.error(err));
-    this.redis.on("end", () => this.eventListeners.end());
+    Object.entries(this.eventListeners).forEach(([eventName, eventHandler]) => {
+      this.redis.on(eventName, eventHandler);
+    });
 
     if (!this.options.redis && typeof this.redis.select === "function") {
       await this.redis.select(this.options.database);
@@ -141,8 +142,8 @@ export class Connection extends EventEmitter {
   }
 
   end() {
-    Object.keys(this.listeners).forEach((eventName) => {
-      this.redis.removeAllListeners(eventName);
+    Object.entries(this.eventListeners).forEach(([eventName, eventHandler]) => {
+      this.redis.off(eventName, eventHandler);
     });
 
     // Only disconnect if we established the redis connection on our own.
