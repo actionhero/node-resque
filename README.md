@@ -655,7 +655,7 @@ The Options available for the multiWorker are:
 
 ## Presentation
 
-This package was featured heavily in [this presentation I gave](https://blog.evantahler.com/background-tasks-in-node-js-a-survey-with-redis-971d3575d9d2#.rzph5ofgy) about background jobs + node.js. It contains more examples!
+This package was featured heavily in [this presentation I gave](https://www.evantahler.com/blog/post/2016-05-11-background-tasks-in-nodejs-a-survey-with-redis) about background jobs + node.js. It contains more examples!
 
 ## Acknowledgments
 
