@@ -22,25 +22,25 @@ export declare interface Scheduler {
   on(event: "start" | "end" | "poll" | "leader", cb: () => void): this;
   on(
     event: "cleanStuckWorker",
-    cb: (workerName: string, errorPayload: ErrorPayload, delta: number) => void
+    cb: (workerName: string, errorPayload: ErrorPayload, delta: number) => void,
   ): this;
   on(event: "error", cb: (error: Error, queue: string) => void): this;
   on(event: "workingTimestamp", cb: (timestamp: number) => void): this;
   on(
     event: "transferredJob",
-    cb: (timestamp: number, job: Job<any>) => void
+    cb: (timestamp: number, job: Job<any>) => void,
   ): this;
 
   once(event: "start" | "end" | "poll" | "leader", cb: () => void): this;
   once(
     event: "cleanStuckWorker",
-    cb: (workerName: string, errorPayload: ErrorPayload, delta: number) => void
+    cb: (workerName: string, errorPayload: ErrorPayload, delta: number) => void,
   ): this;
   once(event: "error", cb: (error: Error, queue: string) => void): this;
   once(event: "workingTimestamp", cb: (timestamp: number) => void): this;
   once(
     event: "transferredJob",
-    cb: (timestamp: number, job: Job<any>) => void
+    cb: (timestamp: number, job: Job<any>) => void,
   ): this;
 
   removeAllListeners(event: SchedulerEvent): this;
@@ -175,7 +175,7 @@ export class Scheduler extends EventEmitter {
       this.options.name,
       "EX",
       this.options.leaderLockTimeout,
-      "NX"
+      "NX",
     );
 
     if (lockedByMe && lockedByMe.toUpperCase() === "OK") {
@@ -186,7 +186,7 @@ export class Scheduler extends EventEmitter {
     if (currentLeaderName === this.options.name) {
       await this.connection.redis.expire(
         leaderKey,
-        this.options.leaderLockTimeout
+        this.options.leaderLockTimeout,
       );
       return true;
     }
@@ -217,7 +217,7 @@ export class Scheduler extends EventEmitter {
       time,
       "LIMIT",
       0,
-      1
+      1,
     );
     if (items.length === 0) return;
     return items[0];
@@ -238,7 +238,7 @@ export class Scheduler extends EventEmitter {
     const job = await this.connection.redis.lpop(key);
     await this.connection.redis.srem(
       this.connection.key("timestamps:" + job),
-      "delayed:" + timestamp
+      "delayed:" + timestamp,
     );
     return JSON.parse(job);
   }
@@ -274,17 +274,17 @@ export class Scheduler extends EventEmitter {
     }
 
     const keys = await this.connection.getKeys(
-      this.connection.key("worker", "ping", "*")
+      this.connection.key("worker", "ping", "*"),
     );
     const payloads: Array<Payload> = await Promise.all(
       keys.map(async (k) => {
         return JSON.parse(await this.connection.redis.get(k));
-      })
+      }),
     );
 
     const nowInSeconds = Math.round(new Date().getTime() / 1000);
     const stuckWorkerTimeoutInSeconds = Math.round(
-      this.options.stuckWorkerTimeout / 1000
+      this.options.stuckWorkerTimeout / 1000,
     );
 
     for (let i in payloads) {

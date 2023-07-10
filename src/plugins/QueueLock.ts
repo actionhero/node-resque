@@ -59,7 +59,7 @@ export class QueueLock extends Plugin {
         "lock",
         this.func,
         this.queue,
-        flattenedArgs
+        flattenedArgs,
       );
     }
   }

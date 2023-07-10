@@ -22,7 +22,7 @@ export abstract class Plugin {
     args: Array<any>,
     options: {
       [key: string]: any;
-    }
+    },
   ) {
     this.name = this?.constructor?.name || "Node Resque Plugin";
     this.worker = worker;

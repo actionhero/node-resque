@@ -49,7 +49,7 @@ describe("plugins", () => {
           connection: specHelper.cleanConnectionDetails(),
           queue: [specHelper.queue],
         },
-        jobs
+        jobs,
       );
       scheduler = new Scheduler({
         connection: specHelper.cleanConnectionDetails(),
@@ -82,7 +82,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         worker.on("failure", () => {
@@ -93,7 +93,7 @@ describe("plugins", () => {
 
         worker.on("success", async () => {
           const length = await specHelper.redis.llen(
-            `${specHelper.namespace}:failed`
+            `${specHelper.namespace}:failed`,
           );
           expect(length).toBe(0);
           await worker.end();
@@ -119,7 +119,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         worker.on("success", () => {
@@ -135,7 +135,7 @@ describe("plugins", () => {
           expect(failButRetryCount + failureCount).toBe(3);
 
           const length = await specHelper.redis.llen(
-            `${specHelper.namespace}:failed`
+            `${specHelper.namespace}:failed`,
           );
           expect(length).toBe(1);
           await worker.end();
@@ -176,7 +176,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          customJobs
+          customJobs,
         );
 
         worker.on("success", () => {
@@ -192,7 +192,7 @@ describe("plugins", () => {
           expect(failButRetryCount + failureCount).toBe(5);
 
           const length = await specHelper.redis.llen(
-            `${specHelper.namespace}:failed`
+            `${specHelper.namespace}:failed`,
           );
           expect(length).toBe(1);
           await worker.end();
@@ -234,7 +234,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          customJobs
+          customJobs,
         );
 
         worker.on("success", () => {
@@ -250,7 +250,7 @@ describe("plugins", () => {
           expect(failButRetryCount + failureCount).toBe(5);
 
           const length = await specHelper.redis.llen(
-            `${specHelper.namespace}:failed`
+            `${specHelper.namespace}:failed`,
           );
           expect(length).toBe(1);
           await worker.end();
@@ -271,7 +271,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         await worker.connect();
@@ -279,11 +279,11 @@ describe("plugins", () => {
           const timestamps = await queue.scheduledAt(
             specHelper.queue,
             "brokenJob",
-            [1, 2]
+            [1, 2],
           );
           expect(timestamps.length).toBe(1);
           const length = await specHelper.redis.llen(
-            `${specHelper.namespace}:failed`
+            `${specHelper.namespace}:failed`,
           );
           expect(length).toBe(0);
           await worker.end();
@@ -304,23 +304,23 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         await worker.connect();
 
         worker.on("success", async () => {
           const globalProcessed = await specHelper.redis.get(
-            `${specHelper.namespace}:stat:processed`
+            `${specHelper.namespace}:stat:processed`,
           );
           const globalFailed = await specHelper.redis.get(
-            `${specHelper.namespace}:stat:failed`
+            `${specHelper.namespace}:stat:failed`,
           );
           const workerProcessed = await specHelper.redis.get(
-            `${specHelper.namespace}:stat:processed:${worker.name}`
+            `${specHelper.namespace}:stat:processed:${worker.name}`,
           );
           const workerFailed = await specHelper.redis.get(
-            `${specHelper.namespace}:stat:failed:${worker.name}`
+            `${specHelper.namespace}:stat:failed:${worker.name}`,
           );
           expect(String(globalProcessed)).toBe("0");
           expect(String(globalFailed)).toBe("1");
@@ -344,16 +344,16 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         await worker.connect();
         worker.on("success", async () => {
           const retryAttempts = await specHelper.redis.get(
-            `${specHelper.namespace}:resque-retry:brokenJob:1-2`
+            `${specHelper.namespace}:resque-retry:brokenJob:1-2`,
           );
           let failureData = await specHelper.redis.get(
-            `${specHelper.namespace}:failure-resque-retry:brokenJob:1-2`
+            `${specHelper.namespace}:failure-resque-retry:brokenJob:1-2`,
           );
           expect(String(retryAttempts)).toBe("0");
           const failure = JSON.parse(failureData) as ParsedFailedJobPayload;

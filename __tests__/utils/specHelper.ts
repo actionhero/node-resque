@@ -29,7 +29,7 @@ const SpecHelper = {
     this.redis = new Redis(
       this.connectionDetails.port,
       this.connectionDetails.host,
-      this.connectionDetails.options
+      this.connectionDetails.options,
     );
 
     this.redis.setMaxListeners(0);
@@ -71,7 +71,7 @@ const SpecHelper = {
         queues: this.queue,
         timeout: this.timeout,
       },
-      jobs
+      jobs,
     );
     await this.worker.connect();
 

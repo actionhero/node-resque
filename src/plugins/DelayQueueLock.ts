@@ -7,7 +7,7 @@ export class DelayQueueLock extends Plugin {
     const timestamps = await this.queueObject.scheduledAt(
       this.queue,
       this.func,
-      this.args
+      this.args,
     );
     if (timestamps.length > 0) {
       return false;

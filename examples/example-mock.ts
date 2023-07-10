@@ -68,7 +68,7 @@ async function boot() {
 
   const worker = new Worker(
     { connection: connectionDetails, queues: ["math", "otherQueue"] },
-    jobs
+    jobs,
   );
   await worker.connect();
   worker.start();
@@ -108,14 +108,16 @@ async function boot() {
   });
   worker.on("success", (queue, job, result, duration) => {
     console.log(
-      `job success ${queue} ${JSON.stringify(job)} >> ${result} (${duration}ms)`
+      `job success ${queue} ${JSON.stringify(
+        job,
+      )} >> ${result} (${duration}ms)`,
     );
   });
   worker.on("failure", (queue, job, failure, duration) => {
     console.log(
       `job failure ${queue} ${JSON.stringify(
-        job
-      )} >> ${failure} (${duration}ms)`
+        job,
+      )} >> ${failure} (${duration}ms)`,
     );
   });
   worker.on("error", (error, queue, job) => {
@@ -142,7 +144,7 @@ async function boot() {
   });
   scheduler.on("cleanStuckWorker", (workerName, errorPayload, delta) => {
     console.log(
-      `failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`
+      `failing ${workerName} (stuck for ${delta}s) and failing job ${errorPayload}`,
     );
   });
   scheduler.on("workingTimestamp", (timestamp) => {

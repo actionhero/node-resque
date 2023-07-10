@@ -14,7 +14,7 @@ export async function RunPlugins(
   queue: string,
   job: Job<unknown>,
   args: Array<any>,
-  pluginCounter?: number
+  pluginCounter?: number,
 ): Promise<boolean> {
   if (!job) return true;
   if (!pluginCounter) pluginCounter = 0;
@@ -35,7 +35,7 @@ export async function RunPlugins(
     func,
     queue,
     job,
-    args
+    args,
   );
   pluginCounter++;
   if (toRun === false) return false;
@@ -50,7 +50,7 @@ export async function RunPlugin(
   func: string,
   queue: string,
   job: Job<unknown>,
-  args: Array<any>
+  args: Array<any>,
 ): Promise<boolean> {
   if (!job) return true;
 

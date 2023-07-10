@@ -39,7 +39,7 @@ function awaitHardStop() {
     : 1000 * 30;
   return setTimeout(() => {
     console.error(
-      `Process did not terminate within ${timeout}ms. Stopping now!`
+      `Process did not terminate within ${timeout}ms. Stopping now!`,
     );
     process.nextTick(() => process.exit(1));
   }, timeout);

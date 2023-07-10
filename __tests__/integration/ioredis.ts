@@ -46,7 +46,7 @@ describe("testing with ioredis package", () => {
         queues: ["math"],
         timeout: specHelper.timeout,
       },
-      jobs
+      jobs,
     );
     await worker.connect();
     // worker.start();

@@ -22,13 +22,13 @@ export declare interface MultiWorker {
   on(event: "start" | "end", cb: (workerId: number) => void): this;
   on(
     event: "cleaning_worker",
-    cb: (workerId: number, worker: Worker, pid: number) => void
+    cb: (workerId: number, worker: Worker, pid: number) => void,
   ): this;
   on(event: "poll", cb: (workerId: number, queue: string) => void): this;
   on(event: "ping", cb: (workerId: number, time: number) => void): this;
   on(
     event: "job",
-    cb: (workerId: number, queue: string, job: ParsedJob) => void
+    cb: (workerId: number, queue: string, job: ParsedJob) => void,
   ): this;
   on(
     event: "reEnqueue",
@@ -36,8 +36,8 @@ export declare interface MultiWorker {
       workerId: number,
       queue: string,
       job: ParsedJob,
-      plugin: string
-    ) => void
+      plugin: string,
+    ) => void,
   ): this;
   on(
     event: "success",
@@ -46,8 +46,8 @@ export declare interface MultiWorker {
       queue: string,
       job: ParsedJob,
       result: any,
-      duration: number
-    ) => void
+      duration: number,
+    ) => void,
   ): this;
   on(
     event: "failure",
@@ -56,17 +56,17 @@ export declare interface MultiWorker {
       queue: string,
       job: ParsedJob,
       failure: Error,
-      duration: number
-    ) => void
+      duration: number,
+    ) => void,
   ): this;
   on(
     event: "error",
-    cb: (error: Error, workerId: number, queue: string, job: ParsedJob) => void
+    cb: (error: Error, workerId: number, queue: string, job: ParsedJob) => void,
   ): this;
   on(event: "pause", cb: (workerId: number) => void): this;
   on(
     event: "multiWorkerAction",
-    cb: (verb: string, delay: number) => void
+    cb: (verb: string, delay: number) => void,
   ): this;
 }
 
@@ -86,7 +86,7 @@ export class MultiWorker extends EventEmitter {
       typeof options.connection.redis.setMaxListeners === "function"
     ) {
       options.connection.redis.setMaxListeners(
-        options.connection.redis.getMaxListeners() + options.maxTaskProcessors
+        options.connection.redis.getMaxListeners() + options.maxTaskProcessors,
       );
     }
 
@@ -113,7 +113,7 @@ export class MultiWorker extends EventEmitter {
         this.eventLoopBlocked = blocked;
         this.eventLoopDelay = ms;
         this.eventLoopCheckCounter++;
-      }
+      },
     );
   }
 
@@ -127,7 +127,7 @@ export class MultiWorker extends EventEmitter {
         timeout: this.options.timeout,
         name: this.options.name + ":" + process.pid + "+" + id,
       },
-      this.jobs
+      this.jobs,
     );
 
     worker.id = id;
@@ -241,7 +241,7 @@ export class MultiWorker extends EventEmitter {
             await worker.end();
             await this.cleanupWorker(worker);
             return resolve(null);
-          })
+          }),
         );
       });
 

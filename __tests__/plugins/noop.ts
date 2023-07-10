@@ -44,7 +44,7 @@ describe("plugins", () => {
           connection: specHelper.cleanConnectionDetails(),
           queue: specHelper.queue,
         },
-        jobs
+        jobs,
       );
       scheduler = new Scheduler({
         connection: specHelper.cleanConnectionDetails(),
@@ -81,7 +81,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         worker.on("success", async () => {
@@ -113,7 +113,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         worker.on("success", async () => {

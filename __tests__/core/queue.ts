@@ -16,7 +16,7 @@ describe("queue", () => {
   test("can connect", async () => {
     queue = new Queue(
       { connection: specHelper.connectionDetails, queue: specHelper.queue },
-      {}
+      {},
     );
     await queue.connect();
     await queue.end();
@@ -27,7 +27,7 @@ describe("queue", () => {
       await specHelper.connect();
       queue = new Queue(
         { connection: specHelper.connectionDetails, queue: specHelper.queue },
-        {}
+        {},
       );
       await queue.connect();
     });
@@ -52,12 +52,12 @@ describe("queue", () => {
       await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
-        "10"
+        "10",
       );
       expect(String(score)).toBe("10");
 
       const str = await specHelper.redis.lpop(
-        specHelper.namespace + ":delayed:" + "10"
+        specHelper.namespace + ":delayed:" + "10",
       );
       expect(str).toBeDefined();
       const job = JSON.parse(str) as ParsedJob;
@@ -70,12 +70,12 @@ describe("queue", () => {
       await queue.enqueueAt("10000", specHelper.queue, "someJob", [1, 2, 3]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
-        "10"
+        "10",
       );
       expect(String(score)).toBe("10");
 
       let str = await specHelper.redis.lpop(
-        specHelper.namespace + ":delayed:" + "10"
+        specHelper.namespace + ":delayed:" + "10",
       );
       expect(str).toBeDefined();
       const job = JSON.parse(str) as ParsedJob;
@@ -86,9 +86,9 @@ describe("queue", () => {
     test("will not enqueue a delayed job at the same time with matching params with error", async () => {
       await queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]);
       await expect(
-        queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3])
+        queue.enqueueAt(10000, specHelper.queue, "someJob", [1, 2, 3]),
       ).rejects.toThrow(
-        /Job already enqueued at this time with same arguments/
+        /Job already enqueued at this time with same arguments/,
       );
 
       const { tasks } = await queue.delayedAt(10000);
@@ -102,7 +102,7 @@ describe("queue", () => {
         specHelper.queue,
         "someJob",
         [1, 2, 3],
-        true
+        true,
       ); // no error
 
       const { tasks } = await queue.delayedAt(10000);
@@ -114,12 +114,12 @@ describe("queue", () => {
       await queue.enqueueIn(5 * 1000, specHelper.queue, "someJob", [1, 2, 3]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
-        now.toString()
+        now.toString(),
       );
       expect(String(score)).toBe(String(now));
 
       let str = await specHelper.redis.lpop(
-        specHelper.namespace + ":delayed:" + now
+        specHelper.namespace + ":delayed:" + now,
       );
       expect(str).toBeDefined();
       const job = JSON.parse(str) as ParsedJob;
@@ -134,12 +134,12 @@ describe("queue", () => {
       await queue.enqueueIn(time, specHelper.queue, "someJob", [1, 2, 3]);
       const score = await specHelper.redis.zscore(
         specHelper.namespace + ":delayed_queue_schedule",
-        now.toString()
+        now.toString(),
       );
       expect(String(score)).toBe(String(now));
 
       let str = await specHelper.redis.lpop(
-        specHelper.namespace + ":delayed:" + now
+        specHelper.namespace + ":delayed:" + now,
       );
       expect(str).toBeDefined();
       const job = JSON.parse(str) as ParsedJob;
@@ -168,7 +168,7 @@ describe("queue", () => {
       const timestamps = await queue.scheduledAt(
         specHelper.queue,
         "someJob",
-        [1, 2, 3]
+        [1, 2, 3],
       );
       expect(timestamps.length).toBe(1);
       expect(timestamps[0]).toBe(10);
@@ -179,7 +179,7 @@ describe("queue", () => {
       const timestamps = await queue.scheduledAt(
         specHelper.queue,
         "someJob",
-        [3, 2, 1]
+        [3, 2, 1],
       );
       expect(timestamps.length).toBe(0);
     });
@@ -209,7 +209,7 @@ describe("queue", () => {
 
       const countDeleted = await queue.delByFunction(
         specHelper.queue,
-        "someJob1"
+        "someJob1",
       );
       const lengthFinally = await queue.length(specHelper.queue);
       expect(countDeleted).toBe(2);
@@ -221,7 +221,7 @@ describe("queue", () => {
       const timestamps = await queue.delDelayed(
         specHelper.queue,
         "someJob",
-        [1, 2, 3]
+        [1, 2, 3],
       );
       expect(timestamps.length).toBe(1);
       expect(timestamps[0]).toBe(10);
@@ -232,7 +232,7 @@ describe("queue", () => {
       const timestamps = await queue.delDelayed(
         specHelper.queue,
         "someJob",
-        [1, 2, 3]
+        [1, 2, 3],
       );
       const hash = await queue.allDelayed();
       expect(Object.keys(hash)).toHaveLength(0);
@@ -285,7 +285,7 @@ describe("queue", () => {
       const timestamps = await queue.scheduledAt(
         specHelper.queue,
         "noParams",
-        []
+        [],
       );
       expect(timestamps.length).toBe(4);
       const hashAgain = await queue.allDelayed();
@@ -321,11 +321,11 @@ describe("queue", () => {
     test("can load stats", async () => {
       await queue.connection.redis.set(
         specHelper.namespace + ":stat:failed",
-        1
+        1,
       );
       await queue.connection.redis.set(
         specHelper.namespace + ":stat:processed",
-        2
+        2,
       );
 
       const stats = await queue.stats();
@@ -337,20 +337,20 @@ describe("queue", () => {
       beforeEach(async () => {
         await queue.connection.redis.set(
           queue.connection.key("lock:lists:queueName:jobName:[{}]"),
-          123
+          123,
         );
         await queue.connection.redis.set(
           queue.connection.key("workerslock:lists:queueName:jobName:[{}]"),
-          456
+          456,
         );
       });
 
       afterEach(async () => {
         await queue.connection.redis.del(
-          queue.connection.key("lock:lists:queueName:jobName:[{}]")
+          queue.connection.key("lock:lists:queueName:jobName:[{}]"),
         );
         await queue.connection.redis.del(
-          queue.connection.key("workerslock:lists:queueName:jobName:[{}]")
+          queue.connection.key("workerslock:lists:queueName:jobName:[{}]"),
         );
       });
 
@@ -365,7 +365,7 @@ describe("queue", () => {
         const locks = await queue.locks();
         expect(Object.keys(locks).length).toBe(2);
         const count = await queue.delLock(
-          "workerslock:lists:queueName:jobName:[{}]"
+          "workerslock:lists:queueName:jobName:[{}]",
         );
         expect(count).toBe(1);
       });
@@ -390,15 +390,15 @@ describe("queue", () => {
 
         await queue.connection.redis.rpush(
           queue.connection.key("failed"),
-          errorPayload(1)
+          errorPayload(1),
         );
         await queue.connection.redis.rpush(
           queue.connection.key("failed"),
-          errorPayload(2)
+          errorPayload(2),
         );
         await queue.connection.redis.rpush(
           queue.connection.key("failed"),
-          errorPayload(3)
+          errorPayload(3),
         );
       });
 
@@ -522,7 +522,7 @@ describe("queue", () => {
             queues: [specHelper.queue],
             name: "workerA",
           },
-          jobs
+          jobs,
         );
 
         workerB = new Worker(
@@ -532,7 +532,7 @@ describe("queue", () => {
             queues: [specHelper.queue],
             name: "workerB",
           },
-          jobs
+          jobs,
         );
 
         await workerA.connect();
@@ -606,12 +606,12 @@ describe("queue", () => {
             expect(cleanData.workerA.payload.args[0].a).toBe(1);
 
             let str = await specHelper.redis.rpop(
-              specHelper.namespace + ":" + "failed"
+              specHelper.namespace + ":" + "failed",
             );
             const failedData = JSON.parse(str) as ParsedFailedJobPayload;
             expect(failedData.queue).toBe(specHelper.queue);
             expect(failedData.exception).toBe(
-              "Worker Timeout (killed manually)"
+              "Worker Timeout (killed manually)",
             );
             expect(failedData.error).toBe("Worker Timeout (killed manually)");
             expect(failedData.payload.class).toBe("slowJob");
@@ -664,7 +664,7 @@ describe("queue", () => {
             expect(errorPayload.queue).toBe("test_queue");
             expect(errorPayload.payload.class).toBe("slowJob");
             expect(errorPayload.exception).toBe(
-              "Worker Timeout (killed manually)"
+              "Worker Timeout (killed manually)",
             );
             expect(errorPayload.backtrace[0]).toMatch(/killed by/);
             expect(errorPayload.backtrace[1]).toBe("queue#forceCleanWorker");

@@ -20,7 +20,7 @@ describe("connection error", () => {
 
         brokenConnection.on("error", async (error) => {
           expect(error.message).toMatch(
-            /ENOTFOUND|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN/
+            /ENOTFOUND|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN/,
           );
         });
 
@@ -31,6 +31,6 @@ describe("connection error", () => {
         }
       });
     },
-    60 * 1000
+    60 * 1000,
   );
 });
