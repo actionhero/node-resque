@@ -51,7 +51,7 @@ async function boot() {
 
   const worker = new Worker(
     { connection: connectionDetails, queues: ["math"] },
-    jobs
+    jobs,
   );
   await worker.connect();
   worker.start();
@@ -97,7 +97,7 @@ async function boot() {
   });
   worker.on("failure", (queue, job, failure) => {
     console.log(
-      "job failure " + queue + " " + JSON.stringify(job) + " >> " + failure
+      "job failure " + queue + " " + JSON.stringify(job) + " >> " + failure,
     );
     setTimeout(process.exit, 2000);
   });

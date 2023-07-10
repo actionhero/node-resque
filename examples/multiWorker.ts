@@ -90,7 +90,7 @@ async function boot() {
       connection: connectionDetails,
       queues: ["slowQueue"],
     },
-    jobs
+    jobs,
   );
 
   // normal worker emitters
@@ -108,33 +108,33 @@ async function boot() {
   });
   multiWorker.on("job", (workerId, queue, job) => {
     console.log(
-      `worker[${workerId}] working job ${queue} ${JSON.stringify(job)}`
+      `worker[${workerId}] working job ${queue} ${JSON.stringify(job)}`,
     );
   });
   multiWorker.on("reEnqueue", (workerId, queue, job, plugin) => {
     console.log(
       `worker[${workerId}] reEnqueue job (${plugin}) ${queue} ${JSON.stringify(
-        job
-      )}`
+        job,
+      )}`,
     );
   });
   multiWorker.on("success", (workerId, queue, job, result, duration) => {
     console.log(
       `worker[${workerId}] job success ${queue} ${JSON.stringify(
-        job
-      )} >> ${result} (${duration}ms)`
+        job,
+      )} >> ${result} (${duration}ms)`,
     );
   });
   multiWorker.on("failure", (workerId, queue, job, failure, duration) => {
     console.log(
       `worker[${workerId}] job failure ${queue} ${JSON.stringify(
-        job
-      )} >> ${failure} (${duration}ms)`
+        job,
+      )} >> ${failure} (${duration}ms)`,
     );
   });
   multiWorker.on("error", (error, workerId, queue, job) => {
     console.log(
-      `worker[${workerId}] error ${queue} ${JSON.stringify(job)} >> ${error}`
+      `worker[${workerId}] error ${queue} ${JSON.stringify(job)} >> ${error}`,
     );
   });
   multiWorker.on("pause", (workerId) => {
@@ -144,7 +144,7 @@ async function boot() {
   // multiWorker emitters
   multiWorker.on("multiWorkerAction", (verb, delay) => {
     console.log(
-      `*** checked for worker status: ${verb} (event loop delay: ${delay}ms)`
+      `*** checked for worker status: ${verb} (event loop delay: ${delay}ms)`,
     );
   });
 

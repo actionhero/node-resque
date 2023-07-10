@@ -12,7 +12,7 @@ export class Retry extends Plugin {
     args: Array<any>,
     options: {
       [key: string]: any;
-    }
+    },
   ) {
     super(worker, func, queue, job, args, options);
 
@@ -66,7 +66,7 @@ export class Retry extends Plugin {
       nextTryDelay,
       this.queue,
       this.func,
-      this.args
+      this.args,
     );
 
     this.job.args = this.args;
@@ -77,15 +77,15 @@ export class Retry extends Plugin {
     });
 
     await this.redis().decr(
-      this.queueObject.connection.key("stat", "processed")
+      this.queueObject.connection.key("stat", "processed"),
     );
     await this.redis().decr(
-      this.queueObject.connection.key("stat", "processed", this.worker.name)
+      this.queueObject.connection.key("stat", "processed", this.worker.name),
     );
 
     await this.redis().incr(this.queueObject.connection.key("stat", "failed"));
     await this.redis().incr(
-      this.queueObject.connection.key("stat", "failed", this.worker.name)
+      this.queueObject.connection.key("stat", "failed", this.worker.name),
     );
 
     delete this.worker.error;
@@ -173,7 +173,7 @@ export class Retry extends Plugin {
     await this.redis().setex(
       this.failureKey(),
       this.maxDelay(),
-      JSON.stringify(data)
+      JSON.stringify(data),
     );
   }
 

@@ -61,7 +61,7 @@ describe("multiWorker", () => {
         maxTaskProcessors: maxTaskProcessors,
         queues: [specHelper.queue],
       },
-      jobs
+      jobs,
     );
 
     await multiWorker.end();
@@ -107,7 +107,7 @@ describe("multiWorker", () => {
       expect(multiWorker.workers.length).toBe(maxTaskProcessors);
       await multiWorker.end();
     },
-    10 * 1000
+    10 * 1000,
   );
 
   test(
@@ -126,7 +126,7 @@ describe("multiWorker", () => {
       expect(multiWorker.workers.length).toBe(minTaskProcessors);
       await multiWorker.end();
     },
-    30 * 1000
+    30 * 1000,
   );
 
   test("should pass on all worker emits to the instance of multiWorker", async () => {
@@ -139,13 +139,13 @@ describe("multiWorker", () => {
         "failure",
         async (workerId, queue, job, error, duration) => {
           expect(String(error)).toBe(
-            'Error: No job defined for class "missingJob"'
+            'Error: No job defined for class "missingJob"',
           );
           expect(duration).toBeGreaterThanOrEqual(0);
           multiWorker.removeAllListeners("error");
           await multiWorker.end();
           resolve(null);
-        }
+        },
       );
     });
   });

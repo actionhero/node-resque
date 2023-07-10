@@ -3,7 +3,7 @@
 export function EventLoopDelay(
   limit: number,
   interval: number,
-  fn: (blocked: boolean, delay: number) => any
+  fn: (blocked: boolean, delay: number) => any,
 ) {
   let start = process.hrtime();
 

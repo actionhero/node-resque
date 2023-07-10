@@ -35,7 +35,7 @@ describe("plugins", () => {
         connection: specHelper.cleanConnectionDetails(),
         queue: [specHelper.queue],
       },
-      jobs
+      jobs,
     );
     queue.connect();
   });
@@ -57,7 +57,7 @@ describe("plugins", () => {
       const delayedLen = await specHelper.redis.zcount(
         specHelper.namespace + ":delayed_queue_schedule",
         "-inf",
-        "+inf"
+        "+inf",
       );
       const queueLen = await queue.length(specHelper.queue);
       expect(delayedLen).toBe(1);
@@ -70,7 +70,7 @@ describe("plugins", () => {
       const delayedLen = await specHelper.redis.zcount(
         specHelper.namespace + ":delayed_queue_schedule",
         "-inf",
-        "+inf"
+        "+inf",
       );
       const queueLen = await queue.length(specHelper.queue);
       expect(delayedLen).toBe(1);

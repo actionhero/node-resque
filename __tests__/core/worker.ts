@@ -68,7 +68,7 @@ describe("worker", () => {
   test("can connect", async () => {
     const worker = new Worker(
       { connection: specHelper.connectionDetails, queues: [specHelper.queue] },
-      {}
+      {},
     );
     await worker.connect();
     await worker.end();
@@ -82,7 +82,7 @@ describe("worker", () => {
           timeout: specHelper.timeout,
           queues: [specHelper.queue],
         },
-        jobs
+        jobs,
       );
     });
 
@@ -148,7 +148,7 @@ describe("worker", () => {
           timeout: specHelper.timeout,
           queues: [specHelper.queue],
         },
-        jobs
+        jobs,
       );
       await worker.connect();
       await worker.start();
@@ -161,7 +161,7 @@ describe("worker", () => {
           connection: specHelper.connectionDetails,
           timeout: specHelper.timeout,
         },
-        jobs
+        jobs,
       );
       await worker.connect();
       expect(worker.queues).toEqual([]);
@@ -183,7 +183,7 @@ describe("worker", () => {
               timeout: specHelper.timeout,
               queues: ["*"],
             },
-            jobs
+            jobs,
           );
 
           await wildcardWorker.connect();
@@ -215,7 +215,7 @@ describe("worker", () => {
               timeout: specHelper.timeout,
               queues: [specHelper.queue],
             },
-            jobs
+            jobs,
           );
           await worker.connect();
         });
@@ -299,7 +299,7 @@ describe("worker", () => {
             worker.on("failure", (q, job, failure, duration) => {
               expect(q).toBe(specHelper.queue);
               expect(String(failure)).toBe(
-                'Error: No job defined for class "somethingFake"'
+                'Error: No job defined for class "somethingFake"',
               );
               expect(duration).toBeGreaterThanOrEqual(0);
 
@@ -311,7 +311,7 @@ describe("worker", () => {
 
         test("will place failed jobs in the failed queue", async () => {
           let str = await specHelper.redis.rpop(
-            specHelper.namespace + ":" + "failed"
+            specHelper.namespace + ":" + "failed",
           );
           const data = JSON.parse(str) as ParsedFailedJobPayload;
           expect(data.queue).toBe(specHelper.queue);
@@ -324,15 +324,15 @@ describe("worker", () => {
             const nowInSeconds = Math.round(new Date().getTime() / 1000);
             await worker.start();
             await new Promise((resolve) =>
-              setTimeout(resolve, worker.options.timeout * 2)
+              setTimeout(resolve, worker.options.timeout * 2),
             );
             const pingKey = worker.connection.key(
               "worker",
               "ping",
-              worker.name
+              worker.name,
             );
             const firstPayload = JSON.parse(
-              await specHelper.redis.get(pingKey)
+              await specHelper.redis.get(pingKey),
             );
             expect(firstPayload.name).toEqual(worker.name);
             expect(firstPayload.time).toBeGreaterThanOrEqual(nowInSeconds);
@@ -346,11 +346,11 @@ describe("worker", () => {
             });
 
             const secondPayload = JSON.parse(
-              await specHelper.redis.get(pingKey)
+              await specHelper.redis.get(pingKey),
             );
             expect(secondPayload.name).toEqual(worker.name);
             expect(secondPayload.time).toBeGreaterThanOrEqual(
-              firstPayload.time
+              firstPayload.time,
             );
           });
         });

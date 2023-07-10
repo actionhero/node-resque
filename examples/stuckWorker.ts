@@ -43,7 +43,7 @@ async function boot() {
 
   const worker = new Worker(
     { connection: connectionDetails, queues: ["stuckJobs"] },
-    jobs
+    jobs,
   );
   await worker.connect();
   worker.start();
@@ -123,8 +123,8 @@ async function boot() {
   scheduler.on("cleanStuckWorker", (workerName, errorPayload, delta) => {
     console.log(
       `failing ${workerName} (stuck for ${delta}s) and failing job: ${JSON.stringify(
-        errorPayload
-      )}`
+        errorPayload,
+      )}`,
     );
     process.exit();
   });

@@ -20,7 +20,7 @@ export class JobLock extends Plugin {
       timeout,
       "EX",
       this.lockTimeout(),
-      "NX"
+      "NX",
     );
     if (lockedByMe && lockedByMe.toString().toUpperCase() === "OK") {
       return true;
@@ -49,7 +49,7 @@ export class JobLock extends Plugin {
       this.enqueueTimeout(),
       this.queue,
       this.func,
-      this.args
+      this.args,
     );
   }
 
@@ -80,7 +80,7 @@ export class JobLock extends Plugin {
         "workerslock",
         this.func,
         this.queue,
-        flattenedArgs
+        flattenedArgs,
       );
     }
   }

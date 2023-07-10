@@ -38,7 +38,7 @@ describe("plugins", () => {
         connection: specHelper.cleanConnectionDetails(),
         queue: [specHelper.queue],
       },
-      jobs
+      jobs,
     );
     await queue.connect();
   });
@@ -60,7 +60,7 @@ describe("plugins", () => {
           timeout: specHelper.timeout,
           queues: [specHelper.queue],
         },
-        jobs
+        jobs,
       );
       worker2 = new Worker(
         {
@@ -68,7 +68,7 @@ describe("plugins", () => {
           timeout: specHelper.timeout,
           queues: [specHelper.queue],
         },
-        jobs
+        jobs,
       );
 
       worker1.on("error", (error) => {
@@ -130,7 +130,7 @@ describe("plugins", () => {
                   }
                   const key = this.worker.connection.key(
                     "customKey",
-                    Math.max.apply(Math.max, this.args)
+                    Math.max.apply(Math.max, this.args),
                   );
                   return key;
                 },
@@ -148,7 +148,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          functionJobs
+          functionJobs,
         );
         worker1.on("error", (error) => {
           throw error;
@@ -168,7 +168,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
         worker2 = new Worker(
           {
@@ -176,7 +176,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         worker1.on("error", (error) => {
@@ -199,7 +199,7 @@ describe("plugins", () => {
           let str = await specHelper.redis.lpop(
             specHelper.namespace +
               ":delayed:" +
-              Math.round(timestamps[0] / 1000)
+              Math.round(timestamps[0] / 1000),
           );
           expect(str).toBeDefined();
           const dealyedJob = JSON.parse(str) as ParsedJob;
@@ -229,7 +229,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
         worker2 = new Worker(
           {
@@ -237,7 +237,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         worker1.on("error", (error) => {
@@ -281,7 +281,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
         worker2 = new Worker(
           {
@@ -289,7 +289,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         worker1.on("error", (error) => {

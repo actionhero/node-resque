@@ -62,7 +62,7 @@ describe("plugins", () => {
           connection: specHelper.cleanConnectionDetails(),
           queue: [specHelper.queue],
         },
-        jobs
+        jobs,
       );
       await queue.connect();
     });
@@ -104,7 +104,7 @@ describe("plugins", () => {
       expect(length).toBe(1);
       expect(enqueue).toBe(true);
       const result = await specHelper.redis.keys(
-        specHelper.namespace + ":lock*"
+        specHelper.namespace + ":lock*",
       );
       expect(result).toHaveLength(1);
       const ttl = await specHelper.redis.ttl(
@@ -114,7 +114,7 @@ describe("plugins", () => {
           job +
           ":" +
           specHelper.queue +
-          ":[1,2]"
+          ":[1,2]",
       );
       expect(ttl).toBe(specHelper.timeout);
     });
@@ -125,8 +125,8 @@ describe("plugins", () => {
       await new Promise((resolve) =>
         setTimeout(
           resolve,
-          Math.min((specHelper.smallTimeout + 1) * 1000, 4000)
-        )
+          Math.min((specHelper.smallTimeout + 1) * 1000, 4000),
+        ),
       );
       const tryTwo = await queue.enqueue(specHelper.queue, stuckJob, [1, 2]);
 
@@ -136,7 +136,7 @@ describe("plugins", () => {
       expect(tryTwo).toBe(true);
 
       const result = await specHelper.redis.keys(
-        specHelper.namespace + ":lock*"
+        specHelper.namespace + ":lock*",
       );
       expect(result).toHaveLength(1);
       const ttl = await specHelper.redis.ttl(
@@ -146,7 +146,7 @@ describe("plugins", () => {
           stuckJob +
           ":" +
           specHelper.queue +
-          ":[1,2]"
+          ":[1,2]",
       );
       expect(ttl).toBe(specHelper.smallTimeout);
     });
@@ -161,7 +161,7 @@ describe("plugins", () => {
             timeout: specHelper.timeout,
             queues: [specHelper.queue],
           },
-          jobs
+          jobs,
         );
 
         worker.on("error", (error) => {
@@ -174,7 +174,7 @@ describe("plugins", () => {
         const enqueue = await queue.enqueue(
           specHelper.queue,
           "uniqueJob",
-          [1, 2]
+          [1, 2],
         );
         expect(enqueue).toBe(true);
 
@@ -182,7 +182,7 @@ describe("plugins", () => {
         await worker.end();
 
         const result = await specHelper.redis.keys(
-          specHelper.namespace + ":lock*"
+          specHelper.namespace + ":lock*",
         );
         expect(result).toHaveLength(0);
       });
@@ -191,7 +191,7 @@ describe("plugins", () => {
         const enqueue = await queue.enqueue(
           specHelper.queue,
           "blockingJob",
-          [1, 2]
+          [1, 2],
         );
         expect(enqueue).toBe(true);
 
@@ -199,7 +199,7 @@ describe("plugins", () => {
         await worker.end();
 
         const result = await specHelper.redis.keys(
-          specHelper.namespace + ":lock*"
+          specHelper.namespace + ":lock*",
         );
         expect(result).toHaveLength(0);
       });

@@ -95,14 +95,14 @@ describe("connection", () => {
       await connection.redis.set(connection.key("testPrefixKey"), "abc123");
       await prefixedConnection.redis.set(
         prefixedConnection.key("testPrefixKey"),
-        "abc123"
+        "abc123",
       );
 
       const result = await connection.redis.get(
-        connection.key("testPrefixKey")
+        connection.key("testPrefixKey"),
       );
       const prefixedResult = await prefixedConnection.redis.get(
-        prefixedConnection.key("testPrefixKey")
+        prefixedConnection.key("testPrefixKey"),
       );
       expect(result).toBe("abc123");
       expect(prefixedResult).toBe("abc123");
@@ -135,7 +135,7 @@ describe("connection", () => {
 
       prefixedConnection.options.namespace = specHelper.namespace;
       expect(prefixedConnection.key("thing")).toBe(
-        specHelper.namespace + ":thing"
+        specHelper.namespace + ":thing",
       );
 
       expect(connection.key("thing")).toBe(prefixedConnection.key("thing"));

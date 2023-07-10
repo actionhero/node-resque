@@ -84,7 +84,7 @@ async function boot() {
 
   const worker = new Worker(
     { connection: connectionDetails, queues: ["default"] },
-    jobs
+    jobs,
   );
   await worker.connect();
   worker.start();

@@ -41,7 +41,7 @@ async function boot() {
 
   const worker = new Worker(
     { connection: connectionDetails, queues: ["time"] },
-    jobs
+    jobs,
   );
   await worker.connect();
   worker.start();

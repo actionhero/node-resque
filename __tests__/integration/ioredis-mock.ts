@@ -48,7 +48,7 @@ describe("testing with ioredis-mock package", () => {
         queues: ["math"],
         timeout: specHelper.timeout,
       },
-      jobs
+      jobs,
     );
     await worker.connect();
     // worker.start();

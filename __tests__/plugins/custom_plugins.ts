@@ -20,14 +20,14 @@ describe("plugins", () => {
           connection: specHelper.cleanConnectionDetails(),
           queue: specHelper.queue,
         },
-        jobs
+        jobs,
       );
 
       await queue.connect();
       const enqueueResponse = await queue.enqueue(
         specHelper.queue,
         "myJob",
-        [1, 2]
+        [1, 2],
       );
       expect(enqueueResponse).toBe(false);
       const length = await queue.length(specHelper.queue);

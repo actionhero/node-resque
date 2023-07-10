@@ -57,14 +57,14 @@ export class Connection extends EventEmitter {
         this.redis = Pkg.createClient(
           this.options.port,
           this.options.host,
-          this.options.options
+          this.options.options,
         );
       } else {
         this.options.options.db = this.options.database;
         this.redis = new Pkg(
           this.options.port,
           this.options.host,
-          this.options.options
+          this.options.options,
         );
       }
     }
@@ -111,7 +111,7 @@ export class Connection extends EventEmitter {
     match: string,
     count: number = null,
     keysAry: string[] = [],
-    cursor = 0
+    cursor = 0,
   ): Promise<string[]> {
     if (count === null || count === undefined) {
       count = this.options.scanCount || 10;
@@ -123,7 +123,7 @@ export class Connection extends EventEmitter {
         "MATCH",
         match,
         "COUNT",
-        count
+        count,
       );
       if (matches && matches.length > 0) {
         keysAry = keysAry.concat(matches);
@@ -136,8 +136,8 @@ export class Connection extends EventEmitter {
     this.emit(
       "error",
       new Error(
-        "You must establish a connection to redis before running the getKeys command."
-      )
+        "You must establish a connection to redis before running the getKeys command.",
+      ),
     );
   }
 

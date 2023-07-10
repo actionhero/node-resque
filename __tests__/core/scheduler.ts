@@ -99,7 +99,7 @@ describe("scheduler", () => {
           1000 * 10,
           specHelper.queue,
           "someJob",
-          [1, 2, 3]
+          [1, 2, 3],
         );
         await scheduler.poll();
         let obj = await specHelper.popFromQueue();
@@ -115,7 +115,7 @@ describe("scheduler", () => {
           new Date().getTime() + 10000,
           specHelper.queue,
           "someJob",
-          [1, 2, 3]
+          [1, 2, 3],
         );
         await scheduler.poll();
         const obj = await specHelper.popFromQueue();
@@ -144,7 +144,7 @@ describe("scheduler", () => {
               timeout: specHelper.timeout,
               queues: ["stuckJobs"],
             },
-            jobs
+            jobs,
           );
           await worker.connect();
         });
@@ -173,7 +173,7 @@ describe("scheduler", () => {
                 expect(workerName).toEqual(worker.name);
                 expect(errorPayload.worker).toEqual(worker.name);
                 expect(errorPayload.error).toEqual(
-                  "Worker Timeout (killed manually)"
+                  "Worker Timeout (killed manually)",
                 );
 
                 // check the workers list, should be empty now
@@ -181,18 +181,18 @@ describe("scheduler", () => {
 
                 // check the failed list
                 const str = await specHelper.redis.rpop(
-                  specHelper.namespace + ":" + "failed"
+                  specHelper.namespace + ":" + "failed",
                 );
                 const failed = JSON.parse(str) as ParsedFailedJobPayload;
                 expect(failed.queue).toBe("stuckJobs");
                 expect(failed.exception).toBe(
-                  "Worker Timeout (killed manually)"
+                  "Worker Timeout (killed manually)",
                 );
                 expect(failed.error).toBe("Worker Timeout (killed manually)");
 
                 scheduler.removeAllListeners("cleanStuckWorker");
                 resolve(null);
-              }
+              },
             );
           });
         });

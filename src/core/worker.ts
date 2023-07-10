@@ -43,11 +43,11 @@ export declare interface Worker {
   on(event: "job", cb: (queue: string, job: ParsedJob) => void): this;
   on(
     event: "reEnqueue",
-    cb: (queue: string, job: ParsedJob, plugin: string) => void
+    cb: (queue: string, job: ParsedJob, plugin: string) => void,
   ): this;
   on(
     event: "success",
-    cb: (queue: string, job: ParsedJob, result: any, duration: number) => void
+    cb: (queue: string, job: ParsedJob, result: any, duration: number) => void,
   ): this;
   on(
     event: "failure",
@@ -55,37 +55,37 @@ export declare interface Worker {
       queue: string,
       job: ParsedJob,
       failure: Error,
-      duration: number
-    ) => void
+      duration: number,
+    ) => void,
   ): this;
   on(
     event: "error",
-    cb: (error: Error, queue: string, job: ParsedJob) => void
+    cb: (error: Error, queue: string, job: ParsedJob) => void,
   ): this;
 
   once(event: "start" | "end" | "pause", cb: () => void): this;
   once(
     event: "cleaning_worker",
-    cb: (worker: Worker, pid: string) => void
+    cb: (worker: Worker, pid: string) => void,
   ): this;
   once(event: "poll", cb: (queue: string) => void): this;
   once(event: "ping", cb: (time: number) => void): this;
   once(event: "job", cb: (queue: string, job: ParsedJob) => void): this;
   once(
     event: "reEnqueue",
-    cb: (queue: string, job: ParsedJob, plugin: string) => void
+    cb: (queue: string, job: ParsedJob, plugin: string) => void,
   ): this;
   once(
     event: "success",
-    cb: (queue: string, job: ParsedJob, result: any) => void
+    cb: (queue: string, job: ParsedJob, result: any) => void,
   ): this;
   once(
     event: "failure",
-    cb: (queue: string, job: ParsedJob, failure: any) => void
+    cb: (queue: string, job: ParsedJob, failure: any) => void,
   ): this;
   once(
     event: "error",
-    cb: (error: Error, queue: string, job: ParsedJob) => void
+    cb: (error: Error, queue: string, job: ParsedJob) => void,
   ): this;
 
   removeAllListeners(event: string): this;
@@ -156,7 +156,7 @@ export class Worker extends EventEmitter {
     await this.track();
     await this.connection.redis.set(
       this.connection.key("worker", this.name, this.stringQueues(), "started"),
-      Math.round(new Date().getTime() / 1000)
+      Math.round(new Date().getTime() / 1000),
     );
     await this.ping();
     this.pingTimer = setInterval(this.ping.bind(this), this.options.timeout);
@@ -264,7 +264,7 @@ export class Worker extends EventEmitter {
         job.class,
         this.queue,
         this.jobs[job.class],
-        job.args
+        job.args,
       );
       if (toRun === false) {
         return this.completeJob(false, startedAt);
@@ -289,7 +289,7 @@ export class Worker extends EventEmitter {
         job.class,
         this.queue,
         this.jobs[job.class],
-        job.args
+        job.args,
       );
       return this.completeJob(true, startedAt);
     } catch (error) {
@@ -302,7 +302,7 @@ export class Worker extends EventEmitter {
             job.class,
             this.queue,
             this.jobs[job.class],
-            job.args
+            job.args,
           );
         } catch (error) {
           if (error && !this.error) {
@@ -327,7 +327,7 @@ export class Worker extends EventEmitter {
 
     if (this.started) {
       throw new Error(
-        "Worker#performInline can not be used on a started worker"
+        "Worker#performInline can not be used on a started worker",
       );
     }
     if (!this.jobs[func]) {
@@ -345,7 +345,7 @@ export class Worker extends EventEmitter {
         func,
         q,
         this.jobs[func],
-        args
+        args,
       );
       if (toRun === false) {
         return;
@@ -358,7 +358,7 @@ export class Worker extends EventEmitter {
         func,
         q,
         this.jobs[func],
-        args
+        args,
       );
       return this.result;
     } catch (error) {
@@ -371,7 +371,7 @@ export class Worker extends EventEmitter {
             func,
             this.queue,
             this.jobs[func],
-            args
+            args,
           );
         } catch (error) {
           if (error && !this.error) {
@@ -394,7 +394,7 @@ export class Worker extends EventEmitter {
 
     this.working = false;
     await this.connection.redis.del(
-      this.connection.key("worker", this.name, this.stringQueues())
+      this.connection.key("worker", this.name, this.stringQueues()),
     );
     this.job = null;
 
@@ -419,7 +419,7 @@ export class Worker extends EventEmitter {
       .incr(this.connection.key("stat", "failed", this.name))
       .rpush(
         this.connection.key("failed"),
-        JSON.stringify(this.failurePayload(err, this.job))
+        JSON.stringify(this.failurePayload(err, this.job)),
       )
       .exec();
     this.emit("failure", this.queue, this.job, err, duration);
@@ -441,7 +441,7 @@ export class Worker extends EventEmitter {
     const workerKey = this.connection.key(
       "worker",
       this.name,
-      this.stringQueues()
+      this.stringQueues(),
     );
 
     let encodedJob: string;
@@ -458,7 +458,7 @@ export class Worker extends EventEmitter {
         workerKey,
         new Date().toString(),
         this.queue,
-        this.name
+        this.name,
       );
     } else {
       encodedJob = await this.connection.redis.lpop(queueKey);
@@ -470,7 +470,7 @@ export class Worker extends EventEmitter {
             queue: this.queue,
             worker: this.name,
             payload: JSON.parse(encodedJob),
-          })
+          }),
         );
       }
     }
@@ -484,7 +484,7 @@ export class Worker extends EventEmitter {
     this.running = true;
     return this.connection.redis.sadd(
       this.connection.key("workers"),
-      this.name + ":" + this.stringQueues()
+      this.name + ":" + this.stringQueues(),
     );
   }
 
@@ -501,7 +501,7 @@ export class Worker extends EventEmitter {
     });
     await this.connection.redis.set(
       this.connection.key("worker", "ping", name),
-      payload
+      payload,
     );
   }
 
@@ -536,7 +536,7 @@ export class Worker extends EventEmitter {
       this.originalQueue = "*";
       await this.untrack();
       const response = await this.connection.redis.smembers(
-        this.connection.key("queues")
+        this.connection.key("queues"),
       );
       this.queues = response ? response.sort() : [];
       await this.track();

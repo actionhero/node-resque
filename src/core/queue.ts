@@ -106,7 +106,7 @@ export class Queue extends EventEmitter {
     q: string,
     func: string,
     args: Array<any> = [],
-    suppressDuplicateTaskError = false
+    suppressDuplicateTaskError = false,
   ) {
     // Don't run plugins here, they should be run by scheduler at the enqueue step
     args = arrayify(args);
@@ -116,7 +116,7 @@ export class Queue extends EventEmitter {
     const match = "delayed:" + rTimestamp;
     const foundMatch = await this.connection.redis.sismember(
       this.connection.key("timestamps:" + item),
-      match
+      match,
     );
 
     if (foundMatch === 1) {
@@ -124,7 +124,7 @@ export class Queue extends EventEmitter {
         return;
       } else {
         throw new Error(
-          "Job already enqueued at this time with same arguments"
+          "Job already enqueued at this time with same arguments",
         );
       }
     }
@@ -136,7 +136,7 @@ export class Queue extends EventEmitter {
       .zadd(
         this.connection.key("delayed_queue_schedule"),
         rTimestamp,
-        rTimestamp.toString()
+        rTimestamp.toString(),
       )
       .exec();
   }
@@ -150,7 +150,7 @@ export class Queue extends EventEmitter {
     q: string,
     func: string,
     args: Array<any> = [],
-    suppressDuplicateTaskError = false
+    suppressDuplicateTaskError = false,
   ) {
     const timestamp = new Date().getTime() + parseInt(time.toString(), 10);
     return this.enqueueAt(timestamp, q, func, args, suppressDuplicateTaskError);
@@ -192,7 +192,7 @@ export class Queue extends EventEmitter {
     return this.connection.redis.lrem(
       this.connection.key("queue", q),
       count,
-      this.encode(q, func, args)
+      this.encode(q, func, args),
     );
   }
 
@@ -211,12 +211,12 @@ export class Queue extends EventEmitter {
     q: string,
     func: string,
     start: number = 0,
-    stop: number = -1
+    stop: number = -1,
   ) {
     const jobs = await this.connection.redis.lrange(
       this.connection.key("queue", q),
       start,
-      stop
+      stop,
     );
     let numJobsDeleted: number = 0;
     const pipeline = this.connection.redis.multi();
@@ -240,7 +240,7 @@ export class Queue extends EventEmitter {
     const search = this.encode(q, func, args);
 
     const members = await this.connection.redis.smembers(
-      this.connection.key("timestamps:" + search)
+      this.connection.key("timestamps:" + search),
     );
 
     const pipeline = this.connection.redis.multi();
@@ -250,7 +250,7 @@ export class Queue extends EventEmitter {
       const count = await this.connection.redis.lrem(
         this.connection.key(key),
         0,
-        search
+        search,
       );
       if (count > 0) {
         timestamps.push(key.split(":")[key.split(":").length - 1]);
@@ -272,7 +272,7 @@ export class Queue extends EventEmitter {
     const search = this.encode(q, func, args);
 
     const members = await this.connection.redis.smembers(
-      this.connection.key("timestamps:" + search)
+      this.connection.key("timestamps:" + search),
     );
     members.forEach((key) => {
       timestamps.push(parseInt(key.split(":")[key.split(":").length - 1]));
@@ -287,7 +287,7 @@ export class Queue extends EventEmitter {
   async timestamps() {
     const results: number[] = [];
     const timestamps = await this.connection.getKeys(
-      this.connection.key("delayed:*")
+      this.connection.key("delayed:*"),
     );
     timestamps.forEach((timestamp) => {
       const parts = timestamp.split(":");
@@ -306,7 +306,7 @@ export class Queue extends EventEmitter {
     const items = await this.connection.redis.lrange(
       this.connection.key("delayed:" + rTimestamp),
       0,
-      -1
+      -1,
     );
     const tasks = items.map((i) => {
       return JSON.parse(i) as ParsedJob;
@@ -322,7 +322,7 @@ export class Queue extends EventEmitter {
     const items = await this.connection.redis.lrange(
       this.connection.key("queue", q),
       start,
-      stop
+      stop,
     );
     const tasks = items.map(function (i) {
       return JSON.parse(i);
@@ -398,7 +398,7 @@ export class Queue extends EventEmitter {
     const workers: { [key: string]: string } = {};
 
     const results = await this.connection.redis.smembers(
-      this.connection.key("workers")
+      this.connection.key("workers"),
     );
     results.forEach(function (r) {
       const parts = r.split(":");
@@ -427,7 +427,7 @@ export class Queue extends EventEmitter {
   async workingOn(workerName: string, queues: string) {
     const fullWorkerName = workerName + ":" + queues;
     return this.connection.redis.get(
-      this.connection.key("worker", fullWorkerName)
+      this.connection.key("worker", fullWorkerName),
     );
   }
 
@@ -461,7 +461,7 @@ export class Queue extends EventEmitter {
     if (!queues) {
       this.emit(
         "error",
-        `force-cleaning worker ${workerName}, but cannot find queues`
+        `force-cleaning worker ${workerName}, but cannot find queues`,
       );
     } else {
       let workingOn = await this.workingOn(workerName, queues);
@@ -497,7 +497,7 @@ export class Queue extends EventEmitter {
     if (errorPayload) {
       pipeline.rpush(
         this.connection.key("failed"),
-        JSON.stringify(errorPayload)
+        JSON.stringify(errorPayload),
       );
     }
 
@@ -549,7 +549,7 @@ export class Queue extends EventEmitter {
     const data = await this.connection.redis.lrange(
       this.connection.key("failed"),
       start,
-      stop
+      stop,
     );
     const results = data.map((i) => {
       return JSON.parse(i) as ParsedFailedJobPayload;
@@ -562,7 +562,7 @@ export class Queue extends EventEmitter {
     return this.connection.redis.lrem(
       this.connection.key("failed"),
       1,
-      JSON.stringify(failedJob)
+      JSON.stringify(failedJob),
     );
   }
 
@@ -574,7 +574,7 @@ export class Queue extends EventEmitter {
     return this.enqueue(
       failedJob.queue,
       failedJob.payload.class,
-      failedJob.payload.args
+      failedJob.payload.args,
     );
   }
 
