@@ -404,16 +404,23 @@ export class Worker extends EventEmitter {
   }
 
   private async succeed(job: ParsedJob, duration: number) {
-    await this.connection.redis
+    const response = await this.connection.redis
       .multi()
       .incr(this.connection.key("stat", "processed"))
       .incr(this.connection.key("stat", "processed", this.name))
       .exec();
+    
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
+    
     this.emit("success", this.queue, job, this.result, duration);
   }
 
   private async fail(err: Error, duration: number) {
-    await this.connection.redis
+    const response = await this.connection.redis
       .multi()
       .incr(this.connection.key("stat", "failed"))
       .incr(this.connection.key("stat", "failed", this.name))
@@ -422,6 +429,13 @@ export class Worker extends EventEmitter {
         JSON.stringify(this.failurePayload(err, this.job)),
       )
       .exec();
+
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
+
     this.emit("failure", this.queue, this.job, err, duration);
   }
 
@@ -512,7 +526,7 @@ export class Worker extends EventEmitter {
       return;
     }
 
-    await this.connection.redis
+    const response = await this.connection.redis
       .multi()
       .srem(this.connection.key("workers"), name + ":" + queues)
       .del(this.connection.key("worker", "ping", name))
@@ -521,6 +535,12 @@ export class Worker extends EventEmitter {
       .del(this.connection.key("stat", "failed", name))
       .del(this.connection.key("stat", "processed", name))
       .exec();
+
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
   }
 
   async checkQueues() {
