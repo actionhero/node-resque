@@ -409,13 +409,13 @@ export class Worker extends EventEmitter {
       .incr(this.connection.key("stat", "processed"))
       .incr(this.connection.key("stat", "processed", this.name))
       .exec();
-    
+
     response.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }
     });
-    
+
     this.emit("success", this.queue, job, this.result, duration);
   }
 

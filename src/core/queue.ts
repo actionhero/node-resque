@@ -185,7 +185,7 @@ export class Queue extends EventEmitter {
       .del(this.connection.key("queue", q))
       .srem(this.connection.key("queues"), q)
       .exec();
-    
+
     response.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
@@ -249,7 +249,7 @@ export class Queue extends EventEmitter {
     }
 
     const response = await pipeline.exec();
-    
+
     response.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
@@ -284,7 +284,7 @@ export class Queue extends EventEmitter {
     }
 
     const response = await pipeline.exec();
-    
+
     response.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
@@ -534,7 +534,7 @@ export class Queue extends EventEmitter {
     }
 
     const response = await pipeline.exec();
-    
+
     response.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
