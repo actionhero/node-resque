@@ -86,11 +86,17 @@ export class Queue extends EventEmitter {
     const toRun = await RunPlugins(this, "beforeEnqueue", func, q, job, args);
     if (toRun === false) return toRun;
 
-    await this.connection.redis
+    const response = await this.connection.redis
       .multi()
       .sadd(this.connection.key("queues"), q)
       .rpush(this.connection.key("queue", q), this.encode(q, func, args))
       .exec();
+
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
 
     await RunPlugins(this, "afterEnqueue", func, q, job, args);
     return toRun;
@@ -129,7 +135,7 @@ export class Queue extends EventEmitter {
       }
     }
 
-    await this.connection.redis
+    const response = await this.connection.redis
       .multi()
       .rpush(this.connection.key("delayed:" + rTimestamp), item)
       .sadd(this.connection.key("timestamps:" + item), "delayed:" + rTimestamp)
@@ -139,6 +145,12 @@ export class Queue extends EventEmitter {
         rTimestamp.toString(),
       )
       .exec();
+
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
   }
   /**
    * - In ms, the number of ms to delay before this job is able to start being worked on.
@@ -168,11 +180,17 @@ export class Queue extends EventEmitter {
    */
   async delQueue(q: string) {
     const { redis } = this.connection;
-    await redis
+    const response = await redis
       .multi()
       .del(this.connection.key("queue", q))
       .srem(this.connection.key("queues"), q)
       .exec();
+
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
   }
 
   /**
@@ -230,7 +248,14 @@ export class Queue extends EventEmitter {
       }
     }
 
-    await pipeline.exec();
+    const response = await pipeline.exec();
+
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
+
     return numJobsDeleted;
   }
 
@@ -258,7 +283,14 @@ export class Queue extends EventEmitter {
       }
     }
 
-    await pipeline.exec();
+    const response = await pipeline.exec();
+
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
+
     return timestamps.map((t) => parseInt(t, 10));
   }
 
@@ -501,7 +533,13 @@ export class Queue extends EventEmitter {
       );
     }
 
-    await pipeline.exec();
+    const response = await pipeline.exec();
+
+    response.forEach((res) => {
+      if (res[0] !== null) {
+        throw res[0];
+      }
+    });
 
     return errorPayload;
   }

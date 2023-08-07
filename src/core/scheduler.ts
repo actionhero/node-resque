@@ -254,11 +254,17 @@ export class Scheduler extends EventEmitter {
     await this.watchIfPossible(this.connection.key("delayed_queue_schedule"));
     const length = await this.connection.redis.llen(key);
     if (length === 0) {
-      await this.connection.redis
+      const response = await this.connection.redis
         .multi()
         .del(key)
         .zrem(this.connection.key("delayed_queue_schedule"), timestamp)
         .exec();
+
+      response.forEach((res) => {
+        if (res[0] !== null) {
+          throw res[0];
+        }
+      });
     }
     await this.unwatchIfPossible();
   }
