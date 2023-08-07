@@ -321,7 +321,13 @@ export class Scheduler extends EventEmitter {
   }
 
   private canWatch() {
-    if (this.connection.redis?.constructor?.name === "RedisMock") return false;
+    if (
+      ["RedisMock", "_RedisMock"].includes(
+        this.connection.redis?.constructor?.name,
+      )
+    ) {
+      return false;
+    }
     if (typeof this.connection.redis.unwatch !== "function") return false;
     return true;
   }
