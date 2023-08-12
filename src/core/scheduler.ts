@@ -259,12 +259,13 @@ export class Scheduler extends EventEmitter {
         .del(key)
         .zrem(this.connection.key("delayed_queue_schedule"), timestamp)
         .exec();
-
-      response.forEach((res) => {
-        if (res[0] !== null) {
-          throw res[0];
-        }
-      });
+      if (response !== null) {
+        response.forEach((res) => {
+          if (res[0] !== null) {
+            throw res[0];
+          }
+        });
+      }
     }
     await this.unwatchIfPossible();
   }
