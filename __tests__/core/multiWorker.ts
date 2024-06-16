@@ -1,6 +1,9 @@
 import specHelper from "../utils/specHelper";
 import { MultiWorker, Queue } from "../../src";
 
+// we enable this just for this test as the worker scaling is CPU dependent, and other parallel tests can cause shenanigans
+jest.retryTimes(3, { logErrorsBeforeRetry: true });
+
 let queue: Queue;
 let multiWorker: MultiWorker;
 const checkTimeout = specHelper.timeout / 10;
