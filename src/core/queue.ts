@@ -151,6 +151,8 @@ export class Queue extends EventEmitter {
         throw res[0];
       }
     });
+
+    return true;
   }
   /**
    * - In ms, the number of ms to delay before this job is able to start being worked on.
