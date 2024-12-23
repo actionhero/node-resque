@@ -170,25 +170,30 @@ export class Scheduler extends EventEmitter {
       return;
     }
 
-    const lockedByMe = await this.connection.redis.set(
-      leaderKey,
-      this.options.name,
-      "EX",
-      this.options.leaderLockTimeout,
-      "NX",
-    );
-
-    if (lockedByMe && lockedByMe.toUpperCase() === "OK") {
-      return true;
-    }
-
-    const currentLeaderName = await this.connection.redis.get(leaderKey);
-    if (currentLeaderName === this.options.name) {
-      await this.connection.redis.expire(
+    try {
+      const lockedByMe = await this.connection.redis.set(
         leaderKey,
+        this.options.name,
+        "EX",
         this.options.leaderLockTimeout,
+        "NX",
       );
-      return true;
+
+      if (lockedByMe && lockedByMe.toUpperCase() === "OK") {
+        return true;
+      }
+
+      const currentLeaderName = await this.connection.redis.get(leaderKey);
+      if (currentLeaderName === this.options.name) {
+        await this.connection.redis.expire(
+          leaderKey,
+          this.options.leaderLockTimeout,
+        );
+        return true;
+      }
+    } catch (error) {
+      this.emit("error", error);
+      return false;
     }
 
     return false;
