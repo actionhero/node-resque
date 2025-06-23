@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.13.14",
+    "@types/node": "^24.0.3",
     "ioredis-mock": "^8.9.0",
     "jest": "^29.7.0",
     "node-schedule": "^2.1.1",
