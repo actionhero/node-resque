@@ -159,7 +159,7 @@ export class Scheduler extends EventEmitter {
   private async pollAgainLater() {
     if (this.running === true) {
       this.timer = setTimeout(() => {
-        this.poll();
+        this.poll().catch((e) => this.emit("error", e));
       }, this.options.timeout);
     }
   }
