@@ -358,3 +358,39 @@ describe("worker", () => {
     });
   });
 });
+
+describe("worker error handling during shutdown", () => {
+  test("emits error instead of unhandled rejection when ping fails", async () => {
+    const testWorker = new Worker(
+      {
+        connection: specHelper.cleanConnectionDetails(),
+        timeout: specHelper.timeout,
+        queues: ["shutdown_test_queue"],
+      },
+      jobs,
+    );
+    await testWorker.connect();
+    await testWorker.start();
+
+    const errorPromise = new Promise<Error>((resolve) => {
+      testWorker.on("error", (err) => resolve(err));
+    });
+
+    // stub redis.set to simulate a closed connection during ping
+    const originalSet = testWorker.connection.redis.set.bind(
+      testWorker.connection.redis,
+    );
+    const redisError = new Error("Connection is closed");
+    testWorker.connection.redis.set = async () => {
+      throw redisError;
+    };
+
+    // wait for the ping interval to fire and fail
+    const emittedError = await errorPromise;
+    expect(emittedError).toBe(redisError);
+
+    // restore and clean up
+    testWorker.connection.redis.set = originalSet;
+    await testWorker.end();
+  });
+});

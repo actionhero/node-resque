@@ -148,7 +148,7 @@ export class Worker extends EventEmitter {
       this.started = true;
       this.emit("start", new Date());
       await this.init();
-      this.poll();
+      this.poll().catch((e) => this.emit("error", e));
     }
   }
 
@@ -159,7 +159,9 @@ export class Worker extends EventEmitter {
       Math.round(new Date().getTime() / 1000),
     );
     await this.ping();
-    this.pingTimer = setInterval(this.ping.bind(this), this.options.timeout);
+    this.pingTimer = setInterval(() => {
+      this.ping().catch((e) => this.emit("error", e));
+    }, this.options.timeout);
   }
 
   async end(): Promise<void> {
@@ -399,7 +401,7 @@ export class Worker extends EventEmitter {
     this.job = null;
 
     if (this.options.looping) {
-      this.poll();
+      this.poll().catch((e) => this.emit("error", e));
     }
   }
 
@@ -443,7 +445,7 @@ export class Worker extends EventEmitter {
     this.emit("pause");
     await new Promise((resolve) => {
       this.pollTimer = setTimeout(() => {
-        this.poll();
+        this.poll().catch((e) => this.emit("error", e));
         resolve(null);
       }, this.options.timeout);
     });
