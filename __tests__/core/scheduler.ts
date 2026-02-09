@@ -87,6 +87,36 @@ describe("scheduler", () => {
         await queue.end();
       });
 
+      test("emits error instead of unhandled rejection when poll fails", async () => {
+        const testScheduler = new Scheduler({
+          connection: specHelper.cleanConnectionDetails(),
+          timeout: specHelper.timeout,
+        });
+        await testScheduler.connect();
+        await testScheduler.start();
+
+        const errorPromise = new Promise<Error>((resolve) => {
+          testScheduler.on("error", (err) => resolve(err));
+        });
+
+        // stub redis.set to simulate a closed connection during tryForLeader
+        const originalSet = testScheduler.connection.redis.set.bind(
+          testScheduler.connection.redis,
+        );
+        const redisError = new Error("Connection is closed");
+        testScheduler.connection.redis.set = async () => {
+          throw redisError;
+        };
+
+        // wait for pollAgainLater to fire poll() which will fail
+        const emittedError = await errorPromise;
+        expect(emittedError).toBe(redisError);
+
+        // restore and clean up
+        testScheduler.connection.redis.set = originalSet;
+        await testScheduler.end();
+      });
+
       test("queues can see who the leader is", async () => {
         await scheduler.poll();
         const leader = await queue.leader();
