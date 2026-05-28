@@ -1,17 +1,48 @@
 import Redis from "ioredis";
 import * as NodeResque from "../../src/index";
+import { ConnectionOptions } from "../../src/types/options";
 
 const namespace = `resque-test-${process.env.JEST_WORKER_ID || 0}`;
-const queue = "test_queue";
+const queueName = "test_queue";
 const pkg = "ioredis";
+
+interface SpecConnectionDetails extends ConnectionOptions {
+  pkg: string;
+  host: string;
+  password: string;
+  port: number;
+  database: number;
+  namespace: string;
+  options?: { [key: string]: any };
+  redis?: Redis;
+}
+
+interface SpecHelper {
+  pkg: string;
+  namespace: string;
+  queue: string;
+  timeout: number;
+  smallTimeout: number;
+  redis: Redis;
+  connectionDetails: SpecConnectionDetails;
+  worker: NodeResque.Worker;
+  scheduler: NodeResque.Scheduler;
+  connect: () => Promise<void>;
+  cleanup: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  startAll: (jobs: NodeResque.Jobs) => Promise<void>;
+  endAll: () => Promise<void>;
+  popFromQueue: () => Promise<string | null>;
+  cleanConnectionDetails: () => { database: number; namespace: string };
+}
 
 const SpecHelper = {
   pkg: pkg,
   namespace: namespace,
-  queue: queue,
+  queue: queueName,
   timeout: 500,
   smallTimeout: 3,
-  redis: null as Redis,
+  redis: null as unknown as Redis,
   connectionDetails: {
     pkg: pkg,
     host: process.env.REDIS_HOST || "127.0.0.1",
@@ -19,13 +50,13 @@ const SpecHelper = {
     port: 6379,
     database: parseInt(process.env.JEST_WORKER_ID || "0"),
     namespace: namespace,
-    // looping: true
-  },
+  } as SpecConnectionDetails,
+  worker: null as unknown as NodeResque.Worker,
+  scheduler: null as unknown as NodeResque.Scheduler,
 
-  connect: async function () {
+  connect: async function (this: SpecHelper) {
     if (!this.connectionDetails.options) this.connectionDetails.options = {};
-    this.connectionDetails.options.db =
-      this.connectionDetails?.options?.database;
+    this.connectionDetails.options.db = this.connectionDetails.database;
     this.redis = new Redis(
       this.connectionDetails.port,
       this.connectionDetails.host,
@@ -43,30 +74,28 @@ const SpecHelper = {
     this.connectionDetails.redis = this.redis;
   },
 
-  cleanup: async function () {
+  cleanup: async function (this: SpecHelper) {
     const keys = await this.redis.keys(this.namespace + "*");
     if (keys.length > 0) await this.redis.del(keys);
   },
 
-  disconnect: async function () {
+  disconnect: async function (this: SpecHelper) {
     if (typeof this.redis.disconnect === "function") {
-      await this.redis.disconnect();
+      this.redis.disconnect();
     } else if (typeof this.redis.quit === "function") {
       await this.redis.quit();
     }
 
-    delete this.redis;
+    this.redis = null as unknown as Redis;
     delete this.connectionDetails.redis;
   },
 
-  startAll: async function (jobs: NodeResque.Jobs) {
+  startAll: async function (this: SpecHelper, jobs: NodeResque.Jobs) {
     const Worker = NodeResque.Worker;
     const Scheduler = NodeResque.Scheduler;
-    const Queue = NodeResque.Queue;
 
     this.worker = new Worker(
       {
-        //@ts-ignore
         connection: { redis: this.redis },
         queues: this.queue,
         timeout: this.timeout,
@@ -81,21 +110,18 @@ const SpecHelper = {
     });
 
     await this.scheduler.connect();
-
-    this.queue = new Queue({ connection: { redis: this.redis } });
-    await this.queue.connect();
   },
 
-  endAll: async function () {
+  endAll: async function (this: SpecHelper) {
     await this.worker.end();
     await this.scheduler.end();
   },
 
-  popFromQueue: async function () {
+  popFromQueue: async function (this: SpecHelper) {
     return this.redis.lpop(this.namespace + ":queue:" + this.queue);
   },
 
-  cleanConnectionDetails: function () {
+  cleanConnectionDetails: function (this: SpecHelper) {
     interface connectionDetails {
       database: number;
       namespace: string;
