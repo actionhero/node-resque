@@ -313,7 +313,7 @@ describe("worker", () => {
           let str = await specHelper.redis.rpop(
             specHelper.namespace + ":" + "failed",
           );
-          const data = JSON.parse(str) as ParsedFailedJobPayload;
+          const data = JSON.parse(str!) as ParsedFailedJobPayload;
           expect(data.queue).toBe(specHelper.queue);
           expect(data.exception).toBe("Error");
           expect(data.error).toBe('No job defined for class "somethingFake"');
@@ -324,7 +324,7 @@ describe("worker", () => {
             const nowInSeconds = Math.round(new Date().getTime() / 1000);
             await worker.start();
             await new Promise((resolve) =>
-              setTimeout(resolve, worker.options.timeout * 2),
+              setTimeout(resolve, worker.options.timeout! * 2),
             );
             const pingKey = worker.connection.key(
               "worker",
@@ -332,7 +332,7 @@ describe("worker", () => {
               worker.name,
             );
             const firstPayload = JSON.parse(
-              await specHelper.redis.get(pingKey),
+              (await specHelper.redis.get(pingKey))!,
             );
             expect(firstPayload.name).toEqual(worker.name);
             expect(firstPayload.time).toBeGreaterThanOrEqual(nowInSeconds);
@@ -346,7 +346,7 @@ describe("worker", () => {
             });
 
             const secondPayload = JSON.parse(
-              await specHelper.redis.get(pingKey),
+              (await specHelper.redis.get(pingKey))!,
             );
             expect(secondPayload.name).toEqual(worker.name);
             expect(secondPayload.time).toBeGreaterThanOrEqual(

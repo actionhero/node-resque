@@ -202,7 +202,7 @@ describe("plugins", () => {
               Math.round(timestamps[0] / 1000),
           );
           expect(str).toBeDefined();
-          const dealyedJob = JSON.parse(str) as ParsedJob;
+          const dealyedJob = JSON.parse(str!) as ParsedJob;
           expect(dealyedJob.class).toBe("slowAdd");
           expect(dealyedJob.args).toEqual([1, 2]);
 

@@ -41,9 +41,9 @@ describe("queue", () => {
 
     test("can add a normal job", async () => {
       await queue.enqueue(specHelper.queue, "someJob", [1, 2, 3]);
-      let obj = await specHelper.popFromQueue();
-      expect(obj).toBeDefined();
-      obj = JSON.parse(obj);
+      const raw = await specHelper.popFromQueue();
+      expect(raw).toBeDefined();
+      const obj = JSON.parse(raw!);
       expect(obj.class).toBe("someJob");
       expect(obj.args).toEqual([1, 2, 3]);
     });
@@ -60,7 +60,7 @@ describe("queue", () => {
         specHelper.namespace + ":delayed:" + "10",
       );
       expect(str).toBeDefined();
-      const job = JSON.parse(str) as ParsedJob;
+      const job = JSON.parse(str!) as ParsedJob;
       expect(job.class).toBe("someJob");
       expect(job.args).toEqual([1, 2, 3]);
     });
@@ -78,7 +78,7 @@ describe("queue", () => {
         specHelper.namespace + ":delayed:" + "10",
       );
       expect(str).toBeDefined();
-      const job = JSON.parse(str) as ParsedJob;
+      const job = JSON.parse(str!) as ParsedJob;
       expect(job.class).toBe("someJob");
       expect(job.args).toEqual([1, 2, 3]);
     });
@@ -122,7 +122,7 @@ describe("queue", () => {
         specHelper.namespace + ":delayed:" + now,
       );
       expect(str).toBeDefined();
-      const job = JSON.parse(str) as ParsedJob;
+      const job = JSON.parse(str!) as ParsedJob;
       expect(job.class).toBe("someJob");
       expect(job.args).toEqual([1, 2, 3]);
     });
@@ -142,7 +142,7 @@ describe("queue", () => {
         specHelper.namespace + ":delayed:" + now,
       );
       expect(str).toBeDefined();
-      const job = JSON.parse(str) as ParsedJob;
+      const job = JSON.parse(str!) as ParsedJob;
       expect(job.class).toBe("someJob");
       expect(job.args).toEqual([1, 2, 3]);
     });
@@ -244,15 +244,15 @@ describe("queue", () => {
       // @ts-ignore
       await queue.enqueue(specHelper.queue, "someJob", 1);
       const obj = await specHelper.popFromQueue();
-      expect(JSON.parse(obj).args).toEqual([1]);
+      expect(JSON.parse(obj!).args).toEqual([1]);
     });
 
     test("allows omitting arguments when enqueuing", async () => {
       await queue.enqueue(specHelper.queue, "noParams");
       const length = await queue.length(specHelper.queue);
       expect(length).toBe(1);
-      let obj = await specHelper.popFromQueue();
-      obj = JSON.parse(obj);
+      const raw = await specHelper.popFromQueue();
+      const obj = JSON.parse(raw!);
       expect(obj.class).toBe("noParams");
       expect(Array.isArray(obj.args)).toBe(true);
       expect(obj.args).toHaveLength(0);
@@ -608,7 +608,7 @@ describe("queue", () => {
             let str = await specHelper.redis.rpop(
               specHelper.namespace + ":" + "failed",
             );
-            const failedData = JSON.parse(str) as ParsedFailedJobPayload;
+            const failedData = JSON.parse(str!) as ParsedFailedJobPayload;
             expect(failedData.queue).toBe(specHelper.queue);
             expect(failedData.exception).toBe(
               "Worker Timeout (killed manually)",
@@ -660,16 +660,16 @@ describe("queue", () => {
 
             const errorPayload = await queue.forceCleanWorker(workerA.name);
 
-            expect(errorPayload.worker).toBe("workerA");
-            expect(errorPayload.queue).toBe("test_queue");
-            expect(errorPayload.payload.class).toBe("slowJob");
-            expect(errorPayload.exception).toBe(
+            expect(errorPayload!.worker).toBe("workerA");
+            expect(errorPayload!.queue).toBe("test_queue");
+            expect(errorPayload!.payload.class).toBe("slowJob");
+            expect(errorPayload!.exception).toBe(
               "Worker Timeout (killed manually)",
             );
-            expect(errorPayload.backtrace[0]).toMatch(/killed by/);
-            expect(errorPayload.backtrace[1]).toBe("queue#forceCleanWorker");
-            expect(errorPayload.backtrace[2]).toBe("node-resque");
-            expect(errorPayload.failed_at).toBeTruthy();
+            expect(errorPayload!.backtrace[0]).toMatch(/killed by/);
+            expect(errorPayload!.backtrace[1]).toBe("queue#forceCleanWorker");
+            expect(errorPayload!.backtrace[2]).toBe("node-resque");
+            expect(errorPayload!.failed_at).toBeTruthy();
 
             return resolve(null);
           });
