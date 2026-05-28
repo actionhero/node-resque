@@ -356,7 +356,7 @@ describe("plugins", () => {
             `${specHelper.namespace}:failure-resque-retry:brokenJob:1-2`,
           );
           expect(String(retryAttempts)).toBe("0");
-          const failure = JSON.parse(failureData) as ParsedFailedJobPayload;
+          const failure = JSON.parse(failureData!) as ParsedFailedJobPayload;
           expect(failure.payload).toEqual([1, 2]);
           expect(failure.exception).toBe("Error: BUSTED");
           expect(failure.worker).toBe("brokenJob");

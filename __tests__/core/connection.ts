@@ -37,7 +37,7 @@ describe("connection", () => {
     let prefixedConnection: Connection;
     let prefixedRedis: Redis;
     beforeAll(async () => {
-      prefixedRedis = new Redis(null, null, {
+      prefixedRedis = new Redis({
         keyPrefix: "customNamespace:",
         db: db,
       });

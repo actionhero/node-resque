@@ -132,9 +132,9 @@ describe("scheduler", () => {
           [1, 2, 3],
         );
         await scheduler.poll();
-        let obj = await specHelper.popFromQueue();
-        expect(obj).toBeDefined();
-        obj = JSON.parse(obj);
+        const raw = await specHelper.popFromQueue();
+        expect(raw).toBeDefined();
+        const obj = JSON.parse(raw!);
         expect(obj.class).toBe("someJob");
         expect(obj.args).toEqual([1, 2, 3]);
         await scheduler.end();
@@ -157,11 +157,11 @@ describe("scheduler", () => {
         let worker: Worker;
         const jobs = {
           stuck: {
-            perform: async function () {
+            perform: async function (this: Worker) {
               await new Promise((resolve) => {
                 // stop the worker from checking in, like the process crashed
                 // don't resolve
-                clearTimeout(this.pingTimer);
+                if (this.pingTimer) clearTimeout(this.pingTimer);
               });
             },
           } as Job<any>,
@@ -213,7 +213,7 @@ describe("scheduler", () => {
                 const str = await specHelper.redis.rpop(
                   specHelper.namespace + ":" + "failed",
                 );
-                const failed = JSON.parse(str) as ParsedFailedJobPayload;
+                const failed = JSON.parse(str!) as ParsedFailedJobPayload;
                 expect(failed.queue).toBe("stuckJobs");
                 expect(failed.exception).toBe(
                   "Worker Timeout (killed manually)",
