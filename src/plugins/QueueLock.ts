@@ -16,7 +16,7 @@ export class QueueLock extends Plugin {
     }
 
     const redisTimeout = await this.queueObject.connection.redis.get(key);
-    const redisTimeoutInt = parseInt(redisTimeout);
+    const redisTimeoutInt = redisTimeout ? parseInt(redisTimeout) : 0;
     if (now <= redisTimeoutInt) {
       return false;
     }
