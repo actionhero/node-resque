@@ -92,7 +92,7 @@ export class Queue extends EventEmitter {
       .rpush(this.connection.key("queue", q), this.encode(q, func, args))
       .exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }
@@ -146,7 +146,7 @@ export class Queue extends EventEmitter {
       )
       .exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }
@@ -188,7 +188,7 @@ export class Queue extends EventEmitter {
       .srem(this.connection.key("queues"), q)
       .exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }
@@ -252,7 +252,7 @@ export class Queue extends EventEmitter {
 
     const response = await pipeline.exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }
@@ -287,7 +287,7 @@ export class Queue extends EventEmitter {
 
     const response = await pipeline.exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }
@@ -387,9 +387,9 @@ export class Queue extends EventEmitter {
    */
   async locks() {
     let keys: Array<string> = [];
-    const data: { [key: string]: string } = {};
+    const data: { [key: string]: string | null } = {};
     let _keys: Array<string>;
-    let values = [];
+    let values: Array<string | null> = [];
 
     _keys = await this.connection.getKeys(this.connection.key("lock:*"));
     keys = keys.concat(_keys);
@@ -429,7 +429,7 @@ export class Queue extends EventEmitter {
    * - returns a hash of the form: `{ 'host:pid': 'queue1, queue2', 'host:pid': 'queue1, queue2' }`
    */
   async workers() {
-    const workers: { [key: string]: string } = {};
+    const workers: { [key: string]: string | null } = {};
 
     const results = await this.connection.redis.smembers(
       this.connection.key("workers"),
@@ -476,7 +476,7 @@ export class Queue extends EventEmitter {
       const w = Object.keys(workers)[i];
       //@ts-ignore
       results[w] = "started";
-      let data = await this.workingOn(w, workers[w]);
+      let data = await this.workingOn(w, workers[w] ?? "");
       if (data) {
         let parsedData = JSON.parse(data) as ParsedWorkerPayload;
         results[parsedData.worker] = parsedData;
@@ -487,7 +487,7 @@ export class Queue extends EventEmitter {
   }
 
   async forceCleanWorker(workerName: string) {
-    let errorPayload: ErrorPayload;
+    let errorPayload: ErrorPayload | undefined;
 
     const workers = await this.workers();
     const queues = workers[workerName];
@@ -537,7 +537,7 @@ export class Queue extends EventEmitter {
 
     const response = await pipeline.exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }

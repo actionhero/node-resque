@@ -67,7 +67,7 @@ export class Scheduler extends EventEmitter {
     options.retryStuckJobs = options.retryStuckJobs ?? false;
 
     this.options = options;
-    this.name = this.options.name;
+    this.name = this.options.name!;
     this.leader = false;
     this.running = false;
     this.processing = false;
@@ -122,7 +122,7 @@ export class Scheduler extends EventEmitter {
         setTimeout(async () => {
           await this.end();
           resolve(null);
-        }, this.options.timeout / 2);
+        }, this.options.timeout! / 2);
       });
     }
   }
@@ -173,9 +173,9 @@ export class Scheduler extends EventEmitter {
     try {
       const lockedByMe = await this.connection.redis.set(
         leaderKey,
-        this.options.name,
+        this.options.name!,
         "EX",
-        this.options.leaderLockTimeout,
+        this.options.leaderLockTimeout!,
         "NX",
       );
 
@@ -187,7 +187,7 @@ export class Scheduler extends EventEmitter {
       if (currentLeaderName === this.options.name) {
         await this.connection.redis.expire(
           leaderKey,
-          this.options.leaderLockTimeout,
+          this.options.leaderLockTimeout!,
         );
         return true;
       }
@@ -241,6 +241,7 @@ export class Scheduler extends EventEmitter {
   private async nextItemForTimestamp(timestamp: number) {
     const key = this.connection.key("delayed:" + timestamp);
     const job = await this.connection.redis.lpop(key);
+    if (!job) return null;
     await this.connection.redis.srem(
       this.connection.key("timestamps:" + job),
       "delayed:" + timestamp,
@@ -290,7 +291,8 @@ export class Scheduler extends EventEmitter {
     );
     const payloads: Array<Payload> = await Promise.all(
       keys.map(async (k) => {
-        return JSON.parse(await this.connection.redis.get(k));
+        const raw = await this.connection.redis.get(k);
+        return raw ? JSON.parse(raw) : null;
       }),
     );
 

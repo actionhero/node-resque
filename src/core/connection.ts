@@ -12,7 +12,7 @@ export class Connection extends EventEmitter {
   options: ConnectionOptions;
   private eventListeners: EventListeners;
   connected: boolean;
-  redis: Redis | Cluster;
+  redis!: Redis | Cluster;
 
   constructor(options: ConnectionOptions = {}) {
     super();
@@ -49,13 +49,13 @@ export class Connection extends EventEmitter {
     if (this.options.redis) {
       this.redis = this.options.redis;
     } else {
-      const Pkg = require(this.options.pkg);
+      const Pkg = require(this.options.pkg!);
       if (
         typeof Pkg.createClient === "function" &&
         this.options.pkg !== "ioredis"
       ) {
         this.redis = Pkg.createClient(
-          this.options.port,
+          this.options.port!,
           this.options.host,
           this.options.options,
         );
@@ -80,7 +80,7 @@ export class Connection extends EventEmitter {
     });
 
     if (!this.options.redis && typeof this.redis.select === "function") {
-      await this.redis.select(this.options.database);
+      await this.redis.select(this.options.database!);
     }
 
     await connectionTestAndLoadLua();
@@ -109,7 +109,7 @@ export class Connection extends EventEmitter {
 
   async getKeys(
     match: string,
-    count: number = null,
+    count: number | null = null,
     keysAry: string[] = [],
     cursor = 0,
   ): Promise<string[]> {
@@ -139,6 +139,7 @@ export class Connection extends EventEmitter {
         "You must establish a connection to redis before running the getKeys command.",
       ),
     );
+    return keysAry;
   }
 
   end() {
@@ -160,7 +161,7 @@ export class Connection extends EventEmitter {
   }
 
   key(arg: any, arg2?: any, arg3?: any, arg4?: any): string {
-    let args;
+    let args: any[];
     args = arguments.length >= 1 ? [].slice.call(arguments, 0) : [];
     if (Array.isArray(this.options.namespace)) {
       args.unshift(...this.options.namespace);

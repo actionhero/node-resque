@@ -58,8 +58,10 @@ export async function RunPlugin(
   if (typeof PluginReference === "function") {
     // @ts-ignore
     pluginName = new PluginReference(self, func, queue, job, args, {}).name;
-  } else if (typeof pluginName === "function") {
-    pluginName = pluginName["name"];
+  } else if (typeof PluginReference === "string") {
+    pluginName = PluginReference;
+  } else {
+    throw new Error("Plugin must be the constructor name or an object");
   }
 
   let pluginOptions = null;

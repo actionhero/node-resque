@@ -21,17 +21,17 @@ export declare interface Worker {
   started: boolean;
   name: string;
   queues: Array<string> | string;
-  queue: string;
+  queue: string | null;
   originalQueue: string | null;
   error: Error | null;
   result: any;
   ready: boolean;
   running: boolean;
   working: boolean;
-  pollTimer: NodeJS.Timeout;
-  endTimer: NodeJS.Timeout;
-  pingTimer: NodeJS.Timeout;
-  job: ParsedJob;
+  pollTimer: NodeJS.Timeout | null;
+  endTimer: NodeJS.Timeout | null;
+  pingTimer: NodeJS.Timeout | null;
+  job: ParsedJob | null;
   connection: Connection;
   queueObject: Queue;
   id: number;
@@ -116,8 +116,8 @@ export class Worker extends EventEmitter {
 
     this.options = options;
     this.jobs = prepareJobs(jobs);
-    this.name = this.options.name;
-    this.queues = this.options.queues;
+    this.name = this.options.name!;
+    this.queues = this.options.queues!;
     this.queue = null;
     this.originalQueue = null;
     this.error = null;
@@ -176,9 +176,9 @@ export class Worker extends EventEmitter {
       return this.end();
     }
 
-    clearTimeout(this.pollTimer);
-    clearTimeout(this.endTimer);
-    clearInterval(this.pingTimer);
+    if (this.pollTimer) clearTimeout(this.pollTimer);
+    if (this.endTimer) clearTimeout(this.endTimer);
+    if (this.pingTimer) clearInterval(this.pingTimer);
 
     if (
       this.connection &&
@@ -193,10 +193,10 @@ export class Worker extends EventEmitter {
     this.emit("end", new Date());
   }
 
-  private async poll(nQueue = 0): Promise<ParsedJob> {
+  private async poll(nQueue = 0): Promise<ParsedJob | null | undefined> {
     if (!this.running) return;
 
-    this.queue = this.queues[nQueue];
+    this.queue = this.queues[nQueue] ?? null;
     this.emit("poll", this.queue);
 
     if (this.queue === null || this.queue === undefined) {
@@ -264,7 +264,7 @@ export class Worker extends EventEmitter {
         this,
         "beforePerform",
         job.class,
-        this.queue,
+        this.queue!,
         this.jobs[job.class],
         job.args,
       );
@@ -289,26 +289,26 @@ export class Worker extends EventEmitter {
         this,
         "afterPerform",
         job.class,
-        this.queue,
+        this.queue!,
         this.jobs[job.class],
         job.args,
       );
       return this.completeJob(true, startedAt);
     } catch (error) {
-      this.error = error;
+      this.error = error as Error;
       if (!triedAfterPerform) {
         try {
           await RunPlugins(
             this,
             "afterPerform",
             job.class,
-            this.queue,
+            this.queue!,
             this.jobs[job.class],
             job.args,
           );
         } catch (error) {
           if (error && !this.error) {
-            this.error = error;
+            this.error = error as Error;
           }
         }
       }
@@ -364,20 +364,20 @@ export class Worker extends EventEmitter {
       );
       return this.result;
     } catch (error) {
-      this.error = error;
+      this.error = error as Error;
       if (!triedAfterPerform) {
         try {
           await RunPlugins(
             this,
             "afterPerform",
             func,
-            this.queue,
+            this.queue!,
             this.jobs[func],
             args,
           );
         } catch (error) {
           if (error && !this.error) {
-            this.error = error;
+            this.error = error as Error;
           }
         }
       }
@@ -391,7 +391,7 @@ export class Worker extends EventEmitter {
     if (this.error) {
       await this.fail(this.error, duration);
     } else if (toRespond) {
-      await this.succeed(this.job, duration);
+      await this.succeed(this.job!, duration);
     }
 
     this.working = false;
@@ -412,7 +412,7 @@ export class Worker extends EventEmitter {
       .incr(this.connection.key("stat", "processed", this.name))
       .exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }
@@ -428,11 +428,11 @@ export class Worker extends EventEmitter {
       .incr(this.connection.key("stat", "failed", this.name))
       .rpush(
         this.connection.key("failed"),
-        JSON.stringify(this.failurePayload(err, this.job)),
+        JSON.stringify(this.failurePayload(err, this.job!)),
       )
       .exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }
@@ -452,7 +452,7 @@ export class Worker extends EventEmitter {
   }
 
   private async getJob() {
-    let currentJob: ParsedJob;
+    let currentJob: ParsedJob | undefined;
     const queueKey = this.connection.key("queue", this.queue);
     const workerKey = this.connection.key(
       "worker",
@@ -460,7 +460,7 @@ export class Worker extends EventEmitter {
       this.stringQueues(),
     );
 
-    let encodedJob: string;
+    let encodedJob: string | null;
 
     if (
       // We cannot use the atomic Lua script if we are using redis cluster - the shard storing the queue and worker may not be the same
@@ -538,7 +538,7 @@ export class Worker extends EventEmitter {
       .del(this.connection.key("stat", "processed", name))
       .exec();
 
-    response.forEach((res) => {
+    response?.forEach((res) => {
       if (res[0] !== null) {
         throw res[0];
       }

@@ -17,7 +17,7 @@ export declare interface MultiWorker {
   eventLoopDelay: number;
   eventLoopCheckCounter: number;
   stopInProcess: boolean;
-  checkTimer: NodeJS.Timeout;
+  checkTimer: NodeJS.Timeout | null;
 
   on(event: "start" | "end", cb: (workerId: number) => void): this;
   on(
@@ -82,6 +82,7 @@ export class MultiWorker extends EventEmitter {
     options.maxEventLoopDelay = options.maxEventLoopDelay ?? 10;
 
     if (
+      options.connection &&
       options.connection.redis &&
       typeof options.connection.redis.setMaxListeners === "function"
     ) {
@@ -95,7 +96,7 @@ export class MultiWorker extends EventEmitter {
     this.jobs = jobs;
     this.running = false;
     this.working = false;
-    this.name = this.options.name;
+    this.name = this.options.name!;
     this.eventLoopBlocked = true;
     this.eventLoopDelay = Infinity;
     this.eventLoopCheckCounter = 0;
@@ -107,8 +108,8 @@ export class MultiWorker extends EventEmitter {
 
   private PollEventLoopDelay() {
     EventLoopDelay(
-      this.options.maxEventLoopDelay,
-      this.options.checkTimeout,
+      this.options.maxEventLoopDelay!,
+      this.options.checkTimeout!,
       (blocked: boolean, ms: number) => {
         this.eventLoopBlocked = blocked;
         this.eventLoopDelay = ms;
@@ -191,7 +192,7 @@ export class MultiWorker extends EventEmitter {
       verb = "x";
     } else if (
       this.eventLoopBlocked &&
-      this.workers.length > this.options.minTaskProcessors
+      this.workers.length > this.options.minTaskProcessors!
     ) {
       verb = "-";
     } else if (
@@ -201,18 +202,18 @@ export class MultiWorker extends EventEmitter {
       verb = "x";
     } else if (
       !this.eventLoopBlocked &&
-      this.workers.length < this.options.minTaskProcessors
+      this.workers.length < this.options.minTaskProcessors!
     ) {
       verb = "+";
     } else if (
       !this.eventLoopBlocked &&
-      this.workers.length < this.options.maxTaskProcessors &&
+      this.workers.length < this.options.maxTaskProcessors! &&
       (this.workers.length === 0 || workingCount / this.workers.length > 0.5)
     ) {
       verb = "+";
     } else if (
       !this.eventLoopBlocked &&
-      this.workers.length > this.options.minTaskProcessors &&
+      this.workers.length > this.options.minTaskProcessors! &&
       workingCount / this.workers.length < 0.5
     ) {
       verb = "-";
@@ -226,6 +227,7 @@ export class MultiWorker extends EventEmitter {
 
     if (verb === "-") {
       worker = this.workers.pop();
+      if (!worker) return { verb, eventLoopDelay: this.eventLoopDelay };
       await worker.end();
       await this.cleanupWorker(worker);
       return { verb, eventLoopDelay: this.eventLoopDelay };
@@ -256,6 +258,8 @@ export class MultiWorker extends EventEmitter {
       await this.startWorker();
       return { verb, eventLoopDelay: this.eventLoopDelay };
     }
+
+    return { verb, eventLoopDelay: this.eventLoopDelay };
   }
 
   private async cleanupWorker(worker: Worker) {
@@ -278,7 +282,7 @@ export class MultiWorker extends EventEmitter {
   }
 
   private async checkWrapper() {
-    clearTimeout(this.checkTimer);
+    if (this.checkTimer) clearTimeout(this.checkTimer);
     const { verb, eventLoopDelay } = await this.checkWorkers();
     this.emit("multiWorkerAction", verb, eventLoopDelay);
     this.checkTimer = setTimeout(() => {
@@ -306,7 +310,7 @@ export class MultiWorker extends EventEmitter {
       this.working === false &&
       !this.stopInProcess
     ) {
-      clearTimeout(this.checkTimer);
+      if (this.checkTimer) clearTimeout(this.checkTimer);
       return;
     }
 

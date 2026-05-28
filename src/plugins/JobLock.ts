@@ -26,7 +26,7 @@ export class JobLock extends Plugin {
       return true;
     } else {
       const options = this.job.pluginOptions;
-      const toReEnqueue = options.JobLock
+      const toReEnqueue = options?.JobLock
         ? options.JobLock.reEnqueue !== null &&
           options.JobLock.reEnqueue !== undefined
           ? options.JobLock.reEnqueue
